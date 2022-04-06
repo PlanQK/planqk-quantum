@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_namespace_packages
 
-version = os.environ.get("VERSION", "1.0.0")
+version = os.environ.get("VERSION", "1.0.1")
 
 with open("./README.md", "r") as fh:
     long_description = fh.read()
