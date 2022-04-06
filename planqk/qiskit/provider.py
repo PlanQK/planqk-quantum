@@ -2,18 +2,18 @@ import logging
 
 from qiskit.providers import ProviderV1 as Provider
 
-from anaqor.client import AnaqorClient
-from anaqor.credentials import DefaultCredentialsProvider
-from anaqor.qiskit.backend import AnaqorQuantumBackend
+from planqk.client import PlanqkClient
+from planqk.credentials import DefaultCredentialsProvider
+from planqk.qiskit.backend import PlanqkQuantumBackend
 
 logger = logging.getLogger(__name__)
 
 
-class AnaqorQuantumProvider(Provider):
+class PlanqkQuantumProvider(Provider):
 
     def __init__(self, access_token=None):
         self._credentials = DefaultCredentialsProvider(access_token)
-        self._client = AnaqorClient(self._credentials)
+        self._client = PlanqkClient(self._credentials)
 
     def backends(self, name=None, **kwargs):
         targets = self._client.get_backends()
@@ -24,4 +24,4 @@ class AnaqorQuantumProvider(Provider):
         target = targets[idx]
         if target is None:
             return []
-        return [AnaqorQuantumBackend(client=self._client, backend_name=target, provider=self)]
+        return [PlanqkQuantumBackend(client=self._client, backend_name=target, provider=self)]

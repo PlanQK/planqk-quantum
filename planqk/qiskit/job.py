@@ -4,8 +4,8 @@ import logging
 from qiskit.providers import JobV1 as Job, JobStatus, BackendV1 as Backend
 from qiskit.result import Result
 
-from anaqor.client import AnaqorClient
-from anaqor.exceptions import AnaqorError
+from planqk.client import PlanqkClient
+from planqk.exceptions import PlanqkError
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ class JobDetails:
         return cls(**in_data)
 
 
-class AnaqorQuantumJob(Job):
-    def __init__(self, client: AnaqorClient, backend: Backend, **kwargs) -> None:
+class PlanqkQuantumJob(Job):
+    def __init__(self, client: PlanqkClient, backend: Backend, **kwargs) -> None:
         self._client = client
         self._backend = backend
         self._details = JobDetails(backend_name=backend.name())
@@ -39,7 +39,7 @@ class AnaqorQuantumJob(Job):
         """
         circuit_qasm = self.metadata.pop('circuit_qasm', None),
         if circuit_qasm is None:
-            raise AnaqorError('Attribute "circuit_qasm" must not be None')
+            raise PlanqkError('Attribute "circuit_qasm" must not be None')
         payload = {
             'backend_name': self._backend.name(),
             'circuit_qasm': circuit_qasm[0],  # for some reason 'circuit_qasm' is a tuple
@@ -48,7 +48,7 @@ class AnaqorQuantumJob(Job):
         job = self._client.submit_job(payload)
         job_id = job.get('id', None)
         if job_id is None:
-            raise AnaqorError('Error submitting job: attribute "job_id" must not be None')
+            raise PlanqkError('Error submitting job: attribute "job_id" must not be None')
         return job_id
 
     def status(self):

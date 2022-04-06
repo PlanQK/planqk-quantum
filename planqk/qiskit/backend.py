@@ -8,8 +8,8 @@ from qiskit.providers import BackendV1, ProviderV1, Options, QiskitBackendNotFou
 from qiskit.providers.models import BackendConfiguration
 from qiskit.utils import local_hardware_info
 
-from anaqor.client import AnaqorClient
-from anaqor.qiskit.job import AnaqorQuantumJob
+from planqk.client import PlanqkClient
+from planqk.qiskit.job import PlanqkQuantumJob
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,8 @@ _DEFAULT_CONFIGURATION = {
 }
 
 
-class AnaqorQuantumBackend(BackendV1):
-    def __init__(self, client: AnaqorClient, backend_name: str, provider: ProviderV1, **kwargs):
+class PlanqkQuantumBackend(BackendV1):
+    def __init__(self, client: PlanqkClient, backend_name: str, provider: ProviderV1, **kwargs):
         self._client = client
         self.backend_name = backend_name
         configuration = BackendConfiguration.from_dict({
@@ -71,7 +71,7 @@ class AnaqorQuantumBackend(BackendV1):
         circuit_qasm_bytes = circuit_qasm.encode('utf-8')
         circuit_qasm_base64 = base64.b64encode(circuit_qasm_bytes)
         circuit_qasm_base64_string = str(circuit_qasm_base64, 'utf-8')
-        job = AnaqorQuantumJob(
+        job = PlanqkQuantumJob(
             client=self._client,
             backend=self,
             circuit_qasm=circuit_qasm_base64_string,

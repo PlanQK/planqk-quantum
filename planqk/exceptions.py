@@ -1,4 +1,4 @@
-class AnaqorError(Exception):
+class PlanqkError(Exception):
     def __init__(self, *message):
         super().__init__(' '.join(message))
         self.message = ' '.join(message)
@@ -7,9 +7,9 @@ class AnaqorError(Exception):
         return repr(self.message)
 
 
-class AnaqorClientError(AnaqorError):
+class PlanqkClientError(PlanqkError):
     pass
 
 
-class CredentialUnavailableError(AnaqorError):
+class CredentialUnavailableError(PlanqkError):
     pass

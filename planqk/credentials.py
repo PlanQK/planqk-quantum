@@ -4,10 +4,10 @@ import os
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
 
-from anaqor.exceptions import CredentialUnavailableError, AnaqorClientError
+from planqk.exceptions import CredentialUnavailableError, PlanqkClientError
 
-_TOKEN_ENV_VARIABLE = 'ANAQOR_QUANTUM_ACCESS_TOKEN'
-_TOKEN_FILE_ENV_VARIABLE = 'ANAQOR_QUANTUM_ACCESS_TOKEN_FILE'
+_TOKEN_ENV_VARIABLE = 'PLANQK_QUANTUM_ACCESS_TOKEN'
+_TOKEN_FILE_ENV_VARIABLE = 'PLANQK_QUANTUM_ACCESS_TOKEN_FILE'
 
 logger = logging.getLogger(__name__)
 
@@ -88,4 +88,4 @@ class DefaultCredentialsProvider(CredentialProvider):
 
         message = f'{self.__class__.__name__} failed to retrieve an access token'
         logger.warning(message)
-        raise AnaqorClientError(message)
+        raise PlanqkClientError(message)
