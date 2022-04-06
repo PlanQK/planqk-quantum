@@ -15,7 +15,7 @@ setup(
     version=version,
     author="StoneOne AG",
     author_email="info@stoneone.de",
-    url="https://github.com/planqk/anaqor-quantum",
+    url="https://github.com/planqk/planqk-quantum",
     description="Python library for the PlanQK Quantum Platform",
     long_description=long_description,
     long_description_content_type="text/markdown",
