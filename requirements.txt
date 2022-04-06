@@ -1,0 +1,4 @@
+numpy>=1.21.0
+qiskit-aer>=0.9.1
+qiskit-terra>=0.18.0
+requests
