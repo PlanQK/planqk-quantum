@@ -1,5 +1,7 @@
 # Python library for the PlanQK Quantum Platform
 
+[![PyPI version](https://badge.fury.io/py/planqk-quantum.svg)](https://badge.fury.io/py/planqk-quantum)
+
 ## Installation
 
 The package is released on PyPI and can be installed via `pip`:
