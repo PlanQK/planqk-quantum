@@ -7,7 +7,7 @@ from .exceptions import PlanqkClientError
 
 
 def base_url():
-    return os.environ.get('PLANQK_QUANTUM_BASE_URL', 'http://quantum-engine.34.107.19.77.nip.io')
+    return os.environ.get('PLANQK_QUANTUM_BASE_URL', 'https://quantum-engine.platform.planqk.de')
 
 
 class PlanqkClient(object):
