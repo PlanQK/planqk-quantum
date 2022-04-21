@@ -16,12 +16,22 @@ class PlanqkQuantumProvider(Provider):
         self._client = PlanqkClient(self._credentials)
 
     def backends(self, name=None, **kwargs):
-        targets = self._client.get_backends()
-        try:
-            idx = targets.index(name)
-        except ValueError:
-            return []
-        target = targets[idx]
-        if target is None:
-            return []
-        return [PlanqkQuantumBackend(client=self._client, backend_name=target, provider=self)]
+        backends = self._client.get_backends()
+        targets = []
+
+        if name is None:
+            for backend_name in backends:
+                target = PlanqkQuantumBackend(client=self._client, backend_name=backend_name, provider=self)
+                targets.append(target)
+        else:
+            try:
+                idx = backends.index(name)
+            except ValueError:
+                return []
+            backend_name = backends[idx]
+            if backend_name is None:
+                return []
+            target = PlanqkQuantumBackend(client=self._client, backend_name=backend_name, provider=self)
+            targets.append(target)
+
+        return targets
