@@ -1,4 +1,5 @@
 import logging
+import os
 import unittest
 
 import pytest
@@ -11,11 +12,11 @@ from planqk.qiskit import PlanqkQuantumProvider, PlanqkQuantumJob
 
 logging.basicConfig(level=logging.DEBUG)
 
-
 # overwrite base url
-# os.environ['PLANQK_QUANTUM_BASE_URL'] = 'http://engine.34.107.19.77.nip.io'
+os.environ['PLANQK_QUANTUM_BASE_URL'] = 'http://127.0.0.1:8000'
 # set access token
-# os.environ['PLANQK_QUANTUM_ACCESS_TOKEN'] = 'todo'
+os.environ['PLANQK_QUANTUM_ACCESS_TOKEN'] \
+    = '7439cead03a3429bd4f49dbf832fa181b0ffc01cb4435a19e6ae736aa1126055aa64da0faada22c8'
 
 
 class BasicTestSuite(unittest.TestCase):
