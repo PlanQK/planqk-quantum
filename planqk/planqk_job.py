@@ -1,0 +1,165 @@
+import time
+
+from planqk.client import logger, PlanqkClient
+
+DEFAULT_TIMEOUT = 300  # Default timeout for waiting for job to complete
+
+class ErrorData(object):
+    def __init__(self, code: str, message: str):
+        self.code = code
+        self.message = message
+
+
+class PlanqkJob(object):
+    def __init__(self, client: PlanqkClient, job_id: str = None, **job_details):
+        self._client = client
+        if id is not None:
+            self.job_id = job_id
+            self.refresh()
+        else:
+            self._update_job_details(job_id=self.job_id, **job_details)
+
+    def submit(self):
+        job_details_dict = self._client.submit_job(self)
+        self._update_job_details(**self._json_dict_to_params(job_details_dict))
+
+    def _update_job_details(self,
+                            provider_id: str,
+                            target: str,
+                            input_data_format: str,
+                            job_id: str = None,
+                            input_data: str = None,
+                            name: str = None,
+                            input_params: object = None,
+                            metadata: dict[str, str] = None,
+                            output_data_format: str = None,
+                            output_data: object = None,
+                            status: str = None,
+                            creation_time: str = None,
+                            begin_execution_time: str = None,
+                            end_execution_time: str = None,
+                            cancellation_time: str = None,
+                            error_data: ErrorData = None):
+
+        self.job_id = job_id
+        self.name = name
+        self.input_data_format = input_data_format
+        self.input_data = input_data
+        self.input_params = input_params
+        self.provider_id = provider_id
+        self.target = target
+        self.metadata = metadata
+        self.output_data = output_data
+        self.output_data_format = output_data_format
+        self.status = status
+        self.creation_time = creation_time
+        self.begin_execution_time = begin_execution_time
+        self.end_execution_time = end_execution_time
+        self.cancellation_time = cancellation_time
+        self.error_data = error_data
+        # self.tags = kwargs.get('tags', None) TODO qiskit specific?
+
+    def _json_dict_to_params(self, job_details_dict):
+        return dict(provider_id=job_details_dict['providerId'],
+                    target=job_details_dict['target'],
+                    input_data_format=job_details_dict['inputDataFormat'],
+                    job_id=self.job_id,
+                    input_data=job_details_dict.get('input_data_format', None),
+                    name=job_details_dict.get('name', None),
+                    input_params=job_details_dict.get('inputParams', None),
+                    metadata=job_details_dict.get('metadata', None),
+                    output_data_format=job_details_dict.get('outputDataFormat', None),
+                    output_data=job_details_dict.get('outputData', None),
+                    status=job_details_dict.get('status', None),
+                    creation_time=job_details_dict.get('creationTime', None),
+                    begin_execution_time=job_details_dict.get('beginExecutionTime', None),
+                    end_execution_time=job_details_dict.get('endExecutionTime', None),
+                    cancellation_time=job_details_dict.get('cancellationTime', None),
+                    error_data=job_details_dict.get('errorData', None))
+
+    def wait_until_completed(
+            self,
+            max_poll_wait_secs=30,
+            timeout_secs=None,
+            print_progress=True
+    ) -> None:
+        """Keeps refreshing the Job's details
+        until it reaches a finished status.
+
+        :param max_poll_wait_secs: Maximum poll wait time, defaults to 30
+        :type max_poll_wait_secs: int, optional
+        :param timeout_secs: Timeout in seconds, defaults to None
+        :type timeout_secs: int, optional
+        :param print_progress: Print "." to stdout to display progress
+        :type print_progress: bool, optional
+        :raises TimeoutError: If the total poll time exceeds timeout, raise
+        """
+        self.refresh()
+        poll_wait = 0.2
+        total_time = 0.
+        while not self.has_completed():
+            if timeout_secs is not None and total_time >= timeout_secs:
+                raise TimeoutError(f"The wait time has exceeded {timeout_secs} seconds.")
+
+            logger.debug(
+                f"Waiting for job {self.id},"
+                + f"it is in status '{self.details.status}'"
+            )
+            if print_progress:
+                print(".", end="", flush=True)
+            time.sleep(poll_wait)
+            total_time += poll_wait
+            self.refresh()
+            poll_wait = (
+                max_poll_wait_secs
+                if poll_wait >= max_poll_wait_secs
+                else poll_wait * 1.5
+            )
+
+    def has_completed(self) -> bool:
+        """Check if the job has completed."""
+
+        # TODO maybe we just use qiskit states here already
+        return (
+                self.status == "Succeeded"
+                or self.status == "Failed"
+                or self.status == "Cancelled"
+        )
+
+    def refresh(self):
+        job_details_dict = self._client.get_job(self.job_id)
+
+        self._update_job_details(**self._json_dict_to_params(job_details_dict))
+
+    def status(self):
+        """Return the status of the job, among the values of ``JobStatus``."""
+        self.refresh()
+        return self.status
+
+    def cancel(self):
+        self._planqk_client.cancel_job(self.job_id())
+
+    def get_results(self, timeout_secs: float = DEFAULT_TIMEOUT) -> dict:
+        if self.output_data is not None:
+            return self.output_data
+
+        if not self.has_completed():
+            self.wait_until_completed(timeout_secs=timeout_secs)
+
+        if not self.status == "Succeeded":
+            raise RuntimeError(
+                f'{"Cannot retrieve results as job execution failed"}'
+                + f"(status: {self.status}."
+                + f"error: {self.error_data})"
+            )
+
+        # TODO object must not be defined here
+        self.output_data = self._client.get_job_result(self.job_id)
+
+        return self.output_data
+
+    @property
+    def id(self):
+        return self.job_id
+
+

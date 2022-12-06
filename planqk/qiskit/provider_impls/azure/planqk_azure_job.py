@@ -7,7 +7,8 @@ from typing import Dict
 
 import numpy as np
 
-from planqk.client import PlanqkClient, PlanqkJob
+from planqk.client import PlanqkClient
+from planqk.planqk_job import PlanqkJob
 
 try:
     from qiskit.providers import JobV1, JobStatus
@@ -43,65 +44,51 @@ class PlanqkAzureJob(JobV1):
 
     def __init__(
             self,
-            client: PlanqkClient,
-            backend: str = None,
-            target: str = None,
-            name: str = None,
-            provider_id: str = None,
-            input_data: str = None,
-            input_data_format: str = None,
-            output_data_format: str = None,
-            input_params: str = None,
-            meta_data: Dict[str, object] = None,
+            client,
+            backend,
             planqk_job=None,
             **kwargs
     ) -> None:
-        self._planqk_client = client
-
         if planqk_job is None:
             self._planqk_job = PlanqkJob(
-                target=target,
-                name=name,
-                provider_id=provider_id,
-                input_data=input_data,
-                input_data_format=input_data_format,
-                output_data_format=output_data_format,
-                input_params=input_params,
-                meta_data=meta_data
+                client, backend,
+                **kwargs
             )
-            job = self.submit()
+            self.submit()
+        else:
+            self._planqk_job = planqk_job
 
-        self._planqk_job = planqk_job
         super().__init__(backend, self._planqk_job.id, **kwargs)
 
     def submit(self):
-        return self._planqk_client.submit_job(self._planqk_job)
+        self._planqk_job.submit()
+        #self._planqk_job = self._planqk_client.submit_job(self._planqk_job)
 
     def result(self, timeout=None, sampler_seed=None):
         """Return the results of the job."""
-        self._planqk_job.wait_until_completed(timeout_secs=timeout)  # TODO
+        self._planqk_job.wait_until_completed(timeout_secs=timeout)
 
-        success = self._azure_job.details.status == "Succeeded"
+        success = self._planqk_job.status == "Succeeded"
         results = self._format_results(sampler_seed=sampler_seed)
 
         return Result.from_dict(
             {
                 "results": [results],
-                "job_id": self._azure_job.details.id,
+                "job_id": self._planqk_job.id,
                 "backend_name": self._backend.name(),
                 "backend_version": self._backend.version,
-                "qobj_id": self._azure_job.details.name,
+                "qobj_id": self._planqk_job.name,
                 "success": success,
             }
         )
 
     def cancel(self):
-        self._planqk_client.cancel_job(self.job_id())
+        self._planqk_job.cancel()
+
 
     def status(self):
         """Return the status of the job, among the values of ``JobStatus``."""
-        planqkJob = self._planqk_client.get_job(self.job_id())
-        status = AzureJobStatusMap[planqkJob.status]
+        status = AzureJobStatusMap[self.planqkJob.status()]
         return status
 
     def job_id(self):
@@ -114,7 +101,7 @@ class PlanqkAzureJob(JobV1):
 
     def _format_results(self, sampler_seed=None):
         """ Populates the results datastructures in a format that is compatible with qiskit libraries. """
-        success = self._azure_job.details.status == "Succeeded"
+        success = self._planqk_job.status == "Succeeded"
         shots_key = "shots"
 
         job_result = {
@@ -124,26 +111,26 @@ class PlanqkAzureJob(JobV1):
         }
 
         if success:
-            is_simulator = "sim" in self._azure_job.details.target
-            if (self._azure_job.details.output_data_format == MICROSOFT_OUTPUT_DATA_FORMAT):
+            is_simulator = "sim" in self._planqk_job.target
+            if self._planqk_job.output_data_format == MICROSOFT_OUTPUT_DATA_FORMAT: #TODO fix me azure_job
                 job_result["data"] = self._format_microsoft_results(sampler_seed=sampler_seed)
 
-            elif (self._azure_job.details.output_data_format == IONQ_OUTPUT_DATA_FORMAT):
+            elif self._planqk_job.output_data_format == IONQ_OUTPUT_DATA_FORMAT:
                 job_result["data"] = self._format_ionq_results(sampler_seed=sampler_seed, is_simulator=is_simulator)
 
-            elif (self._azure_job.details.output_data_format == HONEYWELL_OUTPUT_DATA_FORMAT):
+            elif self._planqk_job.output_data_format == HONEYWELL_OUTPUT_DATA_FORMAT:
                 job_result["data"] = self._format_honeywell_results()
                 shots_key = "count"
 
             else:
                 job_result["data"] = self._format_unknown_results()
 
-        job_result["header"] = self._azure_job.details.metadata
+        job_result["header"] = self._planqk_job.metadata
         if "metadata" in job_result["header"]:
             job_result["header"]["metadata"] = json.loads(job_result["header"]["metadata"])
 
-        shots = self._azure_job.details.input_params[shots_key] \
-            if shots_key in self._azure_job.details.input_params \
+        shots = self._planqk_job.input_params[shots_key] \
+            if shots_key in self._planqk_job.input_params \
             else self._backend.options.get(shots_key)
         job_result["shots"] = shots
         return job_result
@@ -163,18 +150,18 @@ class PlanqkAzureJob(JobV1):
 
     def _format_ionq_results(self, sampler_seed=None, is_simulator=False):
         """ Translate IonQ's histogram data into a format that can be consumed by qiskit libraries. """
-        az_result = self._azure_job.get_results()
-        shots = int(self._azure_job.details.input_params['shots']) \
-            if 'shots' in self._azure_job.details.input_params \
+        az_result = self._planqk_job.get_results()
+        shots = int(self._planqk_job.input_params['shots']) \
+            if 'shots' in self._planqk_job.input_params \
             else self._backend.options.get('shots')
 
-        if "num_qubits" not in self._azure_job.details.metadata:
+        if "num_qubits" not in self._planqk_job.metadata:
             raise ValueError(
                 f"Job with ID {self.id()} does not have the required metadata (num_qubits) to format IonQ results.")
 
-        meas_map = json.loads(self._azure_job.details.metadata.get(
-            "meas_map")) if "meas_map" in self._azure_job.details.metadata else None
-        num_qubits = self._azure_job.details.metadata.get("num_qubits")
+        meas_map = json.loads(self._planqk_job.metadata.get(
+            "meas_map")) if "meas_map" in self._planqk_job.metadata else None
+        num_qubits = self._planqk_job.metadata.get("num_qubits")
 
         if not 'histogram' in az_result:
             raise "Histogram missing from IonQ Job results"
@@ -194,9 +181,9 @@ class PlanqkAzureJob(JobV1):
 
     def _format_microsoft_results(self, sampler_seed=None, is_simulator=False):
         """ Translate Microsoft's job results histogram into a format that can be consumed by qiskit libraries. """
-        az_result = self._azure_job.get_results()
-        shots = int(self._azure_job.details.input_params['shots']) \
-            if 'shots' in self._azure_job.details.input_params \
+        az_result = self._planqk_job.get_results()
+        shots = int(self._planqk_job.input_params['shots']) \
+            if 'shots' in self._planqk_job.input_params \
             else self._backend.options.get('shots')
 
         if not 'Histogram' in az_result:
@@ -225,7 +212,7 @@ class PlanqkAzureJob(JobV1):
 
     def _format_honeywell_results(self):
         """ Translate IonQ's histogram data into a format that can be consumed by qiskit libraries. """
-        az_result = self._azure_job.get_results()
+        az_result = self._planqk_job.get_results()
         all_bitstrings = [
             bitstrings for classical_register, bitstrings
             in az_result.items() if classical_register != "access_token"
@@ -243,5 +230,5 @@ class PlanqkAzureJob(JobV1):
 
     def _format_unknown_results(self):
         """ This method is called to format Job results data when the job output is in an unknown format."""
-        az_result = self._azure_job.get_results()
+        az_result = self._planqk_job.get_results()
         return az_result

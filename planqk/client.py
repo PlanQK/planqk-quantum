@@ -1,4 +1,5 @@
 import os
+import logging
 
 import requests
 
@@ -10,27 +11,7 @@ def base_url():
     return os.environ.get('PLANQK_QUANTUM_BASE_URL', 'https://quantum-engine.platform.planqk.de')
 
 
-class PlanqkJob(object):
-    def __init__(self, id: str, name: str, target: str, meta_data: dict, input_data: str,
-                 input_data_format: str, input_params: dict,
-                 provider_id: str, output_data_format: str, begin_execution_time: str,
-                 end_execution_time: str, cancellation_time: str, creation_time: str,
-                 status: str):
-        # def __init__(self, id: str, **kwargs):
-        self.id = id
-        self.name = name
-        self.inputData = input_data
-        self.inputDataFormat = input_data_format
-        self.inputParams = input_params
-        self.providerId = provider_id
-        self.target = target
-        self.metaData = meta_data
-        self.outputDataFormat = output_data_format
-        self.beginExecutionTime = begin_execution_time
-        self.endExecutionTime = end_execution_time
-        self.cancellationTime = cancellation_time
-        self.creationTime = creation_time
-        self.status = status
+logger = logging.getLogger(__name__)
 
 
 class PlanqkClient(object):
@@ -47,39 +28,23 @@ class PlanqkClient(object):
             )
         return response.json()
 
-    def submit_job(self, job: PlanqkJob) -> dict:
+    def submit_job(self, job) -> dict:
         headers = self._get_default_headers()
         headers["Content-Type"] = "application/json"
-        response = requests.post(f'{base_url()}/jobs', json=vars(job), headers=headers)
+        response = requests.post(f'{base_url()}/jobs', json=job.toDict(), headers=headers)
         if not response:
             raise PlanqkClientError(f'Error submitting job (HTTP {response.status_code}: {response.text})')
         return response.json()
+        #return _create_planqk_job_object(response.json())
 
-    def get_job(self, job_id: str) -> PlanqkJob:
+    def get_job(self, job_id: str) -> dict:
         headers = self._get_default_headers()
         response = requests.get(f'{base_url()}/jobs/{job_id}', headers=headers)
         if not response:
             raise PlanqkClientError(
                 f'Error requesting details of job "{job_id}" (HTTP {response.status_code}: {response.text})'
             )
-        body = response.json()
-
-        job = PlanqkJob(
-            id=job_id,
-            name=body['name'],
-            input_params=body['inputParams'],
-            input_data=body.get('inputData', None),
-            input_data_format=body.get('inputDataFormat', None),
-            output_data_format=body['outputDataFormat'],
-            provider_id=body['providerId'],
-            target=body['target'],
-            meta_data=body['metadata'],
-            begin_execution_time=body.get('beginExecutionTime', None),
-            end_execution_time=body.get('endExecutionTime', None),
-            cancellation_time=body.get('cancellationTime', None),
-            creation_time=body.get('creationTime', None),
-            status=body.get('status', None))
-        return job
+        return response.json()
 
     def get_job_result(self, job_id: str) -> dict:
         headers = self._get_default_headers()
@@ -90,8 +55,13 @@ class PlanqkClient(object):
             )
         return response.json()
 
-    def cancel_job(self, job_id: str) -> PlanqkJob:
-        pass
+    def cancel_job(self, job_id: str) -> None:
+        headers = self._get_default_headers()
+        response = requests.delete(f'{base_url()}/jobs/{job_id}', headers=headers)
+        if not response:
+            raise PlanqkClientError(
+                f'Error cancelling job "{job_id}" (HTTP {response.status_code}: {response.text})'
+            )
 
     def _get_default_headers(self):
         return {'X-Access-Token': self.credentials.get_access_token()}

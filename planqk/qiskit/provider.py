@@ -2,10 +2,10 @@ import logging
 
 from qiskit.providers import ProviderV1 as Provider
 
-from planqk.client import PlanqkClient, PlanqkJob
+from planqk.client import PlanqkClient
+from planqk.planqk_job import PlanqkJob
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.qiskit.provider_impls.azure.planqk_azure_provider import PlanqkAzureQuantumProvider
-from planqk.qiskit.provider_impls.azure.workspace_proxy import WorkspaceProxy
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +15,6 @@ class PlanqkQuantumProvider(Provider):
     def __init__(self, access_token=None):
         self._credentials = DefaultCredentialsProvider(access_token)
         self._client = PlanqkClient(self._credentials)
-
-        workspace = WorkspaceProxy(self._client)
 
         azure_provider = PlanqkAzureQuantumProvider(
             client=self._client

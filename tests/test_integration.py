@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 import unittest
@@ -5,6 +6,8 @@ from uuid import UUID
 
 import pytest
 import qiskit
+
+from busypie import wait, SECOND
 from azure.identity import ClientSecretCredential
 from azure.quantum import Workspace
 from azure.quantum.qiskit import AzureQuantumProvider
@@ -20,8 +23,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 # overwrite base url
 os.environ['PLANQK_QUANTUM_BASE_URL'] = 'http://127.0.0.1:8080'
+
+
 # set access token
-#os.environ['PLANQK_QUANTUM_ACCESS_TOKEN'] = None
+# os.environ['PLANQK_QUANTUM_ACCESS_TOKEN'] = None
 
 
 def is_valid_uuid(uuid_to_test):
@@ -31,9 +36,26 @@ def is_valid_uuid(uuid_to_test):
         return False
     return True
 
+def to_dict(obj):
+    if not  hasattr(obj,"__dict__"):
+        return obj
+    result = {}
+    for key, val in obj.__dict__.items():
+        if key.startswith("_"):
+            continue
+        element = []
+        if isinstance(val, list):
+            for item in val:
+                element.append(to_dict(item))
+        else:
+            element = to_dict(val)
+        result[key] = element
+    return result
+
+
 
 class BasicTestSuite(unittest.TestCase):
-    #TODO get backends from azure povider
+    # TODO get backends from azure povider
 
     def setUp(self):
         credential = ClientSecretCredential(tenant_id="3871fdd8-273b-4217-bba4-03ddd57c8785",
@@ -50,6 +72,9 @@ class BasicTestSuite(unittest.TestCase):
         )
         self.azure_provider = provider
         self.planqk_provider = PlanqkQuantumProvider("123")
+
+        # Ensure to see the diff of large objects
+        self.maxDiff = None
 
     def test_should_list_all_backends(self):
         # Get backend names via AzureProvider
@@ -85,7 +110,7 @@ class BasicTestSuite(unittest.TestCase):
         sim_backend = self.planqk_provider.get_backend("ionq.simulator")
         circuit = self.get_sample_circuit(sim_backend)
         job = sim_backend.run(circuit, shots=1)
-        #job = qiskit.execute(circuit, backend=backend, shots=1) EXECUTE?
+        # job = qiskit.execute(circuit, backend=backend, shots=1) EXECUTE?
         job_id = job.id()
 
         assert is_valid_uuid(job_id)
@@ -108,6 +133,29 @@ class BasicTestSuite(unittest.TestCase):
         assert exp_job.id() == job.id()
         assert exp_job.version == job.version
 
+    def test_should_retrieve_job_result(self):
+        # Given: create job
+        azure_backend = self.azure_provider.get_backend("ionq.simulator")
+        circuit = self.get_sample_circuit(azure_backend)
+        azure_job = azure_backend.run(circuit, shots=1)
+
+        # When
+
+        # Get job result via Azure
+        exp_job_result_dict = to_dict(azure_job.result())
+
+        # Get job via PlanQK
+        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(azure_job.id())
+        job_result_dict = to_dict(job.result())
+
+        # job_result/results[0]/counts may contain either the key 000 or 111 -> the field is removed to assert dicts
+        exp_job_result_dict.get("results")[0].get('data').pop('counts')
+        counts = job_result_dict.get("results")[0].get('data').pop('counts')
+        self.assertTrue(counts.get("111") == 1 or counts.get("000") == 1)
+
+        self.assertDictEqual(exp_job_result_dict, job_result_dict)
+
+
     def test_should_retrieve_job_status(self):
         azure_backend = self.azure_provider.get_backend("ionq.simulator")
         circuit = self.get_sample_circuit(azure_backend)
@@ -120,12 +168,19 @@ class BasicTestSuite(unittest.TestCase):
         # Then
         self.assertIn(job_status.name, [JobStatus.QUEUED.name, JobStatus.DONE.name])
 
-    def test_should_cancel_job(self):
-        azure_backend = self.azure_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(azure_backend)
-        job = azure_backend.run(circuit, shots=1)
+    #  TODO unbedint die Job Funktionen von Qiskit anschauen
 
-        job.cancel()
+    def test_should_cancel_job(self):
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        circuit = self.get_sample_circuit(sim_backend)
+        planqk_job = sim_backend.run(circuit, shots=1)
+        planqk_job.cancel()
+
+        def assert_job_cancelled():
+            job_status = planqk_job.status()
+            assert job_status.name == JobStatus.CANCELLED.name
+
+        wait().until_asserted(assert_job_cancelled)
 
 
 

@@ -5,7 +5,8 @@ from qiskit.qobj import Qobj, QasmQobj
 
 import logging
 
-from planqk.client import PlanqkClient, PlanqkJob
+from planqk.client import PlanqkClient
+from planqk.planqk_job import PlanqkJob
 from planqk.qiskit.provider_impls.azure.planqk_azure_job import PlanqkAzureJob
 
 logger = logging.getLogger(__name__)
@@ -81,8 +82,8 @@ class PlanqkAzureBackend(Backend):
 
     def retrieve_job(self, job_id) -> PlanqkAzureJob:
         """ Returns the Job instance associated with the given id."""
-        planqk_job = self._client.get_job(job_id)
-        return PlanqkAzureJob(client=self._client, planqk_job=planqk_job)
+        planqk_job = PlanqkJob(self._client, job_id=job_id)
+        return PlanqkAzureJob(client=self._client, backend=self, planqk_job=planqk_job)
 
     def name(self):
         return self.backend.name()
