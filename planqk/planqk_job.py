@@ -13,11 +13,11 @@ class ErrorData(object):
 class PlanqkJob(object):
     def __init__(self, client: PlanqkClient, job_id: str = None, **job_details):
         self._client = client
-        if id is not None:
+        if job_id is not None:
             self.job_id = job_id
             self.refresh()
         else:
-            self._update_job_details(job_id=self.job_id, **job_details)
+            self._update_job_details(job_id=job_id, **job_details)
 
     def submit(self):
         job_details_dict = self._client.submit_job(self)
@@ -31,7 +31,7 @@ class PlanqkJob(object):
                             input_data: str = None,
                             name: str = None,
                             input_params: object = None,
-                            metadata: dict[str, str] = None,
+                            meta_data: dict[str, str] = None,
                             output_data_format: str = None,
                             output_data: object = None,
                             status: str = None,
@@ -48,7 +48,7 @@ class PlanqkJob(object):
         self.input_params = input_params
         self.provider_id = provider_id
         self.target = target
-        self.metadata = metadata
+        self.meta_data = meta_data
         self.output_data = output_data
         self.output_data_format = output_data_format
         self.status = status
@@ -131,10 +131,10 @@ class PlanqkJob(object):
 
         self._update_job_details(**self._json_dict_to_params(job_details_dict))
 
-    def status(self):
-        """Return the status of the job, among the values of ``JobStatus``."""
-        self.refresh()
-        return self.status
+    # def status(self):
+    #     """Return the status of the job, among the values of ``JobStatus``."""
+    #     self.refresh()
+    #     return self.status
 
     def cancel(self):
         self._planqk_client.cancel_job(self.job_id())
@@ -158,6 +158,9 @@ class PlanqkJob(object):
 
         return self.output_data
 
+    def toDict(self) -> dict:
+        # Create dict and remove private fields
+        return { key: value for key, value in vars(self).items() if not key.startswith('_') }
     @property
     def id(self):
         return self.job_id

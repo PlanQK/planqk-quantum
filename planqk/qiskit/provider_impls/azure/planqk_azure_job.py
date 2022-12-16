@@ -51,7 +51,7 @@ class PlanqkAzureJob(JobV1):
     ) -> None:
         if planqk_job is None:
             self._planqk_job = PlanqkJob(
-                client, backend,
+                client=client,
                 **kwargs
             )
             self.submit()
@@ -60,9 +60,10 @@ class PlanqkAzureJob(JobV1):
 
         super().__init__(backend, self._planqk_job.id, **kwargs)
 
+
     def submit(self):
         self._planqk_job.submit()
-        #self._planqk_job = self._planqk_client.submit_job(self._planqk_job)
+
 
     def result(self, timeout=None, sampler_seed=None):
         """Return the results of the job."""
@@ -87,8 +88,9 @@ class PlanqkAzureJob(JobV1):
 
 
     def status(self):
+        self._planqk_job.refresh()
         """Return the status of the job, among the values of ``JobStatus``."""
-        status = AzureJobStatusMap[self.planqkJob.status()]
+        status = AzureJobStatusMap[self._planqk_job.status]
         return status
 
     def job_id(self):
@@ -98,6 +100,10 @@ class PlanqkAzureJob(JobV1):
     def id(self):
         """ This job's id."""
         return self._planqk_job.id
+
+    def queue_position(self):
+        """Return the position of the job in the queue. Currently not supported."""
+        return None
 
     def _format_results(self, sampler_seed=None):
         """ Populates the results datastructures in a format that is compatible with qiskit libraries. """

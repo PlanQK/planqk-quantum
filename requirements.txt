@@ -1,3 +1,10 @@
 'azure-quantum[qiskit]'
 #qiskit-aer>=0.9.1
-requests
+requests~=2.28.1
+
+pytest~=7.2.0
+busypie~=0.5.1
+responses~=0.22.0
+numpy~=1.23.5
+msrest~=0.7.1
+setuptools~=65.5.0

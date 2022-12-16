@@ -1,4 +1,6 @@
+import re
 import os
+import json
 import logging
 
 import requests
@@ -10,8 +12,17 @@ from .exceptions import PlanqkClientError
 def base_url():
     return os.environ.get('PLANQK_QUANTUM_BASE_URL', 'https://quantum-engine.platform.planqk.de')
 
+# TODO read always from env first even if token provided
 
 logger = logging.getLogger(__name__)
+
+def _dict_values_to_string(obj_values_dict: dict):
+    for key in obj_values_dict:
+        obj_value = obj_values_dict[key]
+        if not isinstance(obj_value, str):
+            str_value = json.dumps(obj_value)
+            obj_values_dict[key] = str_value
+
 
 
 class PlanqkClient(object):
@@ -31,11 +42,14 @@ class PlanqkClient(object):
     def submit_job(self, job) -> dict:
         headers = self._get_default_headers()
         headers["Content-Type"] = "application/json"
-        response = requests.post(f'{base_url()}/jobs', json=job.toDict(), headers=headers)
+
+        job_dict = job.toDict()
+        _dict_values_to_string(job_dict.get("meta_data"))
+
+        response = requests.post(f'{base_url()}/jobs', json=job_dict, headers=headers)
         if not response:
             raise PlanqkClientError(f'Error submitting job (HTTP {response.status_code}: {response.text})')
         return response.json()
-        #return _create_planqk_job_object(response.json())
 
     def get_job(self, job_id: str) -> dict:
         headers = self._get_default_headers()
@@ -64,4 +78,4 @@ class PlanqkClient(object):
             )
 
     def _get_default_headers(self):
-        return {'X-Access-Token': self.credentials.get_access_token()}
+        return {'X-Auth-Token': self.credentials.get_access_token()}
