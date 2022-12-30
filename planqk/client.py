@@ -12,9 +12,11 @@ from .exceptions import PlanqkClientError
 def base_url():
     return os.environ.get('PLANQK_QUANTUM_BASE_URL', 'https://quantum-engine.platform.planqk.de')
 
+
 # TODO read always from env first even if token provided
 
 logger = logging.getLogger(__name__)
+
 
 def _dict_values_to_string(obj_values_dict: dict):
     for key in obj_values_dict:
@@ -22,7 +24,6 @@ def _dict_values_to_string(obj_values_dict: dict):
         if not isinstance(obj_value, str):
             str_value = json.dumps(obj_value)
             obj_values_dict[key] = str_value
-
 
 
 class PlanqkClient(object):
@@ -44,7 +45,7 @@ class PlanqkClient(object):
         headers["Content-Type"] = "application/json"
 
         job_dict = job.toDict()
-        _dict_values_to_string(job_dict.get("meta_data"))
+        _dict_values_to_string(job_dict.get("metadata"))
 
         response = requests.post(f'{base_url()}/jobs', json=job_dict, headers=headers)
         if not response:

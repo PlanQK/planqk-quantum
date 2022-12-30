@@ -4,6 +4,7 @@ from planqk.client import logger, PlanqkClient
 
 DEFAULT_TIMEOUT = 300  # Default timeout for waiting for job to complete
 
+
 class ErrorData(object):
     def __init__(self, code: str, message: str):
         self.code = code
@@ -31,7 +32,7 @@ class PlanqkJob(object):
                             input_data: str = None,
                             name: str = None,
                             input_params: object = None,
-                            meta_data: dict[str, str] = None,
+                            metadata: dict[str, str] = None,
                             output_data_format: str = None,
                             output_data: object = None,
                             status: str = None,
@@ -39,6 +40,7 @@ class PlanqkJob(object):
                             begin_execution_time: str = None,
                             end_execution_time: str = None,
                             cancellation_time: str = None,
+                            tags: list[str] = [],
                             error_data: ErrorData = None):
 
         self.job_id = job_id
@@ -48,7 +50,7 @@ class PlanqkJob(object):
         self.input_params = input_params
         self.provider_id = provider_id
         self.target = target
-        self.meta_data = meta_data
+        self.metadata = metadata
         self.output_data = output_data
         self.output_data_format = output_data_format
         self.status = status
@@ -56,26 +58,26 @@ class PlanqkJob(object):
         self.begin_execution_time = begin_execution_time
         self.end_execution_time = end_execution_time
         self.cancellation_time = cancellation_time
+        self.tags = tags
         self.error_data = error_data
-        # self.tags = kwargs.get('tags', None) TODO qiskit specific?
 
     def _json_dict_to_params(self, job_details_dict):
-        return dict(provider_id=job_details_dict['providerId'],
+        return dict(provider_id=job_details_dict['provider_id'],
                     target=job_details_dict['target'],
-                    input_data_format=job_details_dict['inputDataFormat'],
-                    job_id=self.job_id,
+                    input_data_format=job_details_dict['input_data_format'],
+                    job_id=job_details_dict['id'],
                     input_data=job_details_dict.get('input_data_format', None),
                     name=job_details_dict.get('name', None),
-                    input_params=job_details_dict.get('inputParams', None),
+                    input_params=job_details_dict.get('input_params', None),
                     metadata=job_details_dict.get('metadata', None),
-                    output_data_format=job_details_dict.get('outputDataFormat', None),
-                    output_data=job_details_dict.get('outputData', None),
+                    output_data_format=job_details_dict.get('output_data_format', None),
+                    output_data=job_details_dict.get('output_data', None),
                     status=job_details_dict.get('status', None),
-                    creation_time=job_details_dict.get('creationTime', None),
-                    begin_execution_time=job_details_dict.get('beginExecutionTime', None),
-                    end_execution_time=job_details_dict.get('endExecutionTime', None),
-                    cancellation_time=job_details_dict.get('cancellationTime', None),
-                    error_data=job_details_dict.get('errorData', None))
+                    creation_time=job_details_dict.get('creation_time', None),
+                    begin_execution_time=job_details_dict.get('begin_execution_time', None),
+                    end_execution_time=job_details_dict.get('end_execution_time', None),
+                    cancellation_time=job_details_dict.get('cancellation_time', None),
+                    error_data=job_details_dict.get('error_data', None))
 
     def wait_until_completed(
             self,
@@ -103,7 +105,7 @@ class PlanqkJob(object):
 
             logger.debug(
                 f"Waiting for job {self.id},"
-                + f"it is in status '{self.details.status}'"
+                + f"it is in status '{self.status}'"
             )
             if print_progress:
                 print(".", end="", flush=True)
@@ -119,7 +121,6 @@ class PlanqkJob(object):
     def has_completed(self) -> bool:
         """Check if the job has completed."""
 
-        # TODO maybe we just use qiskit states here already
         return (
                 self.status == "Succeeded"
                 or self.status == "Failed"
@@ -128,16 +129,10 @@ class PlanqkJob(object):
 
     def refresh(self):
         job_details_dict = self._client.get_job(self.job_id)
-
         self._update_job_details(**self._json_dict_to_params(job_details_dict))
 
-    # def status(self):
-    #     """Return the status of the job, among the values of ``JobStatus``."""
-    #     self.refresh()
-    #     return self.status
-
     def cancel(self):
-        self._planqk_client.cancel_job(self.job_id())
+        self._client.cancel_job(self.job_id)
 
     def get_results(self, timeout_secs: float = DEFAULT_TIMEOUT) -> dict:
         if self.output_data is not None:
@@ -160,9 +155,8 @@ class PlanqkJob(object):
 
     def toDict(self) -> dict:
         # Create dict and remove private fields
-        return { key: value for key, value in vars(self).items() if not key.startswith('_') }
+        return {key: value for key, value in vars(self).items() if not key.startswith('_')}
+
     @property
     def id(self):
         return self.job_id
-
-

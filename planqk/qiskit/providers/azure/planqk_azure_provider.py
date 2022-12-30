@@ -13,8 +13,8 @@ from azure.quantum.qiskit.job import AzureQuantumJob
 from azure.quantum.qiskit.backends import *
 
 from planqk.client import PlanqkClient
-from planqk.qiskit.provider_impls.azure.planqk_azure_backend import PlanqkAzureBackend
-from planqk.qiskit.provider_impls.azure.planqk_target_factory import PlanqkTargetFactory
+from planqk.qiskit.providers.azure.planqk_azure_backend import PlanqkAzureBackend
+from planqk.qiskit.providers.azure.planqk_target_factory import PlanqkTargetFactory
 
 QISKIT_USER_AGENT = "azure-quantum-qiskit"
 

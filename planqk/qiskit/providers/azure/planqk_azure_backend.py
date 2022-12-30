@@ -7,7 +7,7 @@ import logging
 
 from planqk.client import PlanqkClient
 from planqk.planqk_job import PlanqkJob
-from planqk.qiskit.provider_impls.azure.planqk_azure_job import PlanqkAzureJob
+from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class PlanqkAzureBackend(Backend):
             input_data_format=input_data_format,
             output_data_format=output_data_format,
             input_params=input_params,
-            meta_data=metadata,
+            metadata=metadata,
             **kwargs
         )
 

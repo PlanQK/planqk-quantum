@@ -1,5 +1,3 @@
-import json
-import logging
 import logging
 import os
 import sys
@@ -7,66 +5,39 @@ import unittest
 from io import StringIO
 from uuid import UUID
 
-import pytest
-import qiskit
 from azure.identity import ClientSecretCredential
 from azure.quantum import Workspace
 from azure.quantum.qiskit import AzureQuantumProvider
 from busypie import wait
-from qiskit import QuantumCircuit, transpile
-from qiskit.providers import JobStatus, Backend
-from qiskit.result import Counts
+from qiskit.providers import JobStatus
 from qiskit.tools import job_monitor
 
-from planqk.qiskit import PlanqkQuantumProvider, PlanqkQuantumJob
+from planqk.qiskit import PlanqkQuantumProvider
+from tests.utils import get_sample_circuit, to_dict
 
 logging.basicConfig(level=logging.DEBUG)
 
 # overwrite base url
 os.environ['PLANQK_QUANTUM_BASE_URL'] = 'http://127.0.0.1:8080'
 
-# set access token
-# os.environ['PLANQK_QUANTUM_ACCESS_TOKEN'] = None
-
-# Su
 SUPPORTED_BACKENDS = {"ionq.qpu", "ionq.simulator"}
 
 
 def is_valid_uuid(uuid_to_test):
     try:
-        uuid_obj = UUID(str(uuid_to_test))
+        UUID(str(uuid_to_test))
     except ValueError:
         return False
     return True
 
 
-def to_dict(obj):
-    if not hasattr(obj, "__dict__"):
-        return obj
-    result = {}
-    for key, val in obj.__dict__.items():
-        if key.startswith("_"):
-            continue
-        element = []
-        if isinstance(val, list):
-            for item in val:
-                element.append(to_dict(item))
-        else:
-            element = to_dict(val)
-        result[key] = element
-    return result
-
-
 class AcceptanceTestSuite(unittest.TestCase):
-    # TODO get backends from azure povider
 
     def setUp(self):
         # TODO remove make configurable
         credential = ClientSecretCredential(tenant_id="3871fdd8-273b-4217-bba4-03ddd57c8785",
                                             client_id="48db1ba7-ec70-45a0-9d21-b4f4f48d129f",
                                             client_secret="THy8Q~J1u3.3UW6gqxkvVGZse6efDLslhbW.zbho")
-
-        # TODO Externalize me
 
         workspace = Workspace(
             # Format must match
@@ -79,8 +50,7 @@ class AcceptanceTestSuite(unittest.TestCase):
         )
         self.azure_provider = provider
         self.planqk_provider = PlanqkQuantumProvider(
-            "716365ea163a89638d9534721b844528ea3beaa65d147317b0855c4a5b3ad1b22b4723ab86c00a50")
-        # TODO access token hier oder in env?
+            "a0a771da52888fb4c5c8b26cd94f6fd4204c92a5af2508060ee9baef53f02935319d0bc4cf402ac2")
 
         # Ensure to see the diff of large objects
         self.maxDiff = None
@@ -113,45 +83,48 @@ class AcceptanceTestSuite(unittest.TestCase):
         assert backend.status() == exp_backend.status()
         assert backend.version == exp_backend.version
 
-    # @pytest.mark.skip(reason="enable for local integration testing")
-    def test_should_run_local_job(self):
+    def test_should_run_job(self):
 
         sim_backend = self.planqk_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(sim_backend)
+        circuit = get_sample_circuit(sim_backend)
         job = sim_backend.run(circuit, shots=1)
-        # TODO job = qiskit.execute(circuit, backend=backend, shots=1) EXECUTE?
         job_id = job.id()
 
         assert is_valid_uuid(job_id)
 
     def test_should_retrieve_job(self):
         # Given: create job
-        azure_backend = self.azure_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(azure_backend)
-        job = azure_backend.run(circuit, shots=1)
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        circuit = get_sample_circuit(sim_backend)
+        created_job = sim_backend.run(circuit, shots=1)
 
         # When
 
         # Get job via Azure
-        exp_job = azure_backend.retrieve_job(job.id())
+        azure_backend = self.azure_provider.get_backend("ionq.simulator")
+        exp_job = azure_backend.retrieve_job(created_job.id())
 
         # Get job via PlanQK
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job.id())
+        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(created_job.id())
 
         # Then
         assert exp_job.id() == job.id()
         assert exp_job.version == job.version
+        assert exp_job.metadata == job.metadata
 
     def test_should_retrieve_job_result(self):
         # Given: create job
-        azure_backend = self.azure_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(azure_backend)
-        azure_job = azure_backend.run(circuit, shots=1)
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        circuit = get_sample_circuit(sim_backend)
+        created_job = sim_backend.run(circuit, shots=1)
 
         # When
 
         # Get job result via Azure
-        exp_job_result_dict = to_dict(azure_job.result())
+        azure_backend = self.azure_provider.get_backend("ionq.simulator")
+        azure_job = azure_backend.retrieve_job(created_job.id())
+        azure_result = azure_job.result()
+        exp_job_result_dict = to_dict(azure_result)
 
         # Get job via PlanQK
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(azure_job.id())
@@ -162,29 +135,27 @@ class AcceptanceTestSuite(unittest.TestCase):
         counts = job_result_dict.get("results")[0].get('data').pop('counts')
         self.assertTrue(counts.get("111") == 1 or counts.get("000") == 1)
 
-        self.assertDictEqual(exp_job_result_dict, job_result_dict)  # TODO testfälle verheinheitlichen
+        self.assertDictEqual(exp_job_result_dict, job_result_dict)
 
     def test_should_retrieve_job_status(self):
-        azure_backend = self.azure_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(azure_backend)
-        job = azure_backend.run(circuit, shots=1)
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        circuit = get_sample_circuit(sim_backend)
+        created_job = sim_backend.run(circuit, shots=1)
 
         # Get job status via PlanQK
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job.id())
+        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(created_job.id())
         job_status = job.status()
 
         # Then
         self.assertIn(job_status.name, [JobStatus.QUEUED.name, JobStatus.DONE.name])
 
-    #  TODO unbedint die Job Funktionen von Qiskit anschauen
-
     def test_should_monitor_job(self):
-        azure_backend = self.azure_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(azure_backend)
-        azure_job = azure_backend.run(circuit, shots=1)
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        circuit = get_sample_circuit(sim_backend)
+        created_job = sim_backend.run(circuit, shots=1)
 
         # Get job status via PlanQK
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(azure_job.id())
+        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(created_job.id())
         sys.stdout = planqk_stdout = StringIO()
 
         job_monitor(job, output=planqk_stdout)
@@ -195,7 +166,7 @@ class AcceptanceTestSuite(unittest.TestCase):
 
     def test_should_cancel_job(self):
         sim_backend = self.planqk_provider.get_backend("ionq.simulator")
-        circuit = self.get_sample_circuit(sim_backend)
+        circuit = get_sample_circuit(sim_backend)
         planqk_job = sim_backend.run(circuit, shots=1)
         planqk_job.cancel()
 
@@ -206,35 +177,6 @@ class AcceptanceTestSuite(unittest.TestCase):
         wait().until_asserted(assert_job_cancelled)
 
     # TODO cirq
-
-    def test_should_execute_job_on_all_backends(self):
-        pass
-
-    def get_sample_circuit(self, backend: Backend):
-        circuit = QuantumCircuit(3, 3)
-        circuit.name = "Qiskit Sample - 3-qubit GHZ circuit"
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.cx(1, 2)
-        circuit.measure([0, 1, 2], [0, 1, 2])
-
-        circuit = transpile(circuit, backend)
-
-        return circuit
-
-    @pytest.mark.skip(reason="enable for local integration testing")
-    def test_should_execute_remote_job(self):
-        n_bits = 5
-        circuit = qiskit.QuantumCircuit(n_bits)
-        circuit.h(range(n_bits))
-        circuit.measure_all()
-        provider = PlanqkQuantumProvider()
-        backend = provider.get_backend(name='ibmq_qasm_simulator')
-        job = qiskit.execute(circuit, backend=backend, shots=1)
-        assert type(job) is PlanqkQuantumJob
-        assert type(job.status()) is JobStatus
-        result_counts = job.result().get_counts()
-        assert type(result_counts) is Counts
 
 
 if __name__ == '__main__':

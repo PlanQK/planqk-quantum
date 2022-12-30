@@ -3,9 +3,8 @@ import logging
 from qiskit.providers import ProviderV1 as Provider
 
 from planqk.client import PlanqkClient
-from planqk.planqk_job import PlanqkJob
 from planqk.credentials import DefaultCredentialsProvider
-from planqk.qiskit.provider_impls.azure.planqk_azure_provider import PlanqkAzureQuantumProvider
+from planqk.qiskit.providers.azure.planqk_azure_provider import PlanqkAzureQuantumProvider
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +30,8 @@ class PlanqkQuantumProvider(Provider):
         for provider in self._providers:
 
             for backend in provider.backends(name, **kwargs):
-                #TODO if azure provider
-                #planqk_azure_backend = type("PlanQKAzureBackend", (AzureBackendProxy, type(backend),), {}) backend.configuration()
-                #planqk_azure_backend_obj = planqk_azure_backend(backend.name(), provider)
                 backends.append(backend)
-                #TODO
 
-
-        # jo = dir(backends[0])
-        #
-        # new_class = type("NewClassName", (type(backends[0]),), {"new_method": chuck})
-        # inst = new_class("name", "provider")
-        # inst.new_method() dir(inst)
         return backends
 
 
