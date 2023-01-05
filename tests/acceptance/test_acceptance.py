@@ -17,8 +17,14 @@ from tests.utils import get_sample_circuit, to_dict
 
 logging.basicConfig(level=logging.DEBUG)
 
-# overwrite base url
-os.environ['PLANQK_QUANTUM_BASE_URL'] = 'http://127.0.0.1:8080'
+AZ_TENANT_ID = os.environ.get('AZ_TENANT_ID')
+AZ_CLIENT_ID = os.environ.get('AZ_CLIENT_ID')
+AZ_CLIENT_SECRET = os.environ.get('AZ_CLIENT_SECRET')
+AZ_QUANTUM_RESOURCE_ID = os.environ.get('AZ_QUANTUM_RESOURCE_ID')
+AZ_REGION = os.environ.get('AZ_REGION')
+
+PLANQK_QUANTUM_BASE_URL = os.environ.get('PLANQK_QUANTUM_BASE_URL')
+PLANQK_ACCESS_TOKEN = os.environ.get('PLANQK_ACCESS_TOKEN')
 
 SUPPORTED_BACKENDS = {"ionq.qpu", "ionq.simulator"}
 
@@ -34,23 +40,33 @@ def is_valid_uuid(uuid_to_test):
 class AcceptanceTestSuite(unittest.TestCase):
 
     def setUp(self):
-        # TODO remove make configurable
-        credential = ClientSecretCredential(tenant_id="3871fdd8-273b-4217-bba4-03ddd57c8785",
-                                            client_id="48db1ba7-ec70-45a0-9d21-b4f4f48d129f",
-                                            client_secret="THy8Q~J1u3.3UW6gqxkvVGZse6efDLslhbW.zbho")
+
+        self.assertIsNotNone(AZ_TENANT_ID, "Env variable AZ_TENANT_ID (Azure tenant id) not set")
+        self.assertIsNotNone(AZ_CLIENT_ID, "Env variable AZ_CLIENT_ID (Azure client id) not set")
+        self.assertIsNotNone(AZ_CLIENT_SECRET, "Env variable AZ_CLIENT_SECRET (Azure client secret) not set")
+        self.assertIsNotNone(AZ_QUANTUM_RESOURCE_ID, "Env variable AZ_QUANTUM_RESOURCE_ID "
+                                                     "(Azure quantum resource id) not set")
+        self.assertIsNotNone(AZ_REGION, "Env variable AZ_REGION (Azure region name) not set")
+        self.assertIsNotNone(PLANQK_QUANTUM_BASE_URL,
+                             "Env variable PLANQK_QUANTUM_BASE_URL (PlanQK quantum base url) not set")
+        self.assertIsNotNone(PLANQK_ACCESS_TOKEN,
+                             "Env variable PLANQK_ACCESS_TOKEN (PlanQK API access token) not set")
+
+        credential = ClientSecretCredential(tenant_id=AZ_TENANT_ID,
+                                            client_id=AZ_CLIENT_ID,
+                                            client_secret=AZ_CLIENT_SECRET)
 
         workspace = Workspace(
             # Format must match
-            resource_id="/subscriptions/57e31d8b-7609-4a9a-a8bd-c1b9a7b6042b/resourceGroups/PlanQK/providers/Microsoft.Quantum/Workspaces/planqk-workspace",
-            location='West Europe',
+            resource_id=AZ_QUANTUM_RESOURCE_ID,
+            location=AZ_REGION,
             credential=credential
         )
         provider = AzureQuantumProvider(
             workspace=workspace
         )
         self.azure_provider = provider
-        self.planqk_provider = PlanqkQuantumProvider(
-            "a0a771da52888fb4c5c8b26cd94f6fd4204c92a5af2508060ee9baef53f02935319d0bc4cf402ac2")
+        self.planqk_provider = PlanqkQuantumProvider(PLANQK_ACCESS_TOKEN)
 
         # Ensure to see the diff of large objects
         self.maxDiff = None
