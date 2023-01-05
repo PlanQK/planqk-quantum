@@ -1,6 +1,5 @@
 import os
 import unittest.mock
-from threading import Thread
 
 import responses
 from qiskit.qobj.utils import MeasLevel
@@ -123,29 +122,6 @@ class JobTestSuite(unittest.TestCase):
         self.assertEqual(results[0].meas_level, MeasLevel.CLASSIFIED)
         self.assertEqual(results[0].shots, 1)
         self.assertTrue(results[0].success)
-
-    @unittest.skip("Deactivated because of threading issues with responses framework")
-    @responses.activate
-    def test_should_not_retrieve_job_result_of_uncompleted_job(self):
-        # TODO fix test
-        job_id = MOCK_JOB['id']
-        MOCK_JOB['status'] = 'Waiting'
-        responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
-
-        responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}/result',
-                      json=MOCK_JOB_RESPONSE, status=200)
-
-        thread = Thread(target=self._poll_for_result)
-        thread.start()
-        MOCK_JOB['status'] = 'Succeeded'
-
-    def _poll_for_result(self):
-        job_id = MOCK_JOB['id']
-        responses.add(responses.GET, BASE_URL + '/backends', json=BACKENDS_MOCK_RESPONSE, status=200)
-        responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}', json=MOCK_JOB, status=200)
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
-        job.result()
 
     @responses.activate
     def test_should_cancel_job(self):

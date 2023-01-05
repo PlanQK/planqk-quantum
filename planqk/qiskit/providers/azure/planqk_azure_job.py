@@ -3,12 +3,10 @@
 ##
 
 from collections import defaultdict
-from typing import Dict
 
 import numpy as np
 
-from planqk.client import PlanqkClient
-from planqk.planqk_job import PlanqkJob
+from planqk.qiskit.planqk_job import PlanqkJob
 
 try:
     from qiskit.providers import JobV1, JobStatus
@@ -60,10 +58,8 @@ class PlanqkAzureJob(JobV1):
 
         super().__init__(backend, self._planqk_job.id, **kwargs)
 
-
     def submit(self):
         self._planqk_job.submit()
-
 
     def result(self, timeout=None, sampler_seed=None):
         """Return the results of the job."""
@@ -85,7 +81,6 @@ class PlanqkAzureJob(JobV1):
 
     def cancel(self):
         self._planqk_job.cancel()
-
 
     def status(self):
         self._planqk_job.refresh()
@@ -118,7 +113,7 @@ class PlanqkAzureJob(JobV1):
 
         if success:
             is_simulator = "sim" in self._planqk_job.target
-            if self._planqk_job.output_data_format == MICROSOFT_OUTPUT_DATA_FORMAT: #TODO fix me azure_job
+            if self._planqk_job.output_data_format == MICROSOFT_OUTPUT_DATA_FORMAT:
                 job_result["data"] = self._format_microsoft_results(sampler_seed=sampler_seed)
 
             elif self._planqk_job.output_data_format == IONQ_OUTPUT_DATA_FORMAT:

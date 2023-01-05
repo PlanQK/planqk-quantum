@@ -1,7 +1,6 @@
-import re
-import os
 import json
 import logging
+import os
 
 import requests
 

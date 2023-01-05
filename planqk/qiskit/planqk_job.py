@@ -14,6 +14,8 @@ class ErrorData(object):
 class PlanqkJob(object):
     def __init__(self, client: PlanqkClient, job_id: str = None, **job_details):
         self._client = client
+        self.output_data = None
+
         if job_id is not None:
             self.job_id = job_id
             self.refresh()
@@ -148,7 +150,6 @@ class PlanqkJob(object):
                 + f"error: {self.error_data})"
             )
 
-        # TODO object must not be defined here
         self.output_data = self._client.get_job_result(self.job_id)
 
         return self.output_data

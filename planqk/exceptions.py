@@ -14,4 +14,3 @@ class PlanqkClientError(PlanqkError):
 class CredentialUnavailableError(PlanqkError):
     pass
 
-# TODO exception handling in tests

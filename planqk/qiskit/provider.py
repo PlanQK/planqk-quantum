@@ -21,9 +21,6 @@ class PlanqkQuantumProvider(Provider):
 
         self._providers = [azure_provider]
 
-    def append_user_agent(self, value: str):
-        pass
-
     def backends(self, name=None, **kwargs):
         backends = []
 

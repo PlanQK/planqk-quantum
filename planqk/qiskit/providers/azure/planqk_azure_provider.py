@@ -18,6 +18,7 @@ from planqk.qiskit.providers.azure.planqk_target_factory import PlanqkTargetFact
 
 QISKIT_USER_AGENT = "azure-quantum-qiskit"
 
+
 # TODO add property/method docs form qiskit
 
 class PlanqkAzureQuantumProvider(Provider):
@@ -91,6 +92,6 @@ class PlanqkAzureQuantumProvider(Provider):
     def get_job(self, job_id) -> AzureQuantumJob:
         """ Returns the Job instance associated with the given id."""
         pass
-        #azure_job = self._workspace.get_job(job_id)
-        #backend = self.get_backend(azure_job.details.target)
-        #return AzureQuantumJob(backend, azure_job)
+        # azure_job = self._workspace.get_job(job_id)
+        # backend = self.get_backend(azure_job.details.target)
+        # return AzureQuantumJob(backend, azure_job)

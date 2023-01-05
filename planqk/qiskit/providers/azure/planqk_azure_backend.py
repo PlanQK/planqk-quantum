@@ -1,12 +1,11 @@
 from azure.quantum.qiskit.backends.backend import AzureBackend
-from qiskit import QuantumCircuit
 from qiskit.providers import Backend
 from qiskit.qobj import Qobj, QasmQobj
 
 import logging
 
 from planqk.client import PlanqkClient
-from planqk.planqk_job import PlanqkJob
+from planqk.qiskit.planqk_job import PlanqkJob
 from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
 
 logger = logging.getLogger(__name__)
