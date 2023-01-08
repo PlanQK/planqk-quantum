@@ -1,25 +1,15 @@
-##
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-##
+from typing import Iterable
+
 from azure.quantum.target import Target
 from qiskit.providers import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from typing import Dict, Iterable
-from azure.quantum import Workspace
-
-from azure.quantum.qiskit.job import AzureQuantumJob
-from azure.quantum.qiskit.backends import *
-
 from planqk.client import PlanqkClient
 from planqk.qiskit.providers.azure.planqk_azure_backend import PlanqkAzureBackend
+from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
 from planqk.qiskit.providers.azure.planqk_target_factory import PlanqkTargetFactory
 
 QISKIT_USER_AGENT = "azure-quantum-qiskit"
-
-
-# TODO add property/method docs form qiskit
 
 class PlanqkAzureQuantumProvider(Provider):
     def __init__(self, client: PlanqkClient):
@@ -34,17 +24,24 @@ class PlanqkAzureQuantumProvider(Provider):
         return all_subclasses
 
     def get_backend(self, name=None, **kwargs):
-        """
-        Return a single backend matching the specified filtering.
+        """Return a single backend matching the specified filtering.
+
+        Args:
+            name (str): name of the backend.
+
+        Returns:
+            Backend: a backend matching the filtering.
+
+        Raises:
+            QiskitBackendNotFoundError: if no backend could be found or
+                more than one backend matches the filtering criteria.
         """
         backends = self.backends(name, **kwargs)
         if len(backends) > 1:
             raise QiskitBackendNotFoundError("More than one backend matches the criteria")
         if not backends:
-            raise QiskitBackendNotFoundError(f"Could not find target '{name}'. \
-    Please make sure the target name is valid and that the associated provider is added to your Workspace. \
-    To add a provider to your quantum workspace on the Azure Portal, \
-    see https://aka.ms/AQ/Docs/AddProvider")
+            raise QiskitBackendNotFoundError(f"Could not find backend '{name}'. \
+                Please make sure the target name is valid.")
         return backends[0]
 
     def backends(self, name=None, provider_id=None, **kwargs):
@@ -82,16 +79,16 @@ class PlanqkAzureQuantumProvider(Provider):
 
         # Always return an iterable
         if isinstance(targets, Iterable):
-            return [self._createPlanqk_Backend(target)
+            return [self._create_planqk_backend(target)
                     for target in targets]
-        return [self._createPlanqk_Backend(targets)]
+        return [self._create_planqk_backend(targets)]
 
-    def _createPlanqk_Backend(self, target: Target):
+    def _create_planqk_backend(self, target: Target):
         return PlanqkAzureBackend(self._client, target)
 
-    def get_job(self, job_id) -> AzureQuantumJob:
+    def get_job(self, job_id) -> PlanqkAzureJob:
         """ Returns the Job instance associated with the given id."""
-        pass
-        # azure_job = self._workspace.get_job(job_id)
-        # backend = self.get_backend(azure_job.details.target)
-        # return AzureQuantumJob(backend, azure_job)
+        job = self._client.get_job(job_id)
+        backend = self.get_backend(job.target)
+
+        return PlanqkAzureJob(self._client, backend, job)

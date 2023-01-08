@@ -2,18 +2,17 @@
 # Updated version of azure.quantum.target.target_factory.TargetFactory for interacting with PlanQK backends.
 ##
 
-import warnings
 import asyncio
+import warnings
 from typing import Any, Dict, List, TYPE_CHECKING, Union, Tuple
-from azure.quantum.target import *
+
 from azure.quantum._client import models
-from azure.quantum.workspace import DEFAULT_CONTAINER_NAME_FORMAT
+from azure.quantum.target import *
 from msrest import Serializer, Deserializer
 
 from planqk.client import PlanqkClient
 
 if TYPE_CHECKING:
-    from azure.quantum import Workspace
     from azure.quantum._client.models import TargetStatus
 
 # Target ID keyword for parameter-free solvers
@@ -34,7 +33,7 @@ class PlanqkTargetFactory:
 
     def __init__(
             self,
-            base_cls: Target,
+            base_cls: object,
             client: PlanqkClient,
             default_targets: Dict[str, Any] = DEFAULT_TARGETS,
             all_targets: Dict[str, Any] = None
@@ -115,9 +114,9 @@ https://github.com/microsoft/qdk-python/issues.")
             **kwargs
     ):
         cls = self._target_cls(provider_id, status.id)
-        if hasattr(cls, "from_target_status"):
-            return cls.from_target_status(self._workspace, status, **kwargs)
-        elif cls is not None:
+        #if hasattr(cls, "from_target_status"):
+        #    return cls.from_target_status(self._workspace, status, **kwargs) TODO delete
+        if cls is not None:
             return cls(name=status.id, **kwargs)
 
     def get_targets(
@@ -156,7 +155,7 @@ https://github.com/microsoft/qdk-python/issues.")
     def _get_target_status(self, name: str, provider_id: str) -> List[Tuple[str, "TargetStatus"]]:
         """Get provider ID and status for targets"""
         response = self._client.get_backends()
-        backends: object = self._deserialize_provider_status_list(response)
+        backends = self._deserialize_provider_status_list(response)
 
         return [
             (provider.id, target)

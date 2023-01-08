@@ -140,3 +140,16 @@ class JobTestSuite(unittest.TestCase):
 
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
         self.assertEqual("CANCELLED", job.status().name)
+
+    @responses.activate
+    def test_should_get_job(self):
+        job_id = MOCK_JOB['id']
+        responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
+                      json=MOCK_JOB, status=200)
+
+        responses.add(responses.GET, BASE_URL + '/backends',
+                      json=BACKENDS_MOCK_RESPONSE, status=200)
+
+        job = self.planqk_provider.get_job(self, job_id)
+        self.assertEqual("Waiting", job.status().name)
+

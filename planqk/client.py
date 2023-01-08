@@ -43,7 +43,7 @@ class PlanqkClient(object):
         headers = self._get_default_headers()
         headers["Content-Type"] = "application/json"
 
-        job_dict = job.toDict()
+        job_dict = job.to_dict()
         _dict_values_to_string(job_dict.get("metadata"))
 
         response = requests.post(f'{base_url()}/jobs', json=job_dict, headers=headers)

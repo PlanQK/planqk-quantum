@@ -23,6 +23,7 @@ class PlanqkJob(object):
             self._update_job_details(job_id=job_id, **job_details)
 
     def submit(self):
+        """ Submits the job for execution. """
         job_details_dict = self._client.submit_job(self)
         self._update_job_details(**self._json_dict_to_params(job_details_dict))
 
@@ -130,13 +131,16 @@ class PlanqkJob(object):
         )
 
     def refresh(self):
+        """ Refreshes the job metadata from the server."""
         job_details_dict = self._client.get_job(self.job_id)
         self._update_job_details(**self._json_dict_to_params(job_details_dict))
 
     def cancel(self):
+        """Attempt to cancel the job."""
         self._client.cancel_job(self.job_id)
 
-    def get_results(self, timeout_secs: float = DEFAULT_TIMEOUT) -> dict:
+    def results(self, timeout_secs: float = DEFAULT_TIMEOUT) -> dict:
+        """Return the results of the job."""
         if self.output_data is not None:
             return self.output_data
 
@@ -154,10 +158,11 @@ class PlanqkJob(object):
 
         return self.output_data
 
-    def toDict(self) -> dict:
+    def to_dict(self) -> dict:
         # Create dict and remove private fields
         return {key: value for key, value in vars(self).items() if not key.startswith('_')}
 
     @property
     def id(self):
+        """ This job's id."""
         return self.job_id

@@ -85,38 +85,98 @@ class PlanqkAzureBackend(Backend):
         return PlanqkAzureJob(client=self._client, backend=self, planqk_job=planqk_job)
 
     def name(self):
+        """Return the backend name.
+
+        Returns:
+            str: the name of the backend.
+        """
         return self.backend.name()
 
     @property
     def backend_name(self):
+        """Return the backend name.
+
+        Returns:
+            str: the name of the backend.
+        """
         return self.backend.backend_name
 
     @property
     def backend_names(self):
+        """Return the names for the backend.
+
+        Returns:
+            tuple: the name of the backend.
+        """
         return self.backend.backend_names
 
     @property
     def configuration(self):
+        """Return the backend configuration.
+
+       Returns:
+           BackendConfiguration: the configuration for the backend.
+       """
         return self.backend.configuration
 
     @property
     def options(self):
+        """Return the options for the backend
+
+        The options of a backend are the dynamic parameters defining
+        how the backend is used. These are used to control the :meth:`run`
+        method.
+        """
         return self.backend.options
 
     @property
     def properties(self):
+        """Return the backend properties.
+
+        Returns:
+            BackendProperties: the configuration for the backend. If the backend
+            does not support properties, it returns ``None``.
+        """
         return self.backend.properties
 
     def provider(self):
+        """Return the backend Provider.
+
+        Returns:
+            Provider: the Provider responsible for the backend.
+        """
         return self.backend.provider()
 
     def set_options(self, **fields):
+        """Set the options fields for the backend
+
+        This method is used to update the options of a backend. If
+        you need to change any of the options prior to running just
+        pass in the kwarg with the new value for the options.
+
+        Args:
+            fields: The fields to update the options
+
+        Raises:
+            AttributeError: If the field passed in is not part of the
+                options
+        """
         self.backend.set_options(**fields)
 
     def status(self):
+        """Return the backend status.
+
+        Returns:
+            BackendStatus: the status of the backend.
+        """
         return self.backend.status()
 
     @property
     def version(self):
+        """Return the backend version.
+
+       Returns:
+           str: the version number of the backend.
+       """
         return self.backend.version
 

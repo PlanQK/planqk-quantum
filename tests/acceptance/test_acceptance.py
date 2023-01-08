@@ -192,7 +192,6 @@ class AcceptanceTestSuite(unittest.TestCase):
 
         wait().until_asserted(assert_job_cancelled)
 
-    # TODO cirq
 
 
 if __name__ == '__main__':

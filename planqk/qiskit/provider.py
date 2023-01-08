@@ -22,13 +22,25 @@ class PlanqkQuantumProvider(Provider):
         self._providers = [azure_provider]
 
     def backends(self, name=None, **kwargs):
+        """Return a list of backends matching the specified filtering.
+        Args:
+            name (str): name of the backend.
+            **kwargs: dict used for filtering.
+        Returns:
+            list[Backend]: a list of Backends that match the filtering
+                criteria.
+        """
         backends = []
 
         for provider in self._providers:
-
             for backend in provider.backends(name, **kwargs):
                 backends.append(backend)
 
         return backends
+
+    def get_job(self, job_id):
+        """ Returns the Job instance associated with the given id."""
+        for provider in self._providers:
+            provider.get_job(job_id)
 
 

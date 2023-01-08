@@ -1,11 +1,8 @@
-##
-# Adapted from AzureQuantumJob
-##
-
 from collections import defaultdict
 
 import numpy as np
 
+from planqk.client import PlanqkClient
 from planqk.qiskit.planqk_job import PlanqkJob
 
 try:
@@ -23,6 +20,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Azure status codes being used here
 AzureJobStatusMap = {
     "Succeeded": JobStatus.DONE,
     "Waiting": JobStatus.QUEUED,
@@ -42,9 +40,9 @@ class PlanqkAzureJob(JobV1):
 
     def __init__(
             self,
-            client,
-            backend,
-            planqk_job=None,
+            client: PlanqkClient,
+            backend, #TODO PlanqkAzureBackend causes circular depedency -> use job details
+            planqk_job: PlanqkJob = None,
             **kwargs
     ) -> None:
         if planqk_job is None:
@@ -59,6 +57,7 @@ class PlanqkAzureJob(JobV1):
         super().__init__(backend, self._planqk_job.id, **kwargs)
 
     def submit(self):
+        """ Submits the job for execution. """
         self._planqk_job.submit()
 
     def result(self, timeout=None, sampler_seed=None):
@@ -151,7 +150,7 @@ class PlanqkAzureJob(JobV1):
 
     def _format_ionq_results(self, sampler_seed=None, is_simulator=False):
         """ Translate IonQ's histogram data into a format that can be consumed by qiskit libraries. """
-        az_result = self._planqk_job.get_results()
+        az_result = self._planqk_job.results()
         shots = int(self._planqk_job.input_params['shots']) \
             if 'shots' in self._planqk_job.input_params \
             else self._backend.options.get('shots')
@@ -182,7 +181,7 @@ class PlanqkAzureJob(JobV1):
 
     def _format_microsoft_results(self, sampler_seed=None, is_simulator=False):
         """ Translate Microsoft's job results histogram into a format that can be consumed by qiskit libraries. """
-        az_result = self._planqk_job.get_results()
+        az_result = self._planqk_job.results()
         shots = int(self._planqk_job.input_params['shots']) \
             if 'shots' in self._planqk_job.input_params \
             else self._backend.options.get('shots')
@@ -213,7 +212,7 @@ class PlanqkAzureJob(JobV1):
 
     def _format_honeywell_results(self):
         """ Translate IonQ's histogram data into a format that can be consumed by qiskit libraries. """
-        az_result = self._planqk_job.get_results()
+        az_result = self._planqk_job.results()
         all_bitstrings = [
             bitstrings for classical_register, bitstrings
             in az_result.items() if classical_register != "access_token"
@@ -231,5 +230,5 @@ class PlanqkAzureJob(JobV1):
 
     def _format_unknown_results(self):
         """ This method is called to format Job results data when the job output is in an unknown format."""
-        az_result = self._planqk_job.get_results()
+        az_result = self._planqk_job.results()
         return az_result
