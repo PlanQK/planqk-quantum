@@ -41,6 +41,8 @@ class PlanqkQuantumProvider(Provider):
     def get_job(self, job_id):
         """ Returns the Job instance associated with the given id."""
         for provider in self._providers:
-            provider.get_job(job_id)
+            job = provider.get_job(job_id)
+            if job is not None:
+                return job
 
 
