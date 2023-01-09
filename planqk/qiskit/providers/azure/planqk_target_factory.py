@@ -114,8 +114,6 @@ https://github.com/microsoft/qdk-python/issues.")
             **kwargs
     ):
         cls = self._target_cls(provider_id, status.id)
-        #if hasattr(cls, "from_target_status"):
-        #    return cls.from_target_status(self._workspace, status, **kwargs) TODO delete
         if cls is not None:
             return cls(name=status.id, **kwargs)
 

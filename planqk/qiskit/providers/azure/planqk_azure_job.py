@@ -41,7 +41,7 @@ class PlanqkAzureJob(JobV1):
     def __init__(
             self,
             client: PlanqkClient,
-            backend, #TODO PlanqkAzureBackend causes circular depedency -> use job details
+            backend,  # TODO PlanqkAzureBackend causes circular depedency -> use job details
             planqk_job: PlanqkJob = None,
             **kwargs
     ) -> None:

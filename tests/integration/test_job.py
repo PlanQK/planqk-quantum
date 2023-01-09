@@ -150,6 +150,6 @@ class JobTestSuite(unittest.TestCase):
         responses.add(responses.GET, BASE_URL + '/backends',
                       json=BACKENDS_MOCK_RESPONSE, status=200)
 
-        job = self.planqk_provider.get_job(self, job_id)
-        self.assertEqual("Waiting", job.status().name)
+        job = self.planqk_provider.get_job(job_id)
+        self.assertEqual("QUEUED", job.status().name)
 

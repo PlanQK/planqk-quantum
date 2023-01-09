@@ -11,6 +11,25 @@ class ErrorData(object):
         self.message = message
 
 
+def _json_dict_to_params(job_details_dict):
+    return dict(provider_id=job_details_dict['provider_id'],
+                target=job_details_dict['target'],
+                input_data_format=job_details_dict['input_data_format'],
+                job_id=job_details_dict['id'],
+                input_data=job_details_dict.get('input_data_format', None),
+                name=job_details_dict.get('name', None),
+                input_params=job_details_dict.get('input_params', None),
+                metadata=job_details_dict.get('metadata', None),
+                output_data_format=job_details_dict.get('output_data_format', None),
+                output_data=job_details_dict.get('output_data', None),
+                status=job_details_dict.get('status', None),
+                creation_time=job_details_dict.get('creation_time', None),
+                begin_execution_time=job_details_dict.get('begin_execution_time', None),
+                end_execution_time=job_details_dict.get('end_execution_time', None),
+                cancellation_time=job_details_dict.get('cancellation_time', None),
+                error_data=job_details_dict.get('error_data', None))
+
+
 class PlanqkJob(object):
     def __init__(self, client: PlanqkClient, job_id: str = None, **job_details):
         self._client = client
@@ -25,7 +44,7 @@ class PlanqkJob(object):
     def submit(self):
         """ Submits the job for execution. """
         job_details_dict = self._client.submit_job(self)
-        self._update_job_details(**self._json_dict_to_params(job_details_dict))
+        self._update_job_details(**_json_dict_to_params(job_details_dict))
 
     def _update_job_details(self,
                             provider_id: str,
@@ -63,24 +82,6 @@ class PlanqkJob(object):
         self.cancellation_time = cancellation_time
         self.tags = tags
         self.error_data = error_data
-
-    def _json_dict_to_params(self, job_details_dict):
-        return dict(provider_id=job_details_dict['provider_id'],
-                    target=job_details_dict['target'],
-                    input_data_format=job_details_dict['input_data_format'],
-                    job_id=job_details_dict['id'],
-                    input_data=job_details_dict.get('input_data_format', None),
-                    name=job_details_dict.get('name', None),
-                    input_params=job_details_dict.get('input_params', None),
-                    metadata=job_details_dict.get('metadata', None),
-                    output_data_format=job_details_dict.get('output_data_format', None),
-                    output_data=job_details_dict.get('output_data', None),
-                    status=job_details_dict.get('status', None),
-                    creation_time=job_details_dict.get('creation_time', None),
-                    begin_execution_time=job_details_dict.get('begin_execution_time', None),
-                    end_execution_time=job_details_dict.get('end_execution_time', None),
-                    cancellation_time=job_details_dict.get('cancellation_time', None),
-                    error_data=job_details_dict.get('error_data', None))
 
     def wait_until_completed(
             self,
@@ -133,7 +134,7 @@ class PlanqkJob(object):
     def refresh(self):
         """ Refreshes the job metadata from the server."""
         job_details_dict = self._client.get_job(self.job_id)
-        self._update_job_details(**self._json_dict_to_params(job_details_dict))
+        self._update_job_details(**_json_dict_to_params(job_details_dict))
 
     def cancel(self):
         """Attempt to cancel the job."""
