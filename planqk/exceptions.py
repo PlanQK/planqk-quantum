@@ -13,4 +13,3 @@ class PlanqkClientError(PlanqkError):
 
 class CredentialUnavailableError(PlanqkError):
     pass
-

@@ -1,7 +1,3 @@
-##
-# Updated version of azure.quantum.target.target_factory.TargetFactory for interacting with PlanQK backends.
-##
-
 import asyncio
 import warnings
 from typing import Any, Dict, List, TYPE_CHECKING, Union, Tuple
@@ -20,8 +16,8 @@ PARAMETER_FREE = "parameterfree"
 
 
 class PlanqkTargetFactory:
-    """Factory class for generating a Target based on a
-    provider and target name
+    """
+    Factory class for generating a Target based on a provider and target name
     """
     __instances = {}
 
@@ -38,25 +34,12 @@ class PlanqkTargetFactory:
             default_targets: Dict[str, Any] = DEFAULT_TARGETS,
             all_targets: Dict[str, Any] = None
     ):
-        """Target factory class for creating targets
-        based on a name and/or provider ID.
-
-        :param base_cls: Base class for findng first and second
-            generation child classes.
-        :type base_cls: Target
-        :param client: PlanQK Backend Client
-        :type client: PlanqkClient
-        :param default_targets: Dictionary of default target classes keyed
-            by provider ID, defaults to DEFAULT_TARGETS
-        :type default_targets: Dict[str, Any], optional
-        :param all_targets: Dictionary of all target classes by name,
-            optional. Defaults to finding all first and second degree
-            subclasses of base_cls by name via cls.target_names.
-        :type all_targets: Dict[str, Any]
+        """
+        Target factory class for creating targets based on a name and/or provider ID.
         """
         self._base_cls = base_cls
         self._client = client
-        # case insensitive lookup
+        # case-insensitive lookup
         self._default_targets = {k.lower(): v for k, v in default_targets.items()}
         self._all_targets = all_targets or self._get_all_target_cls()
 
@@ -65,7 +48,9 @@ class PlanqkTargetFactory:
         self._deserialize = Deserializer(client_models)
 
     def _get_all_target_cls(self) -> Dict[str, Target]:
-        """Get all target classes by target name"""
+        """
+        Get all target classes by target name.
+        """
         return {
             name.lower(): _t for t in self._base_cls.__subclasses__()
             for _t in t.__subclasses__() + [t]
@@ -82,22 +67,15 @@ class PlanqkTargetFactory:
             return self._default_targets[provider_id.lower()]
 
         warnings.warn(
-            f"No default target specified for provider {provider_id}. \
-Please check the provider name and try again or create an issue here: \
-https://github.com/microsoft/qdk-python/issues.")
+            f"No default target specified for provider {provider_id}. "
+            f"Please check the provider name and try again or create an issue here: "
+            f"https://github.com/microsoft/qdk-python/issues."
+        )
         return Target
 
-    def create_target(
-            self, provider_id: str, name: str, **kwargs
-    ) -> Target:
-        """Create target from provider ID and target name.
-
-        :param provider_id: Provider name
-        :type provider_id: str
-        :param name: Target name
-        :type name: str
-        :return: Target instance
-        :rtype: Target
+    def create_target(self, provider_id: str, name: str, **kwargs) -> Target:
+        """
+        Create target from provider ID and target name.
         """
         cls = self._target_cls(provider_id, name)
         if cls is not None:
@@ -123,15 +101,8 @@ https://github.com/microsoft/qdk-python/issues.")
             provider_id: str,
             **kwargs
     ) -> Union[Target, List[Target]]:
-        """Retrieve targets that are available in PlanQK
-        filtered by name and provider ID.
-
-        :param name: Target name
-        :type name: str
-        :param provider_id: Provider name
-        :type provider_id: str
-        :return: One or more Target objects
-        :rtype: Union[Target, List[Target]]
+        """
+        Retrieve targets that are available in PlanQK filtered by name and provider ID.
         """
         target_statuses = self._get_target_status(name, provider_id)
 
@@ -143,15 +114,16 @@ https://github.com/microsoft/qdk-python/issues.")
             return [
                 self.from_target_status(_provider_id, status, **kwargs)
                 for _provider_id, status in target_statuses
-                if PARAMETER_FREE not in status.id
-                   and (
-                           _provider_id.lower() in self._default_targets
-                           or status.id in self._all_targets
-                   )
+                if PARAMETER_FREE not in status.id and (
+                        _provider_id.lower() in self._default_targets
+                        or status.id in self._all_targets
+                )
             ]
 
     def _get_target_status(self, name: str, provider_id: str) -> List[Tuple[str, "TargetStatus"]]:
-        """Get provider ID and status for targets"""
+        """
+        Get provider ID and status for targets.
+        """
         response = self._client.get_backends()
         backends = self._deserialize_provider_status_list(response)
 
@@ -159,8 +131,9 @@ https://github.com/microsoft/qdk-python/issues.")
             (provider.id, target)
             for provider in backends
             for target in provider.targets
-            if (provider_id is None or provider.id.lower() == provider_id.lower())
-               and (name is None or target.id.lower() == name.lower())
+            if (provider_id is None or provider.id.lower() == provider_id.lower()) and (
+                    name is None or target.id.lower() == name.lower()
+            )
         ]
 
     def _deserialize_provider_status_list(self, provider_status_list_json):

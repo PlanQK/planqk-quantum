@@ -1,4 +1,6 @@
-azure-quantum[qiskit]==0.24.208024
+azure-quantum==0.24.208024
+qiskit-ionq==0.1.4
+qiskit-terra==0.19.1
 requests==2.28.1
 numpy==1.24.1
 msrest==0.7.1

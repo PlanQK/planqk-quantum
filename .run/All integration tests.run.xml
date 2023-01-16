@@ -1,14 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="All Tests" type="tests" factoryName="Autodetect">
+  <configuration default="false" name="All integration tests" type="tests" factoryName="Autodetect">
     <module name="planqk-quantum" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <envs>
-      <env name="PLANQK_QUANTUM_ACCESS_TOKEN" value="7439cead03a3429bd4f49dbf832fa181b0ffc01cb4435a19e6ae736aa1126055aa64da0faada22c8" />
-      <env name="PLANQK_QUANTUM_BASE_URL" value="http://quantum-engine.34.107.19.77.nip.io" />
-    </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests/integration" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -20,11 +16,11 @@
       <option name="IS_IGNORE_MISSING_FILES" value="false" />
       <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
       <ENTRIES>
-        <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
       </ENTRIES>
     </EXTENSION>
     <option name="_new_additionalArguments" value="&quot;&quot;" />
-    <option name="_new_target" value="&quot;$PROJECT_DIR$/tests&quot;" />
+    <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/integration&quot;" />
     <option name="_new_targetType" value="&quot;PATH&quot;" />
     <method v="2" />
   </configuration>

@@ -1,11 +1,11 @@
+import logging
+
 from azure.quantum.qiskit.backends.backend import AzureBackend
 from qiskit.providers import Backend
 from qiskit.qobj import Qobj, QasmQobj
 
-import logging
-
 from planqk.client import PlanqkClient
-from planqk.qiskit.planqk_job import PlanqkJob
+from planqk.qiskit.job import PlanqkJob
 from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,9 @@ class PlanqkAzureBackend(Backend):
         self.backend = azure_backend
 
     def run(self, circuit, **kwargs):
-        """Submits the given circuit to run on an Azure Quantum backend."""
+        """
+        Submits the given circuit to run on an Azure Quantum backend.
+        """
 
         # Some Qiskit features require passing lists of circuits, so unpack those here.
         # We currently only support single-experiment jobs.
@@ -80,12 +82,15 @@ class PlanqkAzureBackend(Backend):
         return job
 
     def retrieve_job(self, job_id) -> PlanqkAzureJob:
-        """ Returns the Job instance associated with the given id."""
+        """
+        Returns the Job instance associated with the given id.
+        """
         planqk_job = PlanqkJob(self._client, job_id=job_id)
         return PlanqkAzureJob(client=self._client, backend=self, planqk_job=planqk_job)
 
     def name(self):
-        """Return the backend name.
+        """
+        Return the backend name.
 
         Returns:
             str: the name of the backend.
@@ -94,7 +99,8 @@ class PlanqkAzureBackend(Backend):
 
     @property
     def backend_name(self):
-        """Return the backend name.
+        """
+        Return the backend name.
 
         Returns:
             str: the name of the backend.
@@ -103,7 +109,8 @@ class PlanqkAzureBackend(Backend):
 
     @property
     def backend_names(self):
-        """Return the names for the backend.
+        """
+        Return the names for the backend.
 
         Returns:
             tuple: the name of the backend.
@@ -112,7 +119,8 @@ class PlanqkAzureBackend(Backend):
 
     @property
     def configuration(self):
-        """Return the backend configuration.
+        """
+        Return the backend configuration.
 
        Returns:
            BackendConfiguration: the configuration for the backend.
@@ -121,17 +129,18 @@ class PlanqkAzureBackend(Backend):
 
     @property
     def options(self):
-        """Return the options for the backend
+        """
+        Return the options for the backend.
 
         The options of a backend are the dynamic parameters defining
-        how the backend is used. These are used to control the :meth:`run`
-        method.
+        how the backend is used. These are used to control the :meth:`run` method.
         """
         return self.backend.options
 
     @property
     def properties(self):
-        """Return the backend properties.
+        """
+        Return the backend properties.
 
         Returns:
             BackendProperties: the configuration for the backend. If the backend
@@ -140,7 +149,8 @@ class PlanqkAzureBackend(Backend):
         return self.backend.properties
 
     def provider(self):
-        """Return the backend Provider.
+        """
+        Return the backend Provider.
 
         Returns:
             Provider: the Provider responsible for the backend.
@@ -148,7 +158,8 @@ class PlanqkAzureBackend(Backend):
         return self.backend.provider()
 
     def set_options(self, **fields):
-        """Set the options fields for the backend
+        """
+        Set the options fields for the backend.
 
         This method is used to update the options of a backend. If
         you need to change any of the options prior to running just
@@ -164,7 +175,8 @@ class PlanqkAzureBackend(Backend):
         self.backend.set_options(**fields)
 
     def status(self):
-        """Return the backend status.
+        """
+        Return the backend status.
 
         Returns:
             BackendStatus: the status of the backend.
@@ -173,10 +185,10 @@ class PlanqkAzureBackend(Backend):
 
     @property
     def version(self):
-        """Return the backend version.
+        """
+        Return the backend version.
 
        Returns:
            str: the version number of the backend.
        """
         return self.backend.version
-

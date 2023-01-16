@@ -31,6 +31,7 @@ def _json_dict_to_params(job_details_dict):
 
 
 class PlanqkJob(object):
+
     def __init__(self, client: PlanqkClient, job_id: str = None, **job_details):
         self._client = client
         self.output_data = None
@@ -42,7 +43,9 @@ class PlanqkJob(object):
             self._update_job_details(job_id=job_id, **job_details)
 
     def submit(self):
-        """ Submits the job for execution. """
+        """
+        Submits the job for execution.
+        """
         job_details_dict = self._client.submit_job(self)
         self._update_job_details(**_json_dict_to_params(job_details_dict))
 
@@ -89,16 +92,8 @@ class PlanqkJob(object):
             timeout_secs=None,
             print_progress=True
     ) -> None:
-        """Keeps refreshing the Job's details
-        until it reaches a finished status.
-
-        :param max_poll_wait_secs: Maximum poll wait time, defaults to 30
-        :type max_poll_wait_secs: int, optional
-        :param timeout_secs: Timeout in seconds, defaults to None
-        :type timeout_secs: int, optional
-        :param print_progress: Print "." to stdout to display progress
-        :type print_progress: bool, optional
-        :raises TimeoutError: If the total poll time exceeds timeout, raise
+        """
+        Wait until the job has completed.
         """
         self.refresh()
         poll_wait = 0.2
@@ -106,11 +101,7 @@ class PlanqkJob(object):
         while not self.has_completed():
             if timeout_secs is not None and total_time >= timeout_secs:
                 raise TimeoutError(f"The wait time has exceeded {timeout_secs} seconds.")
-
-            logger.debug(
-                f"Waiting for job {self.id},"
-                + f"it is in status '{self.status}'"
-            )
+            logger.debug(f"Waiting for job {self.id}; it is in status '{self.status}'")
             if print_progress:
                 print(".", end="", flush=True)
             time.sleep(poll_wait)
@@ -123,25 +114,28 @@ class PlanqkJob(object):
             )
 
     def has_completed(self) -> bool:
-        """Check if the job has completed."""
-
-        return (
-                self.status == "Succeeded"
-                or self.status == "Failed"
-                or self.status == "Cancelled"
-        )
+        """
+        Check if the job has completed.
+        """
+        return self.status == "Succeeded" or self.status == "Failed" or self.status == "Cancelled"
 
     def refresh(self):
-        """ Refreshes the job metadata from the server."""
+        """
+        Refreshes the job metadata from the server.
+        """
         job_details_dict = self._client.get_job(self.job_id)
         self._update_job_details(**_json_dict_to_params(job_details_dict))
 
     def cancel(self):
-        """Attempt to cancel the job."""
+        """
+        Attempt to cancel the job.
+        """
         self._client.cancel_job(self.job_id)
 
     def results(self, timeout_secs: float = DEFAULT_TIMEOUT) -> dict:
-        """Return the results of the job."""
+        """
+        Return the results of the job.
+        """
         if self.output_data is not None:
             return self.output_data
 
@@ -160,10 +154,14 @@ class PlanqkJob(object):
         return self.output_data
 
     def to_dict(self) -> dict:
-        # Create dict and remove private fields
+        """
+        Return a dictionary representation of the job.
+        """
         return {key: value for key, value in vars(self).items() if not key.startswith('_')}
 
     @property
     def id(self):
-        """ This job's id."""
+        """
+        This job's id.
+        """
         return self.job_id

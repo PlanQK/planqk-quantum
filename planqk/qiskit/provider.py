@@ -44,5 +44,3 @@ class PlanqkQuantumProvider(Provider):
             job = provider.get_job(job_id)
             if job is not None:
                 return job
-
-

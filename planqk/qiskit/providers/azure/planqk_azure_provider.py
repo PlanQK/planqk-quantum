@@ -5,7 +5,7 @@ from qiskit.providers import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from planqk.client import PlanqkClient
-from planqk.qiskit.planqk_job import PlanqkJob
+from planqk.qiskit.job import PlanqkJob
 from planqk.qiskit.providers.azure.planqk_azure_backend import PlanqkAzureBackend
 from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
 from planqk.qiskit.providers.azure.planqk_target_factory import PlanqkTargetFactory
@@ -14,6 +14,7 @@ QISKIT_USER_AGENT = "azure-quantum-qiskit"
 
 
 class PlanqkAzureQuantumProvider(Provider):
+
     def __init__(self, client: PlanqkClient):
         self._backends = None
         self._client = client
@@ -26,7 +27,8 @@ class PlanqkAzureQuantumProvider(Provider):
         return all_subclasses
 
     def get_backend(self, name=None, **kwargs):
-        """Return a single backend matching the specified filtering.
+        """
+        Return a single backend matching the specified filtering.
 
         Args:
             name (str): name of the backend.
@@ -47,7 +49,9 @@ class PlanqkAzureQuantumProvider(Provider):
         return backends[0]
 
     def backends(self, name=None, provider_id=None, **kwargs):
-        """Return a list of backends matching the specified filtering.
+        """
+        Return a list of backends matching the specified filtering.
+
         Args:
             name (str): name of the backend.
             provider_id (str): Provider name
@@ -90,7 +94,9 @@ class PlanqkAzureQuantumProvider(Provider):
         return PlanqkAzureBackend(self._client, target)
 
     def get_job(self, job_id) -> PlanqkAzureJob:
-        """ Returns the Job instance associated with the given id."""
+        """
+        Returns the Job instance associated with the given id.
+        """
         job_dict = self._client.get_job(job_id)
         job = PlanqkJob(self._client, job_id, **job_dict)
         backend = self.get_backend(job.target)
