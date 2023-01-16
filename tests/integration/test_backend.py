@@ -68,8 +68,5 @@ class BackendTestSuite(unittest.TestCase):
         responses.add(responses.GET, BASE_URL + '/backends',
                       json=BACKENDS_MOCK_RESPONSE, status=401)
 
-        # TODO add meaningful error message to 401 in qiskit middleware
-
         with self.assertRaises(PlanqkClientError):
             self.planqk_provider.get_backend("ionq.qpu")
-
