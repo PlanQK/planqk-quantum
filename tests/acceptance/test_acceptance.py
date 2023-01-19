@@ -128,6 +128,25 @@ class AcceptanceTestSuite(unittest.TestCase):
         assert exp_job.version == job.version
         assert exp_job.metadata == job.metadata
 
+    def test_should_retrieve_job_via_provider(self):
+        # Given: create job
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        circuit = get_sample_circuit(sim_backend)
+        created_job = sim_backend.run(circuit, shots=1)
+
+        # When
+
+        # Get job via Azure
+        exp_job = self.azure_provider.get_job(created_job.id())
+
+        # Get job via PlanQK
+        job = self.planqk_provider.get_job(created_job.id())
+
+        # Then
+        assert exp_job.id() == job.id()
+        assert exp_job.version == job.version
+        assert exp_job.metadata == job.metadata
+
     def test_should_retrieve_job_result(self):
         # Given: create job
         sim_backend = self.planqk_provider.get_backend("ionq.simulator")
@@ -191,7 +210,6 @@ class AcceptanceTestSuite(unittest.TestCase):
             assert job_status.name == JobStatus.CANCELLED.name
 
         wait().until_asserted(assert_job_cancelled)
-
 
 
 if __name__ == '__main__':
