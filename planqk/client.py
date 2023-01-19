@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def base_url():
-    return os.environ.get("PLANQK_QUANTUM_BASE_URL", "https://quantum-engine.platform.planqk.de")
+    return os.environ.get("PLANQK_QUANTUM_BASE_URL", "https://platform.planqk.de/qiskit")
 
 
 def service_execution_id():
