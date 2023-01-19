@@ -2,8 +2,6 @@ import time
 
 from planqk.client import logger, PlanqkClient
 
-DEFAULT_TIMEOUT = 300  # Default timeout for waiting for job to complete
-
 
 class ErrorData(object):
     def __init__(self, code: str, message: str):
@@ -86,12 +84,7 @@ class PlanqkJob(object):
         self.tags = tags
         self.error_data = error_data
 
-    def wait_until_completed(
-            self,
-            max_poll_wait_secs=30,
-            timeout_secs=None,
-            print_progress=True
-    ) -> None:
+    def wait_until_completed(self, max_poll_wait_secs=30, timeout_secs=None) -> None:
         """
         Wait until the job has completed.
         """
@@ -102,8 +95,6 @@ class PlanqkJob(object):
             if timeout_secs is not None and total_time >= timeout_secs:
                 raise TimeoutError(f"The wait time has exceeded {timeout_secs} seconds.")
             logger.debug(f"Waiting for job {self.id}; it is in status '{self.status}'")
-            if print_progress:
-                print(".", end="", flush=True)
             time.sleep(poll_wait)
             total_time += poll_wait
             self.refresh()
@@ -132,7 +123,7 @@ class PlanqkJob(object):
         """
         self._client.cancel_job(self.job_id)
 
-    def results(self, timeout_secs: float = DEFAULT_TIMEOUT) -> dict:
+    def results(self, timeout_secs: float = None) -> dict:
         """
         Return the results of the job.
         """
