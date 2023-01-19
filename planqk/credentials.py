@@ -77,14 +77,14 @@ class DefaultCredentialsProvider(CredentialProvider):
         for credential in self.credentials:
             try:
                 access_token = credential.get_access_token()
-                logger.info('%s acquired an access token from %s',
-                            self.__class__.__name__, credential.__class__.__name__)
+                logger.debug('%s acquired an access token from %s',
+                             self.__class__.__name__, credential.__class__.__name__)
                 return access_token
             except CredentialUnavailableError:
-                logger.info('%s - %s is unavailable', self.__class__.__name__, credential.__class__.__name__)
+                logger.debug('%s - %s is unavailable', self.__class__.__name__, credential.__class__.__name__)
             except Exception as e:
-                logger.info('%s.get_access_token() failed: %s raised unexpected error "%s"', self.__class__.__name__,
-                            credential.__class__.__name__, e, exc_info=logger.isEnabledFor(logging.DEBUG))
+                logger.error('%s.get_access_token() failed: %s raised unexpected error "%s"', self.__class__.__name__,
+                             credential.__class__.__name__, e, exc_info=logger.isEnabledFor(logging.DEBUG))
 
         message = f'{self.__class__.__name__} failed to retrieve an access token'
         logger.warning(message)
