@@ -1,3 +1,4 @@
+import copy
 import os
 import unittest.mock
 
@@ -21,35 +22,36 @@ class JobTestSuite(unittest.TestCase):
                       json=BACKENDS_MOCK_RESPONSE, status=200)
         # Ensure to see the diff of large objects
         self.maxDiff = None
+        self.mockJob = copy.deepcopy(MOCK_JOB)
 
     @responses.activate
     def test_should_run_job(self):
         responses.add(responses.POST, BASE_URL + '/jobs',
-                      json=MOCK_JOB, status=201)
+                      json=self.mockJob, status=201)
 
         sim_backend = self.planqk_provider.get_backend("ionq.simulator")
         circuit = get_sample_circuit(sim_backend)
         job = sim_backend.run(circuit, shots=1)
 
-        assert job.id() == MOCK_JOB['id']
+        assert job.id() == self.mockJob['id']
         job_metadata = job.metadata
-        assert job_metadata['input_data_format'] == MOCK_JOB['input_data_format']
-        assert job_metadata['input_params'] == MOCK_JOB['input_params']
-        assert job_metadata['metadata'] == MOCK_JOB['metadata']
-        assert job_metadata['name'] == MOCK_JOB['name']
-        assert job_metadata['output_data_format'] == MOCK_JOB['output_data_format']
-        assert job_metadata['provider_id'] == MOCK_JOB['provider_id']
-        assert job_metadata['target'] == MOCK_JOB['target']
+        assert job_metadata['input_data_format'] == self.mockJob['input_data_format']
+        assert job_metadata['input_params'] == self.mockJob['input_params']
+        assert job_metadata['metadata'] == self.mockJob['metadata']
+        assert job_metadata['name'] == self.mockJob['name']
+        assert job_metadata['output_data_format'] == self.mockJob['output_data_format']
+        assert job_metadata['provider_id'] == self.mockJob['provider_id']
+        assert job_metadata['target'] == self.mockJob['target']
 
     @responses.activate
     def test_should_retrieve_job(self):
-        job_id = MOCK_JOB['id']
+        job_id = self.mockJob['id']
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
 
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
 
-        assert job.id() == MOCK_JOB['id']
+        assert job.id() == self.mockJob['id']
         assert job.metadata == {}
 
     @responses.activate
@@ -67,21 +69,21 @@ class JobTestSuite(unittest.TestCase):
 
     @responses.activate
     def test_should_retrieve_job(self):
-        job_id = MOCK_JOB['id']
+        job_id = self.mockJob['id']
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
 
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
 
-        assert job.id() == MOCK_JOB['id']
+        assert job.id() == self.mockJob['id']
         assert job.metadata == {}
 
     @responses.activate
     def test_should_retrieve_job_status(self):
-        MOCK_JOB['status'] = 'Waiting'
-        job_id = MOCK_JOB['id']
+        self.mockJob['status'] = 'Waiting'
+        job_id = self.mockJob['id']
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
 
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
         # Azure uses own job state names, e.g. the job state WAITING is mapped to QUEUED
@@ -89,10 +91,10 @@ class JobTestSuite(unittest.TestCase):
 
     @responses.activate
     def test_should_retrieve_job_result_of_completed_job(self):
-        job_id = MOCK_JOB['id']
-        MOCK_JOB['status'] = 'Succeeded'
+        job_id = self.mockJob['id']
+        self.mockJob['status'] = 'Succeeded'
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
 
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}/result',
                       json=MOCK_JOB_RESPONSE, status=200)
@@ -128,28 +130,28 @@ class JobTestSuite(unittest.TestCase):
 
     @responses.activate
     def test_should_cancel_job(self):
-        job_id = MOCK_JOB['id']
+        job_id = self.mockJob['id']
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
         responses.add(responses.DELETE, f'{BASE_URL}/jobs/{job_id}', status=204)
 
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
         job.cancel()
 
         # Cancelled state is set in Azure, hence, response must be mocked
-        MOCK_JOB['status'] = 'Cancelled'
+        self.mockJob['status'] = 'Cancelled'
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
 
         job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(job_id)
         self.assertEqual("CANCELLED", job.status().name)
 
     @responses.activate
     def test_should_get_job(self):
-        job_id = MOCK_JOB['id']
-        MOCK_JOB['status'] = 'Waiting'
+        job_id = self.mockJob['id']
+        self.mockJob['status'] = 'Waiting'
         responses.add(responses.GET, f'{BASE_URL}/jobs/{job_id}',
-                      json=MOCK_JOB, status=200)
+                      json=self.mockJob, status=200)
 
         responses.add(responses.GET, BASE_URL + '/backends',
                       json=BACKENDS_MOCK_RESPONSE, status=200)
