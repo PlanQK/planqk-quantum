@@ -24,7 +24,10 @@ class EnvironmentCredential(CredentialProvider):
     def get_access_token(self) -> str:
         access_token = os.environ.get(_TOKEN_ENV_VARIABLE)
         if not access_token:
-            raise CredentialUnavailableError(f'Environment variable {_TOKEN_ENV_VARIABLE} not set')
+            access_token = os.environ.get("SERVICE_EXECUTION_TOKEN")
+            if not access_token:
+                message = f'Environment variable {_TOKEN_ENV_VARIABLE} or SERVICE_EXECUTION_TOKEN not set'
+                raise CredentialUnavailableError(message)
         return access_token
 
 
