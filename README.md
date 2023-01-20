@@ -1,4 +1,4 @@
-# Python library for the PlanQK Quantum Platform
+# Python library for the PlanQK Platform
 
 [![PyPI version](https://badge.fury.io/py/planqk-quantum.svg)](https://badge.fury.io/py/planqk-quantum)
 
