@@ -2,6 +2,9 @@
 
 [![PyPI version](https://badge.fury.io/py/planqk-quantum.svg)](https://badge.fury.io/py/planqk-quantum)
 
+PlanQK Quantum Platform library is an SDK for developing quantum circuits with [Qiskit](https://pypi.org/project/qiskit) 
+that can be performed and metered as jobs on quantum devices provided by the [PlanQK Platform](https://docs.platform.planqk.de/).  
+ 
 ## Installation
 
 The package is released on PyPI and can be installed via `pip`:
