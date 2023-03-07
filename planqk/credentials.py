@@ -71,8 +71,8 @@ class DefaultCredentialsProvider(CredentialProvider):
 
     def __init__(self, access_token=None):
         self.credentials = [
-            StaticCredential(access_token),
             EnvironmentCredential(),
+            StaticCredential(access_token),
             TokenFileCredential(),
         ]
 
