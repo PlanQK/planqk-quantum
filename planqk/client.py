@@ -26,7 +26,7 @@ def _dict_values_to_string(obj_values_dict: dict):
             obj_values_dict[key] = str_value
 
 
-class PlanqkClient(object):
+class _PlanqkClient(object):
 
     def __init__(self, credentials: DefaultCredentialsProvider):
         self.credentials = credentials

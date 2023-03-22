@@ -4,18 +4,18 @@ from azure.quantum.target import Target
 from qiskit.providers import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from planqk.client import PlanqkClient
+from planqk.client import _PlanqkClient
 from planqk.qiskit.job import PlanqkJob
-from planqk.qiskit.providers.azure.planqk_azure_backend import PlanqkAzureBackend
-from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
-from planqk.qiskit.providers.azure.planqk_target_factory import PlanqkTargetFactory
+from planqk.qiskit.providers.azure.planqk_azure_backend import _PlanqkAzureBackend
+from planqk.qiskit.providers.azure.planqk_azure_job import _PlanqkAzureJob
+from planqk.qiskit.providers.azure.planqk_target_factory import _PlanqkTargetFactory
 
 QISKIT_USER_AGENT = "azure-quantum-qiskit"
 
 
-class PlanqkAzureQuantumProvider(Provider):
+class _PlanqkAzureQuantumProvider(Provider):
 
-    def __init__(self, client: PlanqkClient):
+    def __init__(self, client: _PlanqkClient):
         self._backends = None
         self._client = client
 
@@ -70,7 +70,7 @@ class PlanqkAzureQuantumProvider(Provider):
             for name in _t.backend_names
         }
 
-        target_factory = PlanqkTargetFactory(
+        target_factory = _PlanqkTargetFactory(
             base_cls=Backend,
             client=self._client,
             default_targets=DEFAULT_TARGETS,
@@ -91,9 +91,9 @@ class PlanqkAzureQuantumProvider(Provider):
         return [self._create_planqk_backend(targets)]
 
     def _create_planqk_backend(self, target: Target):
-        return PlanqkAzureBackend(self._client, target)
+        return _PlanqkAzureBackend(self._client, target)
 
-    def get_job(self, job_id) -> PlanqkAzureJob:
+    def get_job(self, job_id) -> _PlanqkAzureJob:
         """
         Returns the Job instance associated with the given id.
         """
@@ -101,4 +101,4 @@ class PlanqkAzureQuantumProvider(Provider):
         job = PlanqkJob(self._client, job_id, **job_dict)
         backend = self.get_backend(job.target)
 
-        return PlanqkAzureJob(self._client, backend, job)
+        return _PlanqkAzureJob(self._client, backend, job)

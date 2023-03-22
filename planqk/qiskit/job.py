@@ -1,6 +1,6 @@
 import time
 
-from planqk.client import logger, PlanqkClient
+from planqk.client import logger, _PlanqkClient
 
 
 class ErrorData(object):
@@ -30,7 +30,7 @@ def _json_dict_to_params(job_details_dict):
 
 class PlanqkJob(object):
 
-    def __init__(self, client: PlanqkClient, job_id: str = None, **job_details):
+    def __init__(self, client: _PlanqkClient, job_id: str = None, **job_details):
         self._client = client
         self.output_data = None
 

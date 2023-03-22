@@ -5,7 +5,7 @@ import numpy as np
 from qiskit.providers import JobV1, JobStatus
 from qiskit.result import Result
 
-from planqk.client import PlanqkClient
+from planqk.client import _PlanqkClient
 from planqk.qiskit.job import PlanqkJob
 
 # Azure status codes being used here
@@ -24,12 +24,12 @@ IONQ_OUTPUT_DATA_FORMAT = "ionq.quantum-results.v1"
 HONEYWELL_OUTPUT_DATA_FORMAT = "honeywell.quantum-results.v1"
 
 
-class PlanqkAzureJob(JobV1):
+class _PlanqkAzureJob(JobV1):
 
     def __init__(
             self,
-            client: PlanqkClient,
-            backend,  # TODO PlanqkAzureBackend causes circular dependency -> use job details
+            client: _PlanqkClient,
+            backend,  # TODO _PlanqkAzureBackend causes circular dependency -> use job details
             planqk_job: PlanqkJob = None,
             **kwargs
     ) -> None:

@@ -6,7 +6,7 @@ from azure.quantum._client import models
 from azure.quantum.target import *
 from msrest import Serializer, Deserializer
 
-from planqk.client import PlanqkClient
+from planqk.client import _PlanqkClient
 
 if TYPE_CHECKING:
     from azure.quantum._client.models import TargetStatus
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 PARAMETER_FREE = "parameterfree"
 
 
-class PlanqkTargetFactory:
+class _PlanqkTargetFactory:
     """
     Factory class for generating a Target based on a provider and target name
     """
@@ -30,7 +30,7 @@ class PlanqkTargetFactory:
     def __init__(
             self,
             base_cls: object,
-            client: PlanqkClient,
+            client: _PlanqkClient,
             default_targets: Dict[str, Any] = DEFAULT_TARGETS,
             all_targets: Dict[str, Any] = None
     ):

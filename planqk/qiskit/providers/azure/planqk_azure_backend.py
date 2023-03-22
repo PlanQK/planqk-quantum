@@ -4,17 +4,17 @@ from azure.quantum.qiskit.backends.backend import AzureBackend
 from qiskit.providers import Backend
 from qiskit.qobj import Qobj, QasmQobj
 
-from planqk.client import PlanqkClient
+from planqk.client import _PlanqkClient
 from planqk.qiskit.job import PlanqkJob
-from planqk.qiskit.providers.azure.planqk_azure_job import PlanqkAzureJob
+from planqk.qiskit.providers.azure.planqk_azure_job import _PlanqkAzureJob
 
 logger = logging.getLogger(__name__)
 
 
-class PlanqkAzureBackend(Backend):
+class _PlanqkAzureBackend(Backend):
     backend_name = None
 
-    def __init__(self, client: PlanqkClient, azure_backend: AzureBackend):
+    def __init__(self, client: _PlanqkClient, azure_backend: AzureBackend):
         self._client = client
         self.backend = azure_backend
 
@@ -62,7 +62,7 @@ class PlanqkAzureBackend(Backend):
                 input_params[opt] = kwargs.pop(opt)
 
         logger.info(f"Submitting new job for backend {self.name()}")
-        job = PlanqkAzureJob(
+        job = _PlanqkAzureJob(
             client=self._client,
             backend=self,
             target=self.name(),
@@ -81,12 +81,12 @@ class PlanqkAzureBackend(Backend):
 
         return job
 
-    def retrieve_job(self, job_id) -> PlanqkAzureJob:
+    def retrieve_job(self, job_id) -> _PlanqkAzureJob:
         """
         Returns the Job instance associated with the given id.
         """
         planqk_job = PlanqkJob(self._client, job_id=job_id)
-        return PlanqkAzureJob(client=self._client, backend=self, planqk_job=planqk_job)
+        return _PlanqkAzureJob(client=self._client, backend=self, planqk_job=planqk_job)
 
     def name(self):
         """
