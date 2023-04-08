@@ -33,7 +33,16 @@ class _PlanqkClient(object):
 
     def get_backends(self):
         headers = self._get_default_headers()
-        response = requests.get(f"{base_url()}/backends", headers=headers)
+        response = requests.get(f"{base_url()}/backends", params={"provider": "AWS"}, headers=headers)
+        if not response:
+            raise PlanqkClientError(
+                f"Error requesting available quantum backends (HTTP {response.status_code}: {response.text})"
+            )
+        return response.json()
+
+    def get_backend_config(self, backend_id: str):
+        headers = self._get_default_headers()
+        response = requests.get(f"{base_url()}/backends/{backend_id}", headers=headers)
         if not response:
             raise PlanqkClientError(
                 f"Error requesting available quantum backends (HTTP {response.status_code}: {response.text})"

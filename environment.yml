@@ -19,3 +19,11 @@ dependencies:
       - busypie~=0.5.1
       - responses~=0.22.0
       - setuptools~=65.5.0
+      - certifi>=2021.5.30
+      - qiskit-aer>=0.10.2
+      - qiskit-terra>=0.19.2
+      - amazon-braket-sdk>=1.33.0
+      - qiskit_braket_provider>=0.0.3
+      - retrying==1.3.3
+      - setuptools>=40.1.0
+      - numpy>=1.3

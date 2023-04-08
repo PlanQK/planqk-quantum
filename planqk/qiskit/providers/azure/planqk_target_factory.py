@@ -124,7 +124,7 @@ class _PlanqkTargetFactory:
         """
         Get provider ID and status for targets.
         """
-        response = self._client.get_backends()
+        response = self._client.get_backends() #TODO update to pass parameter indicating the backend type -> im return object dann festlegen welcher provider
         backends = self._deserialize_provider_status_list(response)
 
         return [

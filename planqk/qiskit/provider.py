@@ -5,6 +5,7 @@ from qiskit.providers import ProviderV1 as Provider
 from planqk.client import _PlanqkClient
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.qiskit.providers.azure.planqk_azure_provider import _PlanqkAzureQuantumProvider
+from planqk.qiskit.providers.braket.planqk_aws_braket_provider import _PlanqkAWSBraketProvider
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,12 @@ class PlanqkQuantumProvider(Provider):
             client=self._client
         )
 
-        self._providers = [azure_provider]
+        aws_braket_provider = _PlanqkAWSBraketProvider(
+            client=self._client
+        )
+
+        self._providers = [azure_provider, aws_braket_provider]
+        self._providers = [aws_braket_provider] #TODO remove me
 
     def backends(self, name=None, **kwargs):
         """Return a list of backends matching the specified filtering.

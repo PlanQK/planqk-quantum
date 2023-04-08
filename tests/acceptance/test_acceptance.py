@@ -211,6 +211,12 @@ class AcceptanceTestSuite(unittest.TestCase):
 
         wait().until_asserted(assert_job_cancelled)
 
+    def test_get_braket_device(self):
+        # Given
+        ionq = self.planqk_provider.backends()
+
+        # Then
+        assert ionq == "ionq.simulator"
 
 if __name__ == '__main__':
     unittest.main()
