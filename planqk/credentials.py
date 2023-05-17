@@ -67,7 +67,7 @@ class StaticCredential(CredentialProvider):
 
     def get_access_token(self) -> str:
         if not self.access_token:
-            raise CredentialUnavailableError(f'Access Token not set')
+            raise CredentialUnavailableError(f'Access token not set')
         return self.access_token
 
 
