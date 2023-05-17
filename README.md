@@ -16,7 +16,7 @@ Check out the following guides on how to get started with PlanQK:
 The package is released on PyPI and can be installed via `pip`:
 
 ```bash
-pip install planqk-quantum
+pip install --upgrade planqk-quantum
 ```
 
 ## Development
