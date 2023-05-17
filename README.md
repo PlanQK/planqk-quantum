@@ -8,7 +8,7 @@ The `planqk-quantum` library is a SDK for developing quantum circuits using [Qis
 
 Check out the following guides on how to get started with PlanQK:
 
-- [Tutorial on how to create a PlanQK Service using the `planqk-quantum` library](https://docs.platform.planqk.de/tutorials/tutorial-qiskit.html#install-the-planqk-quantum-library)
+- [Tutorial on how to create a PlanQK Service using the `planqk-quantum` library](https://docs.platform.planqk.de/tutorials/tutorial-qiskit.html)
 - [General guide on how to create and deploy PlanQK Services](https://docs.platform.planqk.de/docs/service-platform/managed-services.html)
 
 ## Installation

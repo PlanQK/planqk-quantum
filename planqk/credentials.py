@@ -1,13 +1,13 @@
 import json
 import logging
 import os
+import platform
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
 
 from planqk.exceptions import CredentialUnavailableError, PlanqkClientError
 
 _TOKEN_ENV_VARIABLE = 'PLANQK_QUANTUM_ACCESS_TOKEN'
-_TOKEN_FILE_ENV_VARIABLE = 'PLANQK_QUANTUM_ACCESS_TOKEN_FILE'
 
 logger = logging.getLogger(__name__)
 
@@ -31,33 +31,37 @@ class EnvironmentCredential(CredentialProvider):
         return access_token
 
 
-class TokenFileCredential(CredentialProvider):
+class ConfigFileCredential(CredentialProvider):
+    def __init__(self):
+        if platform.system() == 'Windows':
+            config_dir = os.path.join(os.getenv('LOCALAPPDATA'), 'planqk')
+        else:
+            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'planqk')
+        self.config_file = os.path.join(config_dir, 'config.json')
 
     def get_access_token(self) -> str:
-        access_token_file = os.environ.get(_TOKEN_FILE_ENV_VARIABLE)
-        if not access_token_file:
-            raise CredentialUnavailableError('Access Token file location not set')
-        if not os.path.isfile(access_token_file):
-            raise CredentialUnavailableError(f'Access Token file at {access_token_file} does not exist')
+        if not self.config_file:
+            raise CredentialUnavailableError('Config file location not set')
+        if not os.path.isfile(self.config_file):
+            raise CredentialUnavailableError(f'Config file at {self.config_file} does not exist')
         try:
-            access_token = TokenFileCredential.parse_access_token_file(access_token_file)
+            access_token = ConfigFileCredential.parse_file(self.config_file)
         except JSONDecodeError:
-            raise CredentialUnavailableError('Failed to parse Access Token file: Invalid JSON')
+            raise CredentialUnavailableError('Failed to parse config file: Invalid JSON')
         except KeyError as e:
-            raise CredentialUnavailableError(f'Failed to parse Access Token file: Missing expected value - {str(e)}')
+            raise CredentialUnavailableError(f'Failed to parse config file: Missing expected value - {str(e)}')
         except Exception as e:
-            raise CredentialUnavailableError(f'Failed to parse Access Token file: {str(e)}')
+            raise CredentialUnavailableError(f'Failed to parse config file: {str(e)}')
         return access_token
 
     @staticmethod
-    def parse_access_token_file(path) -> str:
+    def parse_file(path) -> str:
         with open(path, 'r') as file:
             data = json.load(file)
-            return data['access_token']
+            return data['auth']['value']
 
 
 class StaticCredential(CredentialProvider):
-
     def __init__(self, access_token=None):
         self.access_token = access_token
 
@@ -68,12 +72,11 @@ class StaticCredential(CredentialProvider):
 
 
 class DefaultCredentialsProvider(CredentialProvider):
-
     def __init__(self, access_token=None):
         self.credentials = [
-            EnvironmentCredential(),
             StaticCredential(access_token),
-            TokenFileCredential(),
+            EnvironmentCredential(),
+            ConfigFileCredential(),
         ]
 
     def get_access_token(self) -> str:
