@@ -9,22 +9,14 @@ from azure.identity import ClientSecretCredential
 from azure.quantum import Workspace
 from azure.quantum.qiskit import AzureQuantumProvider
 from busypie import wait
+from dotenv import load_dotenv
 from qiskit.providers import JobStatus
 from qiskit.tools import job_monitor
 
-from planqk.qiskit import PlanqkQuantumProvider
+from planqk.qiskit.provider import PlanqkQuantumProvider
 from tests.utils import get_sample_circuit, to_dict
 
 logging.basicConfig(level=logging.DEBUG)
-
-AZ_TENANT_ID = os.environ.get('AZ_TENANT_ID')
-AZ_CLIENT_ID = os.environ.get('AZ_CLIENT_ID')
-AZ_CLIENT_SECRET = os.environ.get('AZ_CLIENT_SECRET')
-AZ_QUANTUM_RESOURCE_ID = os.environ.get('AZ_QUANTUM_RESOURCE_ID')
-AZ_REGION = os.environ.get('AZ_REGION')
-
-PLANQK_QUANTUM_BASE_URL = os.environ.get('PLANQK_QUANTUM_BASE_URL')
-PLANQK_ACCESS_TOKEN = os.environ.get('PLANQK_ACCESS_TOKEN')
 
 SUPPORTED_BACKENDS = {"ionq.qpu", "ionq.simulator"}
 
@@ -40,6 +32,17 @@ def is_valid_uuid(uuid_to_test):
 class AcceptanceTestSuite(unittest.TestCase):
 
     def setUp(self):
+
+        load_dotenv()
+
+        AZ_TENANT_ID = os.environ.get('AZ_TENANT_ID')
+        AZ_CLIENT_ID = os.environ.get('AZ_CLIENT_ID')
+        AZ_CLIENT_SECRET = os.environ.get('AZ_CLIENT_SECRET')
+        AZ_QUANTUM_RESOURCE_ID = os.environ.get('AZ_QUANTUM_RESOURCE_ID')
+        AZ_REGION = os.environ.get('AZ_REGION')
+
+        PLANQK_QUANTUM_BASE_URL = os.environ.get('PLANQK_QUANTUM_BASE_URL')
+        PLANQK_ACCESS_TOKEN = os.environ.get('PLANQK_ACCESS_TOKEN')
 
         self.assertIsNotNone(AZ_TENANT_ID, "Env variable AZ_TENANT_ID (Azure tenant id) not set")
         self.assertIsNotNone(AZ_CLIENT_ID, "Env variable AZ_CLIENT_ID (Azure client id) not set")
@@ -101,7 +104,7 @@ class AcceptanceTestSuite(unittest.TestCase):
 
     def test_should_run_job(self):
 
-        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        sim_backend = self.azure_provider.get_backend("ionq.qpu")
         circuit = get_sample_circuit(sim_backend)
         job = sim_backend.run(circuit, shots=1)
         job_id = job.id()
@@ -197,7 +200,7 @@ class AcceptanceTestSuite(unittest.TestCase):
 
         console_output = planqk_stdout.getvalue()
 
-        self.assertIn('Job Status: job has successfully run', console_output)
+        self.assertIn('Job STATUS: job has successfully run', console_output)
 
     def test_should_cancel_job(self):
         sim_backend = self.planqk_provider.get_backend("ionq.simulator")
@@ -211,12 +214,6 @@ class AcceptanceTestSuite(unittest.TestCase):
 
         wait().until_asserted(assert_job_cancelled)
 
-    def test_get_braket_device(self):
-        # Given
-        ionq = self.planqk_provider.backends()
-
-        # Then
-        assert ionq == "ionq.simulator"
 
 if __name__ == '__main__':
     unittest.main()

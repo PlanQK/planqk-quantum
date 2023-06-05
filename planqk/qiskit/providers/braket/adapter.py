@@ -1,12 +1,17 @@
 """Util function for provider."""
+import json
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
+from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.aws import AwsDevice
 from braket.circuits import Circuit, Instruction, gates, result_types
+from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.gates import PulseGate
+from braket.circuits.serialization import QubitReferenceType, OpenQASMSerializationProperties, IRType
 from braket.device_schema import (
     DeviceActionType,
     GateModelQpuParadigmProperties,
-    JaqcdDeviceActionProperties,
+    JaqcdDeviceActionProperties, DeviceCapabilities,
 )
 from braket.device_schema.ionq import IonqDeviceCapabilities
 from braket.device_schema.oqc import OqcDeviceCapabilities
@@ -16,6 +21,7 @@ from braket.device_schema.simulators import (
     GateModelSimulatorParadigmProperties,
 )
 from braket.devices import LocalSimulator
+from braket.schema_common import BraketSchemaBase
 from numpy import pi
 from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction as QiskitInstruction
@@ -54,6 +60,8 @@ from qiskit.circuit.library import (
 from qiskit.transpiler import InstructionProperties, Target
 
 from qiskit_braket_provider.exception import QiskitBraketException
+
+from planqk.qiskit.client.backend_dtos import BackendDto
 
 qiskit_to_braket_gate_names_mapping = {
     "u1": "u1",
@@ -126,8 +134,8 @@ qiskit_gate_names_to_braket_gates: Dict[str, Callable] = {
     "ecr": lambda: [gates.ECR()],
 }
 
-
-qiskit_gate_name_to_braket_gate_mapping: Dict[str, Optional[QiskitInstruction]] = {
+# TODP mark add copyright from braket
+qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] = {
     "u1": U1Gate(Parameter("theta")),
     "u2": U2Gate(Parameter("theta"), Parameter("lam")),
     "u3": U3Gate(Parameter("theta"), Parameter("phi"), Parameter("lam")),
@@ -170,52 +178,10 @@ def _op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
         Circuit Instruction
     """
     operation = operation.lower()
-    return qiskit_gate_name_to_braket_gate_mapping.get(operation, None)
+    return qiskit_gate_name_to_planqk_gate_mapping.get(operation, None)
 
 
-def local_simulator_to_target(simulator: LocalSimulator) -> Target:
-    """Converts properties of LocalSimulator into Qiskit Target object.
-
-    Args:
-        simulator: AWS LocalSimulator
-
-    Returns:
-        target for Qiskit backend
-    """
-    target = Target()
-
-    instructions = [
-        inst
-        for inst in qiskit_gate_name_to_braket_gate_mapping.values()
-        if inst is not None
-    ]
-    properties = simulator.properties
-    paradigm: GateModelSimulatorParadigmProperties = properties.paradigm
-
-    # add measurement instruction
-    target.add_instruction(Measure(), {(i,): None for i in range(paradigm.qubitCount)})
-
-    for instruction in instructions:
-        instruction_props: Optional[
-            Dict[Union[Tuple[int], Tuple[int, int]], Optional[InstructionProperties]]
-        ] = {}
-
-        if instruction.num_qubits == 1:
-            for i in range(paradigm.qubitCount):
-                instruction_props[(i,)] = None
-            target.add_instruction(instruction, instruction_props)
-        elif instruction.num_qubits == 2:
-            for src in range(paradigm.qubitCount):
-                for dst in range(paradigm.qubitCount):
-                    if src != dst:
-                        instruction_props[(src, dst)] = None
-                        instruction_props[(dst, src)] = None
-            target.add_instruction(instruction, instruction_props)
-
-    return target
-
-
-def aws_device_to_target(device: AwsDevice) -> Target:
+def aws_device_to_target(backend_info: BackendDto) -> Target:
     """Converts properties of Braket device into Qiskit Target object.
 
     Args:
@@ -225,9 +191,9 @@ def aws_device_to_target(device: AwsDevice) -> Target:
         target for Qiskit backend
     """
     # building target
-    target = Target(description=f"Target for AWS Device: {device.name}")
+    target = Target(description=f"Target for AWS Device: {backend_info.name}")
 
-    properties = device.properties
+    properties = device_capabilities(backend_info)
     # gate model devices
     if isinstance(
         properties,
@@ -279,7 +245,7 @@ def aws_device_to_target(device: AwsDevice) -> Target:
             # for more than 2 qubits
             else:
                 instruction_props = None
-
+        #TODO other architcture not inoq
             target.add_instruction(instruction, instruction_props)
 
     # gate model simulators
@@ -331,14 +297,14 @@ def aws_device_to_target(device: AwsDevice) -> Target:
 
     return target
 
-
-def convert_qiskit_to_braket_circuit(circuit: QuantumCircuit) -> Circuit:
-    """Return a Braket quantum circuit from a Qiskit quantum circuit.
+# TODO metnion copyrigtht
+def convert_qiskit_to_planqk_circuit(circuit: QuantumCircuit) -> Circuit:
+    """Return a PlanQK quantum circuit from a Qiskit quantum circuit.
      Args:
             circuit (QuantumCircuit): Qiskit Quantum Cricuit
 
     Returns:
-        Circuit: Braket circuit
+        Circuit: PlanQK circuit
     """
     quantum_circuit = Circuit()
     for qiskit_gates in circuit.data:
@@ -372,30 +338,55 @@ def convert_qiskit_to_braket_circuit(circuit: QuantumCircuit) -> Circuit:
     return quantum_circuit
 
 
-def convert_qiskit_to_braket_circuits(
-    circuits: List[QuantumCircuit],
-) -> Iterable[Circuit]:
-    """Converts all Qiskit circuits to Braket circuits.
-     Args:
-            circuits (List(QuantumCircuit)): Qiskit Quantum Cricuit
-
-    Returns:
-        Circuit (Iterable[Circuit]): Braket circuit
-    """
-    for circuit in circuits:
-        yield convert_qiskit_to_braket_circuit(circuit)
-
-
-def wrap_circuits_in_verbatim_box(circuits: List[Circuit]) -> Iterable[Circuit]:
-    """Convert each Braket circuit an equivalent one wrapped in verbatim box.
+def wrap_circuit_in_verbatim_box(circuit: Circuit) -> Circuit:
+    """Convert Braket circuit an equivalent one wrapped in verbatim box.
 
     Args:
-           circuits (List(Circuit): circuits to be wrapped in verbatim box.
+           circuit (Circuit): circuit to be wrapped in verbatim box.
     Returns:
-           Circuits wrapped in verbatim box, comprising the same instructions
+           Circuit wrapped in verbatim box, comprising the same instructions
            as the original one and with result types preserved.
     """
-    return [
-        Circuit(circuit.result_types).add_verbatim_box(Circuit(circuit.instructions))
-        for circuit in circuits
-    ]
+    return Circuit(circuit.result_types).add_verbatim_box(Circuit(circuit.instructions))
+
+
+def transform_to_qasm_3_program(braket_circuit: Circuit,
+                                disable_qubit_rewiring: bool,
+                                inputs: Dict[str, float]) -> str:
+    """Transforms a Braket circuit to a QASM 3 program."""
+
+    qubit_reference_type = QubitReferenceType.VIRTUAL
+
+    if (
+            disable_qubit_rewiring
+            or Instruction(StartVerbatimBox()) in braket_circuit.instructions
+            or any(isinstance(instruction.operator, PulseGate) for instruction in braket_circuit.instructions)
+    ):
+        qubit_reference_type = QubitReferenceType.PHYSICAL
+
+    serialization_properties = OpenQASMSerializationProperties(
+        qubit_reference_type=qubit_reference_type
+    )
+
+    openqasm_program = braket_circuit.to_ir(
+        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+    )
+    # TODO do Inputs have a purpose in QASM 3 / qiskit?
+    if inputs:
+        inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
+        inputs_copy.update(inputs)
+        openqasm_program = OpenQASMProgram(
+            source=openqasm_program.source,
+            inputs=inputs_copy,
+        )
+
+    return openqasm_program.source
+
+
+def device_capabilities(backend_info: BackendDto) -> DeviceCapabilities:
+    """DeviceCapabilities: Return the device capabilities for the backend.
+
+    Please see `braket.device_schema` in amazon-braket-schemas-python_
+
+    .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
+    return BraketSchemaBase.parse_raw_schema(json.dumps(backend_info.configuration))

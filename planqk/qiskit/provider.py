@@ -1,11 +1,12 @@
 import logging
+from datetime import datetime
 
 from qiskit.providers import ProviderV1 as Provider
 
-from planqk.client import _PlanqkClient
 from planqk.credentials import DefaultCredentialsProvider
-from planqk.qiskit.providers.azure.planqk_azure_provider import _PlanqkAzureQuantumProvider
-from planqk.qiskit.providers.braket.planqk_aws_braket_provider import _PlanqkAWSBraketProvider
+from planqk.qiskit.backend import PlanqkBackend
+from planqk.qiskit.client.backend_dtos import TYPE
+from planqk.qiskit.client.client import _PlanqkClient
 
 logger = logging.getLogger(__name__)
 
@@ -13,35 +14,41 @@ logger = logging.getLogger(__name__)
 class PlanqkQuantumProvider(Provider):
 
     def __init__(self, access_token=None):
-        self._credentials = DefaultCredentialsProvider(access_token)
-        self._client = _PlanqkClient(self._credentials)
-
-        azure_provider = _PlanqkAzureQuantumProvider(
-            client=self._client
-        )
-
-        aws_braket_provider = _PlanqkAWSBraketProvider(
-            client=self._client
-        )
-
-        self._providers = [azure_provider, aws_braket_provider]
-        self._providers = [aws_braket_provider] #TODO remove me
+        _PlanqkClient.set_credentials(DefaultCredentialsProvider(access_token))
 
     def backends(self, name=None, **kwargs):
         """Return a list of backends matching the specified filtering.
-        Args:
-            name (str): name of the backend.
-            **kwargs: dict used for filtering.
-        Returns:
-            list[Backend]: a list of Backends that match the filtering
-                criteria.
+           Args:
+               name (str): name of the backend.
+               **kwargs: dict used for filtering.
+           Returns:
+               List[Backend]: a list of Backends that match the filtering
+                   criteria.
         """
+
+        # if kwargs.get("local"):  # TODO local backend
+        #   return [BraketLocalBackend(name="default")]
+
+        backend_dtos = _PlanqkClient.get_backends(name)
+
+        # only gate models are supported
+        supported_backend_infos = [
+            backend_info for backend_info in backend_dtos
+            if backend_info.type == TYPE.QPU or backend_info.type == TYPE.SIMULATOR
+        ]
+
         backends = []
-
-        for provider in self._providers:
-            for backend in provider.backends(name, **kwargs):
-                backends.append(backend)
-
+        for backend_dto in supported_backend_infos:
+            backends.append(
+                PlanqkBackend(
+                    backend_info=backend_dto,
+                    provider=self,
+                    name=backend_dto.name,
+                    description=f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.name}.",
+                    online_date=datetime.strptime(backend_dto.updated_at, "%Y-%m-%d %H:%M:%S"),
+                    backend_version="2",
+                )
+            )
         return backends
 
     def get_job(self, job_id):

@@ -103,8 +103,16 @@ class AWSBraketJob(JobV1):
             else 0
         )
 
+    def id(self) -> str:
+        """Return the job id.
+
+        Returns:
+            id: str with the job id.
+        """
+        return self._job_id
+
     def submit(self):
-        return
+        pass
 
     def result(self) -> Result:
         experiment_results = _get_result_from_aws_tasks(tasks=self._tasks)

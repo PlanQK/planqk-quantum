@@ -5,17 +5,15 @@ import numpy as np
 from qiskit.providers import JobV1, JobStatus
 from qiskit.result import Result
 
-from planqk.client import _PlanqkClient
 from planqk.qiskit.job import PlanqkJob
 
 # Azure status codes being used here
 AzureJobStatusMap = {
-    "Succeeded": JobStatus.DONE,
-    "Waiting": JobStatus.QUEUED,
-    "Executing": JobStatus.RUNNING,
-    "Failed": JobStatus.ERROR,
-    "Cancelled": JobStatus.CANCELLED,
-    "Finishing": JobStatus.RUNNING
+    "COMPLETED": JobStatus.DONE,
+    "PENDING": JobStatus.QUEUED,
+    "RUNNING": JobStatus.RUNNING,
+    "FAILED": JobStatus.ERROR,
+    "CANCELLED": JobStatus.CANCELLED,
 }
 
 # Constants for output data format
@@ -28,14 +26,12 @@ class _PlanqkAzureJob(JobV1):
 
     def __init__(
             self,
-            client: _PlanqkClient,
             backend,  # TODO _PlanqkAzureBackend causes circular dependency -> use job details
             planqk_job: PlanqkJob = None,
             **kwargs
     ) -> None:
         if planqk_job is None:
             self._planqk_job = PlanqkJob(
-                client=client,
                 **kwargs
             )
             self.submit()
@@ -53,9 +49,9 @@ class _PlanqkAzureJob(JobV1):
         """
         Return the results of the job.
         """
-        self._planqk_job.wait_until_completed(timeout_secs=timeout)
+        self._planqk_job.wait_for_final_state(timeout_secs=timeout)
 
-        success = self._planqk_job.status == "Succeeded"
+        success = self._planqk_job.status == "COMPLETED"
         results = self._format_results(sampler_seed=sampler_seed)
 
         return Result.from_dict(
@@ -76,7 +72,7 @@ class _PlanqkAzureJob(JobV1):
         """
         Return the status of the job, among the values of ``JobStatus``.
         """
-        self._planqk_job.refresh()
+        self._planqk_job._refresh()
         status = AzureJobStatusMap[self._planqk_job.status]
         return status
 
@@ -102,7 +98,7 @@ class _PlanqkAzureJob(JobV1):
         """
         Populates the results datastructures in a format that is compatible with qiskit libraries.
         """
-        success = self._planqk_job.status == "Succeeded"
+        success = self._planqk_job.status == "COMPLETED"
         shots_key = "shots"
 
         job_result = {

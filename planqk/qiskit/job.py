@@ -1,6 +1,14 @@
 import time
+from dataclasses import asdict
+from typing import Optional, Union
 
-from planqk.client import logger, _PlanqkClient
+from qiskit import QiskitError
+from qiskit.providers import JobV1, BackendV2, JobStatus, Backend
+from qiskit.result import Result
+from qiskit.result.models import ExperimentResult, ExperimentResultData
+
+from planqk.qiskit.client.client import logger, _PlanqkClient
+from planqk.qiskit.client.client_dtos import JobDto
 
 
 class ErrorData(object):
@@ -9,150 +17,123 @@ class ErrorData(object):
         self.message = message
 
 
-def _json_dict_to_params(job_details_dict):
-    return dict(provider_id=job_details_dict['provider_id'],
-                target=job_details_dict['target'],
-                input_data_format=job_details_dict['input_data_format'],
-                job_id=job_details_dict['id'],
-                input_data=job_details_dict.get('input_data_format', None),
-                name=job_details_dict.get('name', None),
-                input_params=job_details_dict.get('input_params', None),
-                metadata=job_details_dict.get('metadata', None),
-                output_data_format=job_details_dict.get('output_data_format', None),
-                output_data=job_details_dict.get('output_data', None),
-                status=job_details_dict.get('status', None),
-                creation_time=job_details_dict.get('creation_time', None),
-                begin_execution_time=job_details_dict.get('begin_execution_time', None),
-                end_execution_time=job_details_dict.get('end_execution_time', None),
-                cancellation_time=job_details_dict.get('cancellation_time', None),
-                error_data=job_details_dict.get('error_data', None))
+JobStatusMap = {
+    "COMPLETED": JobStatus.DONE,
+    "PENDING": JobStatus.QUEUED,
+    "RUNNING": JobStatus.RUNNING,
+    "FAILED": JobStatus.ERROR,
+    "CANCELLING": JobStatus.RUNNING,
+    "CANCELLED": JobStatus.CANCELLED,
+}
 
 
-class PlanqkJob(object):
+class PlanqkJob(JobV1):
+    version = 1
 
-    def __init__(self, client: _PlanqkClient, job_id: str = None, **job_details):
-        self._client = client
-        self.output_data = None
+    def __init__(self, backend: Optional[Backend], job_id: Optional[str] = None, job_details: Optional[JobDto] = None):
+
+        if job_id is None and job_details is None:
+            raise ValueError("Either 'job_id' or 'job_details' must be provided.")
+        if job_id is not None and job_details is not None:
+            raise ValueError("Only one of 'job_id' or 'job_details' can be provided.")
+
+        self._result = None
+        self._backend = backend
+        self._job_details = job_details
 
         if job_id is not None:
-            self.job_id = job_id
-            self.refresh()
+            self._job_id = job_id
+            self._refresh()
+            # TODO get backend from job details bakcend id
+
         else:
-            self._update_job_details(job_id=job_id, **job_details)
+            self.submit()
+
+        job_details_dict = self._job_details.to_dict()
+        super().__init__(backend=backend, job_id=self._job_id, **job_details_dict)
 
     def submit(self):
         """
         Submits the job for execution.
         """
-        job_details_dict = self._client.submit_job(self)
-        self._update_job_details(**_json_dict_to_params(job_details_dict))
 
-    def _update_job_details(self,
-                            provider_id: str,
-                            target: str,
-                            input_data_format: str,
-                            job_id: str = None,
-                            input_data: str = None,
-                            name: str = None,
-                            input_params: object = None,
-                            metadata: dict[str, str] = None,
-                            output_data_format: str = None,
-                            output_data: object = None,
-                            status: str = None,
-                            creation_time: str = None,
-                            begin_execution_time: str = None,
-                            end_execution_time: str = None,
-                            cancellation_time: str = None,
-                            tags: list[str] = [],
-                            error_data: ErrorData = None):
+        if self._job_details is None:
+            raise RuntimeError("Cannot submit job as no job details are set.")
 
-        self.job_id = job_id
-        self.name = name
-        self.input_data_format = input_data_format
-        self.input_data = input_data
-        self.input_params = input_params
-        self.provider_id = provider_id
-        self.target = target
-        self.metadata = metadata
-        self.output_data = output_data
-        self.output_data_format = output_data_format
-        self.status = status
-        self.creation_time = creation_time
-        self.begin_execution_time = begin_execution_time
-        self.end_execution_time = end_execution_time
-        self.cancellation_time = cancellation_time
-        self.tags = tags
-        self.error_data = error_data
+        self._job_id = _PlanqkClient.submit_job(self._job_details)
 
-    def wait_until_completed(self, max_poll_wait_secs=30, timeout_secs=None) -> None:
+    def result(self) -> Result:
         """
-        Wait until the job has completed.
+        Return the result of the job.
         """
-        self.refresh()
-        poll_wait = 0.2
-        total_time = 0.
-        while not self.has_completed():
-            if timeout_secs is not None and total_time >= timeout_secs:
-                raise TimeoutError(f"The wait time has exceeded {timeout_secs} seconds.")
-            logger.debug(f"Waiting for job {self.id}; it is in status '{self.status}'")
-            time.sleep(poll_wait)
-            total_time += poll_wait
-            self.refresh()
-            poll_wait = (
-                max_poll_wait_secs
-                if poll_wait >= max_poll_wait_secs
-                else poll_wait * 1.5
-            )
+        if self._result is not None:
+            return self._result
 
-    def has_completed(self) -> bool:
-        """
-        Check if the job has completed.
-        """
-        return self.status == "Succeeded" or self.status == "Failed" or self.status == "Cancelled"
+        if not self.in_final_state():
+            self.wait_for_final_state()
 
-    def refresh(self):
-        """
-        Refreshes the job metadata from the server.
-        """
-        job_details_dict = self._client.get_job(self.job_id)
-        self._update_job_details(**_json_dict_to_params(job_details_dict))
-
-    def cancel(self):
-        """
-        Attempt to cancel the job.
-        """
-        self._client.cancel_job(self.job_id)
-
-    def results(self, timeout_secs: float = None) -> dict:
-        """
-        Return the results of the job.
-        """
-        if self.output_data is not None:
-            return self.output_data
-
-        if not self.has_completed():
-            self.wait_until_completed(timeout_secs=timeout_secs)
-
-        if not self.status == "Succeeded":
+        status = JobStatusMap[self._job_details.status]
+        if not status == JobStatus.DONE:
             raise RuntimeError(
                 f'{"Cannot retrieve results as job execution failed"}'
                 + f"(status: {self.status}."
                 + f"error: {self.error_data})"
             )
 
-        self.output_data = self._client.get_job_result(self.job_id)
+        result_data = _PlanqkClient.get_job_result(self._job_id)
 
-        return self.output_data
+        experiment_result = ExperimentResult(
+            shots=self._job_details.shots,
+            success=True,
+            status=status,
+            data=ExperimentResultData(
+                counts=result_data.get("counts", {}),
+                memory=result_data.get("memory", []))
+        )
 
-    def to_dict(self) -> dict:
+        self._result = Result(
+            backend_name=self._backend.name,
+            backend_version=self._backend.version,
+            job_id=self._job_id,
+            qobj_id=0,
+            success=True,
+            results=[experiment_result],
+            status=status,
+            date=self._job_details.end_execution_time,
+        )
+
+        return self._result
+
+    def _refresh(self):
         """
-        Return a dictionary representation of the job.
+        Refreshes the job details from the server.
         """
-        return {key: value for key, value in vars(self).items() if not key.startswith('_')}
+        if self.job_id is None:
+            raise ValueError("Job Id is not set.")
+        self._job_details = _PlanqkClient.get_job(self._job_id)
+
+    def cancel(self):
+        """
+        Attempt to cancel the job.
+        """
+        _PlanqkClient.cancel_job(self._job_id)
+
+    def status(self) -> JobStatus:
+        """
+        Return the status of the job if it has reached the state DONE. If it is still running, it polls for the result.
+        """
+        self._refresh()
+        return JobStatusMap[self._job_details.status]
 
     @property
     def id(self):
         """
         This job's id.
         """
-        return self.job_id
+        return self._job_id
+
+    def to_dict(self) -> dict:
+        """
+        Return a dictionary representation of the job.
+        """
+        return {key: value for key, value in vars(self).items() if not key.startswith('_')}
