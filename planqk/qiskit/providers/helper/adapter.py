@@ -1,31 +1,20 @@
 """Util function for provider."""
 import json
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Dict, Optional
 
-from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.aws import AwsDevice
 from braket.circuits import Circuit, Instruction, gates, result_types
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import QubitReferenceType, OpenQASMSerializationProperties, IRType
 from braket.device_schema import (
-    DeviceActionType,
-    GateModelQpuParadigmProperties,
-    JaqcdDeviceActionProperties, DeviceCapabilities,
+    DeviceCapabilities,
 )
-from braket.device_schema.ionq import IonqDeviceCapabilities
-from braket.device_schema.oqc import OqcDeviceCapabilities
-from braket.device_schema.rigetti import RigettiDeviceCapabilities
-from braket.device_schema.simulators import (
-    GateModelSimulatorDeviceCapabilities,
-    GateModelSimulatorParadigmProperties,
-)
-from braket.devices import LocalSimulator
+from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.schema_common import BraketSchemaBase
 from numpy import pi
 from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction as QiskitInstruction
-from qiskit.circuit import Measure, Parameter
+from qiskit.circuit import Parameter
 from qiskit.circuit.library import (
     CCXGate,
     CPhaseGate,
@@ -57,9 +46,7 @@ from qiskit.circuit.library import (
     YGate,
     ZGate,
 )
-from qiskit.transpiler import InstructionProperties, Target
-
-from qiskit_braket_provider.exception import QiskitBraketException
+from qiskit.transpiler import Target
 
 from planqk.qiskit.client.backend_dtos import BackendDto
 
@@ -169,7 +156,7 @@ qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] 
 
 
 def _op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
-    """Converts Braket operation to Qiskit Instruction.
+    """Converts PlanQK operation to Qiskit Instruction.
 
     Args:
         operation: operation
@@ -181,130 +168,14 @@ def _op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
     return qiskit_gate_name_to_planqk_gate_mapping.get(operation, None)
 
 
-def aws_device_to_target(backend_info: BackendDto) -> Target:
-    """Converts properties of Braket device into Qiskit Target object.
-
-    Args:
-        device: AWS Braket device
-
-    Returns:
-        target for Qiskit backend
-    """
-    # building target
-    target = Target(description=f"Target for AWS Device: {backend_info.name}")
-
-    properties = device_capabilities(backend_info)
-    # gate model devices
-    if isinstance(
-        properties,
-        (IonqDeviceCapabilities, RigettiDeviceCapabilities, OqcDeviceCapabilities),
-    ):
-        action_properties: JaqcdDeviceActionProperties = properties.action.get(
-            DeviceActionType.JAQCD
-        )
-        paradigm: GateModelQpuParadigmProperties = properties.paradigm
-        connectivity = paradigm.connectivity
-        instructions: List[QiskitInstruction] = []
-
-        for operation in action_properties.supportedOperations:
-            instruction = _op_to_instruction(operation)
-            if instruction is not None:
-                # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
-                if instruction.num_qubits <= 2:
-                    instructions.append(instruction)
-
-        # add measurement instructions
-        target.add_instruction(
-            Measure(), {(i,): None for i in range(paradigm.qubitCount)}
-        )
-
-        for instruction in instructions:
-            instruction_props: Optional[
-                Dict[
-                    Union[Tuple[int], Tuple[int, int]], Optional[InstructionProperties]
-                ]
-            ] = {}
-            # adding 1 qubit instructions
-            if instruction.num_qubits == 1:
-                for i in range(paradigm.qubitCount):
-                    instruction_props[(i,)] = None
-            # adding 2 qubit instructions
-            elif instruction.num_qubits == 2:
-                # building coupling map for fully connected device
-                if connectivity.fullyConnected:
-                    for src in range(paradigm.qubitCount):
-                        for dst in range(paradigm.qubitCount):
-                            if src != dst:
-                                instruction_props[(src, dst)] = None
-                                instruction_props[(dst, src)] = None
-                # building coupling map for device with connectivity graph
-                else:
-                    for src, connections in connectivity.connectivityGraph.items():
-                        for dst in connections:
-                            instruction_props[(int(src), int(dst))] = None
-            # for more than 2 qubits
-            else:
-                instruction_props = None
-        #TODO other architcture not inoq
-            target.add_instruction(instruction, instruction_props)
-
-    # gate model simulators
-    elif isinstance(properties, GateModelSimulatorDeviceCapabilities):
-        simulator_action_properties: JaqcdDeviceActionProperties = (
-            properties.action.get(DeviceActionType.JAQCD)
-        )
-        simulator_paradigm: GateModelSimulatorParadigmProperties = properties.paradigm
-        instructions = []
-
-        for operation in simulator_action_properties.supportedOperations:
-            instruction = _op_to_instruction(operation)
-            if instruction is not None:
-                # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
-                if instruction.num_qubits <= 2:
-                    instructions.append(instruction)
-
-        # add measurement instructions
-        target.add_instruction(
-            Measure(), {(i,): None for i in range(simulator_paradigm.qubitCount)}
-        )
-
-        for instruction in instructions:
-            simulator_instruction_props: Optional[
-                Dict[
-                    Union[Tuple[int], Tuple[int, int]],
-                    Optional[InstructionProperties],
-                ]
-            ] = {}
-            # adding 1 qubit instructions
-            if instruction.num_qubits == 1:
-                for i in range(simulator_paradigm.qubitCount):
-                    simulator_instruction_props[(i,)] = None
-            # adding 2 qubit instructions
-            elif instruction.num_qubits == 2:
-                # building coupling map for fully connected device
-                for src in range(simulator_paradigm.qubitCount):
-                    for dst in range(simulator_paradigm.qubitCount):
-                        if src != dst:
-                            simulator_instruction_props[(src, dst)] = None
-                            simulator_instruction_props[(dst, src)] = None
-            target.add_instruction(instruction, simulator_instruction_props)
-
-    else:
-        raise QiskitBraketException(
-            f"Cannot convert to target. "
-            f"{properties.__class__} device capabilities are not supported yet."
-        )
-
-    return target
-
 # TODO metnion copyrigtht
 def convert_qiskit_to_planqk_circuit(circuit: QuantumCircuit) -> Circuit:
-    """Return a PlanQK quantum circuit from a Qiskit quantum circuit.
+    """Return a PlanQK quantum input (bases on AWS Braket input) from a Qiskit quantum input.
      Args:
-            circuit (QuantumCircuit): Qiskit Quantum Cricuit
+            circuit (QuantumCircuit): PlanQK Quantum Cricuit
 
     Returns:
-        Circuit: PlanQK circuit
+        Circuit: PlanQK input
     """
     quantum_circuit = Circuit()
     for qiskit_gates in circuit.data:
@@ -339,10 +210,10 @@ def convert_qiskit_to_planqk_circuit(circuit: QuantumCircuit) -> Circuit:
 
 
 def wrap_circuit_in_verbatim_box(circuit: Circuit) -> Circuit:
-    """Convert Braket circuit an equivalent one wrapped in verbatim box.
+    """Convert Braket input an equivalent one wrapped in verbatim box.
 
     Args:
-           circuit (Circuit): circuit to be wrapped in verbatim box.
+           circuit (Circuit): input to be wrapped in verbatim box.
     Returns:
            Circuit wrapped in verbatim box, comprising the same instructions
            as the original one and with result types preserved.
@@ -353,7 +224,7 @@ def wrap_circuit_in_verbatim_box(circuit: Circuit) -> Circuit:
 def transform_to_qasm_3_program(braket_circuit: Circuit,
                                 disable_qubit_rewiring: bool,
                                 inputs: Dict[str, float]) -> str:
-    """Transforms a Braket circuit to a QASM 3 program."""
+    """Transforms a Braket input to a QASM 3 program."""
 
     qubit_reference_type = QubitReferenceType.VIRTUAL
 
@@ -381,12 +252,3 @@ def transform_to_qasm_3_program(braket_circuit: Circuit,
         )
 
     return openqasm_program.source
-
-
-def device_capabilities(backend_info: BackendDto) -> DeviceCapabilities:
-    """DeviceCapabilities: Return the device capabilities for the backend.
-
-    Please see `braket.device_schema` in amazon-braket-schemas-python_
-
-    .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
-    return BraketSchemaBase.parse_raw_schema(json.dumps(backend_info.configuration))

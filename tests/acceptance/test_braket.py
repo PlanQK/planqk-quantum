@@ -90,7 +90,7 @@ class AwsBraketTestSuite(unittest.TestCase):
             self.assertBackend(exp_backend, backend)
 
     def assertBackend(self, expected: Backend, actual: Backend):
-        # PlanQK Backend: HARDWARE_PROVIDER.IONQ Aria 1
+        # PlanQK Backend: HARDWARE_PROVIDER.IONQ_CIRCUIT_V1 Aria 1
         self.assertEqual(expected.name, actual.name)
         self.assertEqual(expected.num_qubits, actual.num_qubits)
         self.assertEqual(expected.backend_version, actual.backend_version)
@@ -169,7 +169,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertEqual(metadata.get('backend_id'), 'aws-sim-sv1')
         self.assertEqual(metadata.get('provider'), 'AWS')
         self.assertEqual(metadata.get('shots'), 1)
-        self.assertIsNone(metadata.get('circuit'))
+        self.assertIsNone(metadata.get('input'))
         self.assertIsNone(metadata.get('circuit_type'))
         self.assertEqual(metadata.get('input_params').get('qubit_count'), 2)
         self.assertEqual(metadata.get('input_params').get('disableQubitRewiring'), False)

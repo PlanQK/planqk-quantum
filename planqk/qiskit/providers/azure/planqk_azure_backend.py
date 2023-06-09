@@ -18,7 +18,7 @@ class _PlanqkAzureBackend(Backend):
 
     def run(self, circuit, **kwargs):
         """
-        Submits the given circuit to run on an Azure Quantum backend.
+        Submits the given input to run on an Azure Quantum backend.
         """
 
         # Some Qiskit features require passing lists of circuits, so unpack those here.
@@ -28,7 +28,7 @@ class _PlanqkAzureBackend(Backend):
                 raise NotImplementedError("Multi-experiment jobs are not supported!")
             circuit = circuit[0]
 
-        # If the circuit was created using qiskit.assemble,
+        # If the input was created using qiskit.assemble,
         # disassemble into QASM here
         if isinstance(circuit, QasmQobj) or isinstance(circuit, Qobj):
             from qiskit.assembler import disassemble
@@ -46,7 +46,7 @@ class _PlanqkAzureBackend(Backend):
         output_data_format = kwargs.pop("output_data_format", config.azure["output_data_format"])
 
         # If not provided as kwargs, the values of these parameters
-        # are calculated from the circuit itself:
+        # are calculated from the input itself:
         job_name = kwargs.pop("job_name", circuit.name)
         input_data = self.backend._translate_circuit(circuit, **kwargs)
         metadata = kwargs.pop("metadata") if "metadata" in kwargs else self.backend._job_metadata(circuit, **kwargs)
@@ -73,7 +73,7 @@ class _PlanqkAzureBackend(Backend):
             **kwargs
         )
 
-        logger.info(f"Submitted job with id '{job.id()}' for circuit '{circuit.name}':")
+        logger.info(f"Submitted job with id '{job.id()}' for input '{circuit.name}':")
         logger.info(input_data)
 
         return job

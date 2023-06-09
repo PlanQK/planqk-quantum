@@ -104,7 +104,7 @@ class AcceptanceTestSuite(unittest.TestCase):
 
     def test_should_run_job(self):
 
-        sim_backend = self.azure_provider.get_backend("ionq.qpu")
+        sim_backend = self.azure_provider.get_backend("ionq.simulator")
         circuit = get_sample_circuit(sim_backend)
         job = sim_backend.run(circuit, shots=1)
         job_id = job.id()
@@ -152,58 +152,76 @@ class AcceptanceTestSuite(unittest.TestCase):
 
     def test_should_retrieve_job_result(self):
         # Given: create job
-        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        sim_backend = self.planqk_provider.get_backend("IonQ Simulator")
         circuit = get_sample_circuit(sim_backend)
-        created_job = sim_backend.run(circuit, shots=1)
+        created_job = sim_backend.run(circuit, shots=100)
 
         # When
 
         # Get job result via Azure
         azure_backend = self.azure_provider.get_backend("ionq.simulator")
-        azure_job = azure_backend.retrieve_job(created_job.id())
+        azure_job = azure_backend.retrieve_job(created_job.id)
         azure_result = azure_job.result()
         exp_job_result_dict = to_dict(azure_result)
 
         # Get job via PlanQK
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(azure_job.id())
+        job = self.planqk_provider.get_backend("IonQ Simulator").retrieve_job(azure_job.id())
         job_result_dict = to_dict(job.result())
 
         # job_result/results[0]/counts may contain either the key 000 or 111 -> the field is removed to assert dicts
-        exp_job_result_dict.get("results")[0].get('data').pop('counts')
-        counts = job_result_dict.get("results")[0].get('data').pop('counts')
-        self.assertTrue(counts.get("111") == 1 or counts.get("000") == 1)
+        exp_counts = exp_job_result_dict.get("results")[0].get('data').get('counts')
+        counts = job_result_dict.get("results")[0].get('data').get('counts')
 
-        self.assertDictEqual(exp_job_result_dict, job_result_dict)
+        self.assertEqual(job_result_dict['backend_name'], 'IonQ Simulator')
+        self.assertEqual(job_result_dict['job_id'], exp_job_result_dict['job_id'])
+        self.assertEqual(job_result_dict['success'], exp_job_result_dict['success'])
+        self.assertEqual(len(job_result_dict['results']), 1)
+        results_entry = job_result_dict['results'][0]
+        self.assertEqual(results_entry['shots'], exp_job_result_dict['results'][0]['shots'])
+        # Transform bitstring to int
+        counts = {str(int(bitstring, 2)): value for bitstring, value in counts.items()}
+        self.assertSetEqual(set(counts.keys()), set(exp_counts.keys()))
+        # The probability distribution is random -> the counts may differ and only there range can be asseted
+        self.assertTrue(40 <= counts.get('0') <= 60)
+        self.assertTrue(40 <= counts.get('7') <= 60)
+
+        # Assert that the specified numbers of bitstrings is contained in the memory
+        memory_count_000 = results_entry['data']['memory'].count('000')
+        memory_count_111 = results_entry['data']['memory'].count('111')
+        self.assertEqual(memory_count_000, counts.get('0'))
+        self.assertEqual(memory_count_111, counts.get('7'))
+
+        self.assertEqual(job_result_dict['date'], exp_job_result_dict['date'])
 
     def test_should_retrieve_job_status(self):
-        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        sim_backend = self.azure_provider.get_backend("ionq.simulator")
         circuit = get_sample_circuit(sim_backend)
         created_job = sim_backend.run(circuit, shots=1)
 
         # Get job status via PlanQK
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(created_job.id())
+        job = self.planqk_provider.get_backend("IonQ Simulator").retrieve_job(created_job.id())
         job_status = job.status()
 
         # Then
         self.assertIn(job_status.name, [JobStatus.QUEUED.name, JobStatus.DONE.name])
 
     def test_should_monitor_job(self):
-        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        sim_backend = self.azure_provider.get_backend("ionq.simulator")
         circuit = get_sample_circuit(sim_backend)
         created_job = sim_backend.run(circuit, shots=1)
 
         # Get job status via PlanQK
-        job = self.planqk_provider.get_backend("ionq.simulator").retrieve_job(created_job.id())
+        job = self.planqk_provider.get_backend("IonQ Simulator").retrieve_job(created_job.id())
         sys.stdout = planqk_stdout = StringIO()
 
         job_monitor(job, output=planqk_stdout)
 
         console_output = planqk_stdout.getvalue()
 
-        self.assertIn('Job STATUS: job has successfully run', console_output)
+        self.assertIn('Job Status: job has successfully run', console_output)
 
     def test_should_cancel_job(self):
-        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        sim_backend = self.planqk_provider.get_backend("IonQ Simulator")
         circuit = get_sample_circuit(sim_backend)
         planqk_job = sim_backend.run(circuit, shots=1)
         planqk_job.cancel()

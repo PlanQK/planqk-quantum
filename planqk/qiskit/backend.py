@@ -5,20 +5,19 @@ from qiskit_braket_provider.exception import QiskitBraketException
 
 
 import datetime
-import logging
 from abc import ABC
 from typing import Union, List, Optional, Tuple, Dict
 
-from qiskit import QuantumCircuit
-from qiskit.providers import BackendV2, QubitProperties, Provider, Options
+from qiskit.providers import BackendV2, Provider, Options
 from qiskit_braket_provider.providers.adapter import wrap_circuits_in_verbatim_box
 
 
 from qiskit.circuit import Instruction as QiskitInstruction
-from .client.backend_dtos import HARDWARE_PROVIDER, ConfigurationDto, TYPE, BackendDto, ConnectivityDto
+from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto
 from .client.client_dtos import JobDto, INPUT_FORMAT
 from .job import PlanqkJob
-from .providers.braket.adapter import _op_to_instruction, convert_qiskit_to_planqk_circuit, transform_to_qasm_3_program
+from planqk.qiskit.providers.helper.adapter import _op_to_instruction, convert_qiskit_to_planqk_circuit, transform_to_qasm_3_program
+from .providers.helper.job_input_converter import convert_circuit_to_backend_input
 
 TASK_ID_DIVIDER = ";"
 
@@ -47,7 +46,7 @@ class PlanqkBackend(BackendV2, ABC):
         Example:
             >>> provider = PlanqkProvider()
             >>> backend = provider.get_backend("SV1")
-            >>> transpiled_circuit = transpile(circuit, backend=backend)
+            >>> transpiled_circuit = transpile(input, backend=backend)
             >>> backend.run(transpiled_circuit, shots=10).result().get_counts()
             {"100": 10, "001": 10}
 
@@ -195,31 +194,23 @@ class PlanqkBackend(BackendV2, ABC):
                 raise RuntimeError("Multi-experiment jobs are not supported")
             circuit = circuit[0]
 
-        shots = kwargs.get('shots', 1)  # TODO externalize
+        shots = kwargs.get('shots', 1)  # TODO externalize - use backen min default
 
-        braket_circuit = convert_qiskit_to_planqk_circuit(circuit)
-        validate_circuit_and_shots(braket_circuit, shots)
-
-        if kwargs.pop("verbatim", False):
-            braket_circuit = wrap_circuits_in_verbatim_box(braket_circuit)
-
-        # TODO multiple circuits
         # TODO input params
 
-        self._backend_info
-
-        qasm_circuit = transform_to_qasm_3_program(braket_circuit, False, {})
+        input = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
 
         # import qiskit.qasm3 as q3  TODO try in verbatim box
-        # qasm_circuit_ibm = q3.dumps(circuit)
+        # qasm_circuit_ibm = q3.dumps(input)
         # qasm_circuit_ibm = qasm_circuit_ibm.replace('\ninclude "stdgates.inc";', '')
-        input_params = {'disableQubitRewiring': False,
-                        'qubit_count': braket_circuit.qubit_count}  # TODO determine QuBit count
+        #TODO this is braket backend specific -> move
+        input_params = {'disable_qubit_rewiring': False,
+                        'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in backend
 
         job_request = JobDto(self._backend_info.id,
                              provider=self._backend_info.provider.name,
-                             circuit=qasm_circuit,
-                             circuit_type=INPUT_FORMAT.OPEN_QASM_3,  # TODO intordce enum
+                             input_format=input[0],
+                             input=input[1],
                              shots=shots,
                              input_params=input_params)
 

@@ -5,8 +5,8 @@ from enum import Enum
 
 
 class INPUT_FORMAT(str, Enum):
-    OPEN_QASM_3 = "OPEN_QASM_3"
-    IONQ = "IONQ"
+    OPEN_QASM_V3 = "OPEN_QASM_V3"
+    IONQ_CIRCUIT_V1 = "IONQ_CIRCUIT_V1"
 
 
 class JOB_STATUS(str, Enum):
@@ -24,7 +24,7 @@ class JobDto:
     provider: str
     shots: int = 1
     id: Optional[str] = None
-    circuit: Optional[Union[str, Dict]] = None
+    input: Optional[Union[str, Dict]] = None
     input_format: Optional[INPUT_FORMAT] = None
     input_params: Optional[Dict] = None
     begin_execution_time: Optional[str] = None
@@ -36,6 +36,8 @@ class JobDto:
     name: Optional[str] = None
     status: Optional[JOB_STATUS] = None
     tags: Optional[Set[str]] = None
+
+    #TODO make me extensible
 
     def __post_init__(self):
         if self.error_data is not None and isinstance(self.error_data, str):

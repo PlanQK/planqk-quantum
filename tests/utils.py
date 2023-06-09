@@ -4,14 +4,14 @@ from qiskit.providers import Backend
 
 def get_sample_circuit(backend: Backend):
     circuit = QuantumCircuit(3, 3)
-    circuit.name = "Qiskit Sample - 3-qubit GHZ circuit"
+    circuit.name = "Qiskit Sample - 3-qubit GHZ input"
     circuit.h(0)
     circuit.cx(0, 1)
-    #circuit.cx(1, 2)
-    circuit.measure([0, 1], [0, 1])
+    circuit.cx(1, 2)
+    circuit.measure([0, 1, 2], [0, 1, 2])
 
-    circuit = transpile(circuit, backend)
-    vars(circuit)
+    #circuit = transpile(circuit, backend)
+    #vars(circuit)
     return circuit
 
 

@@ -86,15 +86,15 @@ MOCK_JOB = {
     'id': '66ab14a8-62ec-40ac-89f7-266cb9bc52b0',
     'creation_time': '2022-12-29T17:43:49.6738189+00:00',
     'input_params': {'shots': 1},
-    'input_data_format': 'ionq.circuit.v1',
+    'input_data_format': 'ionq.input.v1',
     'metadata': {
         'metadata': 'null',
         'num_qubits': '3',
-        'name': 'Qiskit Sample - 3-qubit GHZ circuit',
+        'name': 'Qiskit Sample - 3-qubit GHZ input',
         'qiskit': 'true',
         'meas_map': '[0, 1, 2]',
     },
-    'name': 'Qiskit Sample - 3-qubit GHZ circuit',
+    'name': 'Qiskit Sample - 3-qubit GHZ input',
     'output_data_format': 'ionq.quantum-results.v1',
     'provider_id': 'ionq',
     'status': 'Waiting',
@@ -107,7 +107,7 @@ MOCK_JOB_RESPONSE = {'histogram': {'0': 0.5, '7': 0.5}}
 MOCK_JOB_RESULT = {
     'backend_name': 'ionq.simulator',
     'backend_version': 1,
-    'qobj_id': 'Qiskit Sample - 3-qubit GHZ circuit',
+    'qobj_id': 'Qiskit Sample - 3-qubit GHZ input',
     'job_id': '66ab14a8-62ec-40ac-89f7-266cb9bc52b0',
     'success': True,
     'results': [
@@ -118,7 +118,7 @@ MOCK_JOB_RESULT = {
             'meas_level': {},
             'header': {
                 'qiskit': 'true',
-                'name': 'Qiskit Sample - 3-qubit GHZ circuit',
+                'name': 'Qiskit Sample - 3-qubit GHZ input',
                 'num_qubits': '3',
                 'metadata': None, 'meas_map': '[0, 1, 2]'
             }

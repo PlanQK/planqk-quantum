@@ -10,13 +10,11 @@ from qiskit import QuantumCircuit
 from qiskit.providers import BackendV2, QubitProperties, Options, Provider
 from qiskit_braket_provider.providers.adapter import wrap_circuits_in_verbatim_box
 
-from .adapter import (
+from planqk.qiskit.providers.helper.adapter import (
     aws_device_to_target, convert_qiskit_to_planqk_circuit, transform_to_qasm_3_program,
 )
-from .braket_job import AWSBraketJob
 from ...client.client_dtos import BackendDto, JobDto, INPUT_FORMAT
 from ...job import PlanqkJob
-from ...provider_list import SupportedProviders
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +46,7 @@ class PlanqkAWSBraketBackend(BraketBackend):
         Example:
             >>> provider = AWSBraketProvider()
             >>> backend = provider.get_backend("SV1")
-            >>> transpiled_circuit = transpile(circuit, backend=backend)
+            >>> transpiled_circuit = transpile(input, backend=backend)
             >>> backend.run(transpiled_circuit, shots=10).result().get_counts()
             {"100": 10, "001": 10}
 
@@ -145,14 +143,14 @@ class PlanqkAWSBraketBackend(BraketBackend):
         qasm_circuit = transform_to_qasm_3_program(braket_circuit, False, {})
 
         # import qiskit.qasm3 as q3  TODO try in verbatim box
-        # qasm_circuit_ibm = q3.dumps(circuit)
+        # qasm_circuit_ibm = q3.dumps(input)
         # qasm_circuit_ibm = qasm_circuit_ibm.replace('\ninclude "stdgates.inc";', '')
         input_params = {'disableQubitRewiring': False, 'qubit_count': braket_circuit.qubit_count}  # TODO determine QuBit count
 
         job_request = JobDto(self._backend_info.id,
                              provider=self._backend_info.provider,  # TODO remove - can be decided in backend
-                             circuit=qasm_circuit,
-                             circuit_type=INPUT_FORMAT.OPEN_QASM_3,
+                             input=qasm_circuit,
+                             circuit_type=INPUT_FORMAT.OPEN_QASM_V3,
                              shots=shots,
                              input_params=input_params)
 
