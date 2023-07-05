@@ -104,7 +104,7 @@ class AcceptanceTestSuite(unittest.TestCase):
 
     def test_should_run_job(self):
 
-        sim_backend = self.azure_provider.get_backend("ionq.simulator")
+        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
         circuit = get_sample_circuit(sim_backend)
         job = sim_backend.run(circuit, shots=1)
         job_id = job.id()
@@ -133,7 +133,7 @@ class AcceptanceTestSuite(unittest.TestCase):
 
     def test_should_retrieve_job_via_provider(self):
         # Given: create job
-        sim_backend = self.planqk_provider.get_backend("ionq.simulator")
+        sim_backend = self.planqk_provider.get_backend("IonQ Simulator")
         circuit = get_sample_circuit(sim_backend)
         created_job = sim_backend.run(circuit, shots=1)
 

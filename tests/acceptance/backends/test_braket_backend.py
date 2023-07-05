@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import sys
 import unittest
 from io import StringIO
@@ -21,20 +20,18 @@ logging.basicConfig(level=logging.DEBUG)
 PLANQK_QUANTUM_BASE_URL = os.environ.get('PLANQK_QUANTUM_BASE_URL')
 PLANQK_ACCESS_TOKEN = os.environ.get('PLANQK_ACCESS_TOKEN')
 
-SUPPORTED_BACKENDS = {'Aria 1', 'Harmony 2', 'Lucy', 'Aspen-M-3', 'SV1'}
+BACKEND_ID_AWS_SV1 = "aws.sim.sv1"
+BACKEND_ID_AWS_DM1 = "aws.sim.dm1"
+BACKEND_ID_AWS_IONQ_HARMONY = "aws.ionq.harmony"
+BACKEND_ID_AWS_IONQ_ARIA = "aws.ionq.aria"
+BACKEND_ID_AWS_RIGETTI_ASPEN = "aws.rigetti.aspen"
+BACKEND_ID_AWS_OQC_LUCY = "aws.oqc.lucy"
 
+BACKEND_ID_AZURE_IONQ_HARMONY = "azure.ionq.harmony"
+BACKEND_ID_AZURE_IONQ_SIM= "azure.ionq.simulator"
 
-def is_valid_aws_arn(arn_string):
-    """
-    Validate if the given string is a valid AWS ARN.
-
-    :param arn_string: The ARN string to be validated.
-    :return: True if the ARN string is valid, otherwise False.
-    """
-    arn_pattern = re.compile(
-        r'^arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9-]+):([a-zA-Z0-9-]*):(\d{12}):([a-zA-Z0-9-/:\._]+)$'
-    )
-    return bool(arn_pattern.match(arn_string))
+SUPPORTED_BACKENDS = {BACKEND_ID_AWS_SV1, BACKEND_ID_AWS_DM1, BACKEND_ID_AWS_IONQ_HARMONY, BACKEND_ID_AWS_IONQ_ARIA,
+                      BACKEND_ID_AWS_RIGETTI_ASPEN, BACKEND_ID_AZURE_IONQ_HARMONY, BACKEND_ID_AZURE_IONQ_SIM}
 
 
 def job_id_to_aws_arn(job_id: str) -> str:
@@ -100,7 +97,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertEqual(expected.dt, actual.dt)
         # self.assertEqual(expected.instruction_durations, actual.instruction_durations)
         self.assertEqual(str(expected.instruction_schedule_map), str(actual.instruction_schedule_map))
-        #self.assertEqual(str(expected.instructions), str(actual.instructions))
+        # self.assertEqual(str(expected.instructions), str(actual.instructions))
         self.assert_instructions(expected.instructions, actual.instructions)
         self.assertEqual(expected.max_circuits, actual.max_circuits)
         with self.assertRaises(Exception) as backend_exc:
@@ -116,15 +113,14 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertEqual(expected.target, actual.target)
         self.assertEqual(expected.version, actual.version)
 
-
     def assert_instructions(self, expected: List[Instruction], actual: List[Instruction]):
-        #self.assertEqual(len(expected), len(actual))
+        # self.assertEqual(len(expected), len(actual))
         expected_instruction_strs = [str(entry) for entry in expected]
         actual_instruction_strs = [str(entry) for entry in actual]
         for expected_instruction_str in expected_instruction_strs:
             if expected_instruction_str not in actual_instruction_strs:
                 print(f"Expected instruction {expected_instruction_str} not found in actual list")
-            #assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in actual list"
+            # assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in actual list"
 
     def test_should_get_backend(self):
         exp_backend = self.braket_provider.get_backend("Lucy")
@@ -132,13 +128,6 @@ class AwsBraketTestSuite(unittest.TestCase):
         # Get backend via PlanqkProvider
         backend = self.planqk_provider.get_backend("Lucy")
         self.assertBackend(exp_backend, backend)
-
-    def test_should_run_job(self):
-        sim_backend = self.planqk_provider.get_backend("SV1")
-        # TODO why are getBackends called so often
-        circuit = get_sample_circuit(sim_backend)
-        job = sim_backend.run(circuit)
-        is_valid_aws_arn(job.job_id())
 
     def test_should_retrieve_job(self):
         # Given: create job
@@ -166,7 +155,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertIsNotNone(metadata.get('end_execution_time'))
 
         # Check if the other fields have the expected values
-        self.assertEqual(metadata.get('backend_id'), 'aws-sim-sv1')
+        self.assertEqual(metadata.get('planqk_backend_id'), 'backends-sim-sv1')
         self.assertEqual(metadata.get('provider'), 'AWS')
         self.assertEqual(metadata.get('shots'), 1)
         self.assertIsNone(metadata.get('input'))

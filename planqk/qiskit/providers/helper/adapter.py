@@ -46,9 +46,6 @@ from qiskit.circuit.library import (
     YGate,
     ZGate,
 )
-from qiskit.transpiler import Target
-
-from planqk.qiskit.client.backend_dtos import BackendDto
 
 qiskit_to_braket_gate_names_mapping = {
     "u1": "u1",
