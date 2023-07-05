@@ -106,7 +106,7 @@ class JobTestSuite(unittest.TestCase):
         assert job_result.backend_version == 1
 
         assert job_result.job_id == job_id
-        assert job_result.qobj_id == 'Qiskit Sample - 3-qubit GHZ circuit'
+        assert job_result.qobj_id == 'Qiskit Sample - 3-qubit GHZ input'
         self.assertTrue(job_result.success)
 
         # TODO: Check if this is correct because if enabled, the test case fails
@@ -121,7 +121,7 @@ class JobTestSuite(unittest.TestCase):
         self.assertEqual(results[0].data.probabilities['111'], 0.5)
         self.assertEqual(results[0].header.meas_map, '[0, 1, 2]')
         self.assertIsNone(results[0].header.metadata)
-        self.assertEqual(results[0].header.name, 'Qiskit Sample - 3-qubit GHZ circuit')
+        self.assertEqual(results[0].header.name, 'Qiskit Sample - 3-qubit GHZ input')
         self.assertEqual(results[0].header.num_qubits, '3')
         self.assertEqual(results[0].header.qiskit, 'true')
         self.assertEqual(results[0].meas_level, MeasLevel.CLASSIFIED)

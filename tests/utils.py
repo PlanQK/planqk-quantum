@@ -1,18 +1,28 @@
+from uuid import UUID
+
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers import Backend
 
 
-def get_sample_circuit(backend: Backend):
+def get_sample_circuit() -> QuantumCircuit:
     circuit = QuantumCircuit(3, 3)
-    circuit.name = "Qiskit Sample - 3-qubit GHZ circuit"
+    circuit.name = "Qiskit Sample - 3-qubit GHZ input"
     circuit.h(0)
     circuit.cx(0, 1)
     circuit.cx(1, 2)
     circuit.measure([0, 1, 2], [0, 1, 2])
 
-    circuit = transpile(circuit, backend)
-    vars(circuit)
+    # circuit = transpile(circuit, backend)
+    # vars(circuit)
     return circuit
+
+
+def is_valid_uuid(uuid_to_test):
+    try:
+        UUID(str(uuid_to_test))
+    except ValueError:
+        return False
+    return True
 
 
 def to_dict(obj):
@@ -30,3 +40,18 @@ def to_dict(obj):
             element = to_dict(val)
         result[key] = element
     return result
+
+
+def transform_decimal_to_bitsrings(data: dict[str, int], num_qubits: int) -> dict[str, int]:
+    updated_data: dict[str, int] = {}
+    for key, value in data.items():
+        bitstring_key = transform_decimal_to_bitstring(key, num_qubits)
+        updated_data[bitstring_key] = value
+
+    return updated_data
+
+
+def transform_decimal_to_bitstring(decimal_str: str, num_qubits):
+    # Convert number to bit string
+    bit_string = bin(int(decimal_str))[2:].zfill(num_qubits)
+    return bit_string[::-1]

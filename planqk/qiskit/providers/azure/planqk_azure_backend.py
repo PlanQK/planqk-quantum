@@ -4,7 +4,6 @@ from azure.quantum.qiskit.backends.backend import AzureBackend
 from qiskit.providers import Backend
 from qiskit.qobj import Qobj, QasmQobj
 
-from planqk.client import _PlanqkClient
 from planqk.qiskit.job import PlanqkJob
 from planqk.qiskit.providers.azure.planqk_azure_job import _PlanqkAzureJob
 
@@ -14,13 +13,12 @@ logger = logging.getLogger(__name__)
 class _PlanqkAzureBackend(Backend):
     backend_name = None
 
-    def __init__(self, client: _PlanqkClient, azure_backend: AzureBackend):
-        self._client = client
+    def __init__(self, azure_backend: AzureBackend):
         self.backend = azure_backend
 
     def run(self, circuit, **kwargs):
         """
-        Submits the given circuit to run on an Azure Quantum backend.
+        Submits the given input to run on an Azure Quantum backend.
         """
 
         # Some Qiskit features require passing lists of circuits, so unpack those here.
@@ -30,7 +28,7 @@ class _PlanqkAzureBackend(Backend):
                 raise NotImplementedError("Multi-experiment jobs are not supported!")
             circuit = circuit[0]
 
-        # If the circuit was created using qiskit.assemble,
+        # If the input was created using qiskit.assemble,
         # disassemble into QASM here
         if isinstance(circuit, QasmQobj) or isinstance(circuit, Qobj):
             from qiskit.assembler import disassemble
@@ -48,13 +46,13 @@ class _PlanqkAzureBackend(Backend):
         output_data_format = kwargs.pop("output_data_format", config.azure["output_data_format"])
 
         # If not provided as kwargs, the values of these parameters
-        # are calculated from the circuit itself:
+        # are calculated from the input itself:
         job_name = kwargs.pop("job_name", circuit.name)
         input_data = self.backend._translate_circuit(circuit, **kwargs)
         metadata = kwargs.pop("metadata") if "metadata" in kwargs else self.backend._job_metadata(circuit, **kwargs)
 
-        # Backend options are mapped to input_params.
-        # Take also into consideration options passed in the kwargs, as the take precedence
+        # Backend kwargs are mapped to input_params.
+        # Take also into consideration kwargs passed in the kwargs, as the take precedence
         # over default values:
         input_params = vars(self.backend.options)
         for opt in kwargs.copy():
@@ -63,7 +61,6 @@ class _PlanqkAzureBackend(Backend):
 
         logger.info(f"Submitting new job for backend {self.name()}")
         job = _PlanqkAzureJob(
-            client=self._client,
             backend=self,
             target=self.name(),
             name=job_name,
@@ -76,7 +73,7 @@ class _PlanqkAzureBackend(Backend):
             **kwargs
         )
 
-        logger.info(f"Submitted job with id '{job.id()}' for circuit '{circuit.name}':")
+        logger.info(f"Submitted job with id '{job.id()}' for input '{circuit.name}':")
         logger.info(input_data)
 
         return job
@@ -85,8 +82,8 @@ class _PlanqkAzureBackend(Backend):
         """
         Returns the Job instance associated with the given id.
         """
-        planqk_job = PlanqkJob(self._client, job_id=job_id)
-        return _PlanqkAzureJob(client=self._client, backend=self, planqk_job=planqk_job)
+        planqk_job = PlanqkJob(job_id=job_id)
+        return _PlanqkAzureJob(backend=self, planqk_job=planqk_job)
 
     def name(self):
         """
@@ -130,9 +127,9 @@ class _PlanqkAzureBackend(Backend):
     @property
     def options(self):
         """
-        Return the options for the backend.
+        Return the kwargs for the backend.
 
-        The options of a backend are the dynamic parameters defining
+        The kwargs of a backend are the dynamic parameters defining
         how the backend is used. These are used to control the :meth:`run` method.
         """
         return self.backend.options
@@ -150,27 +147,27 @@ class _PlanqkAzureBackend(Backend):
 
     def provider(self):
         """
-        Return the backend Provider.
+        Return the backend SupportedProviders.
 
         Returns:
-            Provider: the Provider responsible for the backend.
+            SupportedProviders: the SupportedProviders responsible for the backend.
         """
         return self.backend.provider()
 
     def set_options(self, **fields):
         """
-        Set the options fields for the backend.
+        Set the kwargs fields for the backend.
 
-        This method is used to update the options of a backend. If
-        you need to change any of the options prior to running just
-        pass in the kwarg with the new value for the options.
+        This method is used to update the kwargs of a backend. If
+        you need to change any of the kwargs prior to running just
+        pass in the kwarg with the new value for the kwargs.
 
         Args:
-            fields: The fields to update the options
+            fields: The fields to update the kwargs
 
         Raises:
             AttributeError: If the field passed in is not part of the
-                options
+                kwargs
         """
         self.backend.set_options(**fields)
 
