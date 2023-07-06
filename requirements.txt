@@ -1,4 +1,6 @@
+requests==2.*
+qiskit-qasm3-import==0.2.0
+amazon-braket-sdk==1.33.0
+qiskit_braket_provider==0.0.4
 azure-quantum==0.24.208024
 qiskit-ionq==0.1.4
-qiskit-terra>=0.19.1
-requests==2.*
