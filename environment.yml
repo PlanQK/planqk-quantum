@@ -8,6 +8,13 @@ dependencies:
   - pytest>=6.2.4
   - pytest-asyncio>=0.15.0
   - pip:
+      # dev dependencies
+      - setuptools
+
+      # prod dependencies
+
+
+
       - azure-quantum==0.24.208024
       - qiskit-ionq==0.1.4
       - qiskit-terra>=0.19.1
