@@ -13,6 +13,7 @@ from qiskit.tools import job_monitor
 from qiskit_braket_provider.providers import AWSBraketProvider
 
 from planqk.qiskit.provider import PlanqkQuantumProvider
+from tests.acceptance.backends.azure_test_utils import BACKEND_ID_AZURE_IONQ_HARMONY, BACKEND_ID_AZURE_IONQ_SIM
 from tests.utils import get_sample_circuit
 
 logging.basicConfig(level=logging.DEBUG)
@@ -27,8 +28,7 @@ BACKEND_ID_AWS_IONQ_ARIA = "aws.ionq.aria"
 BACKEND_ID_AWS_RIGETTI_ASPEN = "aws.rigetti.aspen"
 BACKEND_ID_AWS_OQC_LUCY = "aws.oqc.lucy"
 
-BACKEND_ID_AZURE_IONQ_HARMONY = "azure.ionq.harmony"
-BACKEND_ID_AZURE_IONQ_SIM= "azure.ionq.simulator"
+
 
 SUPPORTED_BACKENDS = {BACKEND_ID_AWS_SV1, BACKEND_ID_AWS_DM1, BACKEND_ID_AWS_IONQ_HARMONY, BACKEND_ID_AWS_IONQ_ARIA,
                       BACKEND_ID_AWS_RIGETTI_ASPEN, BACKEND_ID_AZURE_IONQ_HARMONY, BACKEND_ID_AZURE_IONQ_SIM}

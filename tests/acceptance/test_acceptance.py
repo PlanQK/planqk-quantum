@@ -91,8 +91,10 @@ class AcceptanceTestSuite(unittest.TestCase):
         # Get backend via AzureProvider
         exp_backend = self.azure_provider.get_backend("ionq.qpu")
 
+        self.planqk_provider.backends()
+
         # Get backend via PlanqkProvider
-        backend = self.planqk_provider.get_backend("ionq.qpu")
+        backend = self.planqk_provider.get_backend("azure.ionq.simulator")
 
         assert backend.name() == exp_backend.name()
         assert backend.backend_name == exp_backend.backend_name
