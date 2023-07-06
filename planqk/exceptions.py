@@ -7,9 +7,5 @@ class PlanqkError(Exception):
         return repr(self.message)
 
 
-class PlanqkClientError(PlanqkError):
-    pass
-
-
 class CredentialUnavailableError(PlanqkError):
     pass
