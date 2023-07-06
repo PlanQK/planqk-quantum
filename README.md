@@ -2,14 +2,14 @@
 
 [![PyPI version](https://badge.fury.io/py/planqk-quantum.svg)](https://badge.fury.io/py/planqk-quantum)
 
-The `planqk-quantum` library is a SDK for developing quantum circuits using [Qiskit](https://pypi.org/project/qiskit) to be run on quantum devices provided by the [PlanQK Platform](https://docs.platform.planqk.de).
+The `planqk-quantum` library is an SDK for developing quantum circuits using [Qiskit](https://pypi.org/project/qiskit) to be run on quantum devices provided by the [PlanQK Platform](https://docs.platform.planqk.de).
 
 ## Getting Started
 
 Check out the following guides on how to get started with PlanQK:
 
-- [Tutorial on how to create a PlanQK Service using the `planqk-quantum` library](https://docs.platform.planqk.de/tutorials/tutorial-qiskit.html)
-- [General guide on how to create and deploy PlanQK Services](https://docs.platform.planqk.de/docs/service-platform/managed-services.html)
+- [PlanQK Quickstart Guide](https://docs.platform.planqk.de/tutorials/tutorial-qiskit.html)
+- [Using the `planqk-quantum` SDK](https://docs.platform.planqk.de/docs/getting-started/using-sdk.html)
 
 ## Installation
 
