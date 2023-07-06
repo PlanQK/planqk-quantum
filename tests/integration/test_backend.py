@@ -4,7 +4,7 @@ import unittest.mock
 import responses
 
 from planqk.exceptions import PlanqkClientError
-from planqk.qiskit import PlanqkQuantumProvider
+from planqk.qiskit.provider import PlanqkQuantumProvider
 from tests.integration.mocks import BACKENDS_MOCK_RESPONSE, BACKEND_IONQ_MOCK_CONFIG, BACKEND_IONQ_MOCK_STATUS
 
 BASE_URL = 'http://127.0.0.1:8080'

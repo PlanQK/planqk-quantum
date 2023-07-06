@@ -119,7 +119,12 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertIsNotNone(metadata.get('id'))
         self.assertIsNotNone(metadata.get('name'))
         self.assertIsNotNone(metadata.get('creation_time'))
-        self.assertIsNotNone(metadata.get('end_execution_time'))
+
+        planqk_job_state = metadata.get('status')
+        if planqk_job_state == JOB_STATUS.COMPLETED:
+            self.assertIsNotNone(metadata.get('end_execution_time'))
+        else:
+            self.assertIsNone(metadata.get('end_execution_time'))
 
         # Check if the other fields have the expected values
         self.assertEqual(metadata.get('backend_id'), planqk_backend_id)
@@ -133,7 +138,7 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertIsNone(metadata.get('error_data'))
         self.assertIsNone(metadata.get('metadata'))
         # This the internal job status name not the Qiskit status name
-        self.assertIn(metadata.get('status'), [JOB_STATUS.PENDING, JOB_STATUS.RUNNING, JOB_STATUS.COMPLETED])
+        self.assertIn(planqk_job_state, [JOB_STATUS.PENDING, JOB_STATUS.RUNNING, JOB_STATUS.COMPLETED])
         self.assertEqual(metadata.get('tags'), [])
 
     @abstractmethod
@@ -145,16 +150,15 @@ class BaseJobTest(ABC, unittest.TestCase):
         planqk_job = self._run_job()
         planqk_backend_id = self.get_backend_id()
 
+        # Get job via PlanQK
+        planqk_backend = self.planqk_provider.get_backend(planqk_backend_id)
+        job = planqk_backend.retrieve_job(planqk_job.id)
+        result: Result = job.result()
+
         # Get job result via provider
         backend = self.get_provider().get_backend(self.get_provider_backend_name())
         provider_job_id = self.get_provider_job_id(planqk_job.id)
         exp_result: Result = backend.retrieve_job(provider_job_id).result()
-
-        # Get job via PlanQK
-        planqk_backend = self.planqk_provider.get_backend(planqk_backend_id)
-        job = planqk_backend.retrieve_job(planqk_job.id)
-        job_result_dict = to_dict(job.result())
-        result: Result = job.result()
 
         self.assertEqual(result.backend_name, planqk_backend_id)
         self.assertEqual(self.get_provider_job_id(result.job_id), exp_result.job_id)
@@ -164,7 +168,7 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertEqual(result_entry.shots, exp_result_entry.shots)
         self.assert_experimental_result_data(result_entry.data, exp_result_entry.data,
                                              self.is_simulator(planqk_backend_id))
-        self.assertIsNotNone(job_result_dict['date'])
+        self.assertIsNotNone(result.date)
 
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData,
                                         is_random_result=False):
@@ -188,3 +192,17 @@ class BaseJobTest(ABC, unittest.TestCase):
 
         # Then:
         wait().until_asserted(assert_job_cancelled)
+
+    @abstractmethod
+    def test_should_retrieve_job_status(self):
+        pass
+
+    def should_retrieve_job_status(self):
+        # Given:
+        planqk_job = self._run_job()
+
+        # When:
+        job_status = planqk_job.status()
+
+        # Then:
+        self.assertIn(job_status, [JobStatus.QUEUED, JobStatus.DONE, JobStatus.RUNNING])

@@ -36,8 +36,6 @@ class AwsSv1JobTests(BaseJobTest):
     def is_valid_job_id(self, job_id: str) -> bool:
         return is_valid_aws_arn(job_id)
 
-    #Tests
-
     def test_should_run_job(self):
         self.should_run_job()
 
@@ -50,3 +48,11 @@ class AwsSv1JobTests(BaseJobTest):
     def test_should_cancel_job(self):
         # Cannot be tested as simulator jobs may complete instantly
         pass
+
+    def test_should_cancel_job(self):
+        self.should_cancel_job()
+
+    def test_should_retrieve_job_status(self):
+        self.should_retrieve_job_status()
+
+

@@ -25,7 +25,7 @@ class AwsIonqAriaJobTests(BaseJobTest):
         return BRAKET_NAME_IONQ_ARIA
 
     def get_test_shots(self) -> int:
-        return 1
+        return 3
 
     def is_simulator(self, backend_id: str) -> bool:
         return False
@@ -49,3 +49,6 @@ class AwsIonqAriaJobTests(BaseJobTest):
 
     def test_should_cancel_job(self):
         self.should_cancel_job()
+
+    def test_should_retrieve_job_status(self):
+        self.should_retrieve_job_status()

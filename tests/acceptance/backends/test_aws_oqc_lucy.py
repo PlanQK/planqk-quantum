@@ -2,11 +2,11 @@ from qiskit_braket_provider import AWSBraketProvider
 
 from tests.acceptance.backends.base_job_test import BaseJobTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn
-from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_SV1, BACKEND_ID_AWS_DM1
-from tests.acceptance.backends.test_braket_job import BRAKET_NAME_SV1, BRAKET_NAME_DM1
+from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_OQC_LUCY
+from tests.acceptance.backends.test_braket_job import BRAKET_NAME_OQC_LUCY
 
 
-class AwsDm1JobTests(BaseJobTest):
+class AwsOqcLucyJobTests(BaseJobTest):
 
     def setUp(self):
         super().setUp()
@@ -19,16 +19,16 @@ class AwsDm1JobTests(BaseJobTest):
         return "AWS"
 
     def get_backend_id(self) -> str:
-        return BACKEND_ID_AWS_DM1
+        return BACKEND_ID_AWS_OQC_LUCY
 
     def get_provider_backend_name(self) -> str:
-        return BRAKET_NAME_DM1
+        return BRAKET_NAME_OQC_LUCY
 
     def get_test_shots(self) -> int:
-        return 1
+        return 10
 
     def is_simulator(self, backend_id: str) -> bool:
-        return True
+        return False
 
     def get_provider_job_id(self, job_id: str) -> str:
         return transform_job_id_to_arn(job_id)
@@ -48,8 +48,7 @@ class AwsDm1JobTests(BaseJobTest):
         self.should_retrieve_job_result()
 
     def test_should_cancel_job(self):
-        # Cannot be tested as simulator jobs may complete instantly
-        pass
+        self.should_cancel_job()
 
     def test_should_retrieve_job_status(self):
         self.should_retrieve_job_status()

@@ -1,13 +1,10 @@
-import time
-from dataclasses import asdict
-from typing import Optional, Union
+from typing import Optional
 
-from qiskit import QiskitError
-from qiskit.providers import JobV1, BackendV2, JobStatus, Backend
+from qiskit.providers import JobV1, JobStatus, Backend
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 
-from planqk.qiskit.client.client import logger, _PlanqkClient
+from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.client_dtos import JobDto
 
 
@@ -18,9 +15,10 @@ class ErrorData(object):
 
 
 JobStatusMap = {
-    "COMPLETED": JobStatus.DONE,
+    "CREATED": JobStatus.INITIALIZING,
     "PENDING": JobStatus.QUEUED,
     "RUNNING": JobStatus.RUNNING,
+    "COMPLETED": JobStatus.DONE,
     "FAILED": JobStatus.ERROR,
     "CANCELLING": JobStatus.RUNNING,
     "CANCELLED": JobStatus.CANCELLED,
