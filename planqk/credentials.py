@@ -5,7 +5,7 @@ import platform
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
 
-from planqk.exceptions import CredentialUnavailableError, PlanqkClientError
+from planqk.exceptions import CredentialUnavailableError
 
 _TOKEN_ENV_VARIABLE = 'PLANQK_QUANTUM_ACCESS_TOKEN'
 
@@ -94,4 +94,4 @@ class DefaultCredentialsProvider(CredentialProvider):
 
         message = f'{self.__class__.__name__} failed to retrieve an access token'
         logger.warning(message)
-        raise PlanqkClientError(message)
+        raise CredentialUnavailableError(message)
