@@ -1,6 +1,7 @@
 from qiskit.result.models import ExperimentResultData
 from qiskit_braket_provider import AWSBraketProvider
 
+from planqk.qiskit.client.backend_dtos import PROVIDER
 from tests.acceptance.backends.base_job_test import BaseJobTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, BRAKET_NAME_OQC_LUCY
 from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_OQC_LUCY
@@ -16,7 +17,7 @@ class AwsOqcLucyJobTests(BaseJobTest):
         return self.braket_provider
 
     def get_provider_id(self):
-        return "AWS"
+        return PROVIDER.AWS.name
 
     def get_backend_id(self) -> str:
         return BACKEND_ID_AWS_OQC_LUCY

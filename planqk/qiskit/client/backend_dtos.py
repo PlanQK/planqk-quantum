@@ -71,6 +71,7 @@ class QubitDto:
 @dataclass
 class GateDto:
     name: str
+    native: bool
 
     @classmethod
     def from_dict(cls, data: Dict):
@@ -88,19 +89,31 @@ class ConnectivityDto:
 
 
 @dataclass
+class ShotsRangeDto:
+    min: int
+    max: int
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return cls(**data)
+
+
+@dataclass
 class ConfigurationDto:
     gates: List[GateDto]
     qubits: List[QubitDto]
     qubit_count: int
     connectivity: ConnectivityDto
     supported_input_formats: List[INPUT_FORMAT]
-    shots_range: range
+    shots_range: ShotsRangeDto
+    memory_result_returned: bool
 
     def __post_init__(self):
         self.gates = [GateDto.from_dict(gate) for gate in self.gates]
         self.qubits = [QubitDto.from_dict(qubit) for qubit in self.qubits]
         self.connectivity = ConnectivityDto.from_dict(self.connectivity)
         self.supported_input_formats = [INPUT_FORMAT(input_format) for input_format in self.supported_input_formats]
+        self.shots_range = ShotsRangeDto.from_dict(self.shots_range)
 
 
     @classmethod

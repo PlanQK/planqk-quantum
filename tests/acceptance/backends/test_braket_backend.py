@@ -95,9 +95,9 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertTrue(actual.description.startswith("PlanQK Backend:"))
         self.assertTrue(actual.description.endswith(actual.name + "."))
         self.assertEqual(expected.dt, actual.dt)
-        # self.assertEqual(expected.instruction_durations, actual.instruction_durations)
+        # self.assertEqual(backend.instruction_durations, config.instruction_durations)
         self.assertEqual(str(expected.instruction_schedule_map), str(actual.instruction_schedule_map))
-        # self.assertEqual(str(expected.instructions), str(actual.instructions))
+        # self.assertEqual(str(backend.instructions), str(config.instructions))
         self.assert_instructions(expected.instructions, actual.instructions)
         self.assertEqual(expected.max_circuits, actual.max_circuits)
         with self.assertRaises(Exception) as backend_exc:
@@ -105,7 +105,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         with self.assertRaises(Exception) as expected_exc:
             _ = expected.meas_map()
         self.assertEqual(type(backend_exc.exception), type(expected_exc.exception))
-        # self.assertEqual(expected.online_date.replace(microsecond=0).astimezone(None), actual.online_date.astimezone(None))
+        # self.assertEqual(backend.online_date.replace(microsecond=0).astimezone(None), config.online_date.astimezone(None))
         self.assertCountEqual(expected.operation_names, actual.operation_names)
         self.assertCountEqual(str(expected.operations), str(actual.operations))
         self.assertEqual(expected.options, actual.options)
@@ -114,13 +114,13 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertEqual(expected.version, actual.version)
 
     def assert_instructions(self, expected: List[Instruction], actual: List[Instruction]):
-        # self.assertEqual(len(expected), len(actual))
+        # self.assertEqual(len(backend), len(config))
         expected_instruction_strs = [str(entry) for entry in expected]
         actual_instruction_strs = [str(entry) for entry in actual]
         for expected_instruction_str in expected_instruction_strs:
             if expected_instruction_str not in actual_instruction_strs:
                 print(f"Expected instruction {expected_instruction_str} not found in actual list")
-            # assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in actual list"
+            # assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in config list"
 
     def test_should_get_backend(self):
         exp_backend = self.braket_provider.get_backend("Lucy")
@@ -154,7 +154,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertIsNotNone(metadata.get('creation_time'))
         self.assertIsNotNone(metadata.get('end_execution_time'))
 
-        # Check if the other fields have the expected values
+        # Check if the other fields have the backend values
         self.assertEqual(metadata.get('planqk_backend_id'), 'backends-sim-sv1')
         self.assertEqual(metadata.get('provider'), 'AWS')
         self.assertEqual(metadata.get('shots'), 1)

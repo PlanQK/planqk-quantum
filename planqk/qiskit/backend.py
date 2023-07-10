@@ -1,32 +1,21 @@
-from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from qiskit.circuit import Measure
-from qiskit.transpiler import Target, InstructionProperties
-from qiskit_braket_provider.exception import QiskitBraketException
-
-
 import datetime
 from abc import ABC
 from typing import Union, List, Optional, Tuple, Dict
 
-from qiskit.providers import BackendV2, Provider, Options
-from qiskit_braket_provider.providers.adapter import wrap_circuits_in_verbatim_box
-
-
 from qiskit.circuit import Instruction as QiskitInstruction
+from qiskit.circuit import Measure
+from qiskit.providers import BackendV2, Provider, Options
+from qiskit.providers.models import QasmBackendConfiguration, GateConfig
+from qiskit.transpiler import Target, InstructionProperties
+from qiskit_braket_provider.exception import QiskitBraketException
+
+from planqk.qiskit.providers.helper.adapter import _op_to_instruction
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto
-from .client.client_dtos import JobDto, INPUT_FORMAT
+from .client.client_dtos import JobDto
 from .job import PlanqkJob
-from planqk.qiskit.providers.helper.adapter import _op_to_instruction, convert_qiskit_to_planqk_circuit, transform_to_qasm_3_program
 from .providers.helper.job_input_converter import convert_circuit_to_backend_input
 
 TASK_ID_DIVIDER = ";"
-
-
-# class PlanqkBackend(BackendV2, ABC):
-#     """BraketBackend."""
-#
-#     def __repr__(self):
-#         return f"PlanqkBraketBackend[{self.name}]"
 
 
 class PlanqkBackend(BackendV2, ABC):
@@ -69,12 +58,10 @@ class PlanqkBackend(BackendV2, ABC):
         )
         self._backend_info = backend_info
         self._target = self._planqk_backend_to_target()
+        self._configuration = self._planqk_backend_dto_to_configuration()
 
     def _planqk_backend_to_target(self) -> Target:
         """Converts properties of a PlanQK backend into Qiskit Target object.
-
-        Args:
-            planqk_backend: PlanQK backend
 
         Returns:
             target for Qiskit backend
@@ -91,7 +78,7 @@ class PlanqkBackend(BackendV2, ABC):
             instructions: List[QiskitInstruction] = []
 
             for operation in configuration.gates:
-                instruction = _op_to_instruction(operation.name) #TODO cchek if finction impl
+                instruction = _op_to_instruction(operation.name)  # TODO cchek if finction impl
                 if instruction is not None:
                     # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
                     if instruction.num_qubits <= 2:
@@ -176,6 +163,42 @@ class PlanqkBackend(BackendV2, ABC):
 
         return target
 
+    def _planqk_backend_dto_to_configuration(self) -> QasmBackendConfiguration:
+        basis_gates = [self._get_gate_config_from_target(basis_gate.name)
+                       for basis_gate in self._backend_info.configuration.gates if basis_gate.native
+                       and self._get_gate_config_from_target(basis_gate.name) is not None]
+        gates = [self._get_gate_config_from_target(gate.name)
+                 for gate in self._backend_info.configuration.gates if not gate.native
+                 and self._get_gate_config_from_target(gate.name) is not None]
+
+        return QasmBackendConfiguration(
+            backend_name=self.name,
+            backend_version=self.backend_version,
+            n_qubits=self._backend_info.configuration.qubit_count,
+            basis_gates=basis_gates,
+            gates=gates,
+            local=False,
+            simulator=self._backend_info.type == TYPE.SIMULATOR,
+            conditional=False,
+            open_pulse=False,
+            memory=self._backend_info.configuration.memory_result_returned,
+            max_shots=self._backend_info.configuration.shots_range.max,
+            coupling_map=self.coupling_map,
+            supported_instructions=self._target.instructions,
+            max_experiments=self._backend_info.configuration.shots_range.max,  # Only one circuit is supported per job
+            description=self._backend_info.documentation.description,
+            min_shots=self._backend_info.configuration.shots_range.min,
+        )
+
+    def _get_gate_config_from_target(self, name) -> GateConfig:
+        operations = [operation for operation in self._target.operations if operation.name.casefold() == name.casefold()]
+        if len(operations) == 1:
+            operation = operations[0]
+            return GateConfig(
+                name=name,
+                parameters=operation.params,
+                qasm_def=None)
+
     @property
     def target(self):
         return self._target
@@ -203,7 +226,7 @@ class PlanqkBackend(BackendV2, ABC):
         # import qiskit.qasm3 as q3  TODO try in verbatim box
         # qasm_circuit_ibm = q3.dumps(input)
         # qasm_circuit_ibm = qasm_circuit_ibm.replace('\ninclude "stdgates.inc";', '')
-        #TODO this is braket backend specific -> move
+        # TODO this is braket backend specific -> move
         input_params = {'disable_qubit_rewiring': False,
                         'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in backend
 
@@ -227,3 +250,12 @@ class PlanqkBackend(BackendV2, ABC):
         """
 
         return PlanqkJob(backend=self, job_id=job_id)
+
+    def configuration(self) -> QasmBackendConfiguration:
+        """Return the backend configuration.
+
+        Returns:
+            QasmBackendConfiguration: the configuration for the backend.
+        """
+
+        return self._configuration

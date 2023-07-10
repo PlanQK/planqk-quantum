@@ -8,7 +8,8 @@ from braket.circuits import Instruction
 from busypie import wait
 from dotenv import load_dotenv
 from qiskit import QuantumCircuit
-from qiskit.providers import JobStatus
+from qiskit.providers import JobStatus, BackendV2
+from qiskit.providers.models import QasmBackendConfiguration
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResultData, ExperimentResult
 
@@ -107,17 +108,17 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertTrue(actual.description.startswith("PlanQK Backend:"))
         self.assertTrue(actual.description.endswith(actual.name + "."))
         self.assertEqual(expected.dt, actual.dt)
-        # self.assertEqual(expected.instruction_durations, actual.instruction_durations)
+        # self.assertEqual(backend.instruction_durations, config.instruction_durations)
         self.assertEqual(str(expected.instruction_schedule_map), str(actual.instruction_schedule_map))
-        # self.assertEqual(str(expected.instructions), str(actual.instructions))
+
         self.assert_instructions(expected.instructions, actual.instructions)
+        self.assert_backend_config(expected, actual.configuration())
         self.assertEqual(expected.max_circuits, actual.max_circuits)
         with self.assertRaises(Exception) as backend_exc:
             _ = actual.meas_map()
         with self.assertRaises(Exception) as expected_exc:
             _ = expected.meas_map()
         self.assertEqual(type(backend_exc.exception), type(expected_exc.exception))
-        # self.assertEqual(expected.online_date.replace(microsecond=0).astimezone(None), actual.online_date.astimezone(None))
         self.assertCountEqual(expected.operation_names, actual.operation_names)
         self.assertCountEqual(str(expected.operations), str(actual.operations))
         self.assertEqual(expected.options, actual.options)
@@ -125,13 +126,28 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertEqual(expected.version, actual.version)
 
     def assert_instructions(self, expected: List[Instruction], actual: List[Instruction]):
-        # self.assertEqual(len(expected), len(actual))
+        # self.assertEqual(len(backend), len(config))
         expected_instruction_strs = [str(entry) for entry in expected]
         actual_instruction_strs = [str(entry) for entry in actual]
         for expected_instruction_str in expected_instruction_strs:
             if expected_instruction_str not in actual_instruction_strs:
                 print(f"Expected instruction {expected_instruction_str} not found in actual list")
-            # assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in actual list"
+            # assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in config list"
+
+    def assert_backend_config(self, backend: BackendV2, config: QasmBackendConfiguration):
+        self.assertEqual(self.get_backend_id(), config.backend_name)
+        self.assertEqual(backend.backend_version, config.backend_version)
+        self.assertIsNotNone(config.basis_gates)
+        self.assertTrue(len(config.gates) > 0)
+        self.assertEqual(False, config.local)
+        self.assertEqual(self.is_simulator(), config.simulator)
+        self.assertEqual(False, config.conditional)
+        self.assertEqual(False, config.open_pulse)
+        self.assertIsNotNone(config.memory)
+        self.assertTrue(config.max_shots > 0)
+        self.assertEqual(backend.coupling_map, config.coupling_map)
+        self.assertTrue(config.max_experiments > 0)
+        self.assertIsNotNone(config.description)
 
     @abstractmethod
     def test_should_run_job(self):
@@ -172,7 +188,7 @@ class BaseJobTest(ABC, unittest.TestCase):
         else:
             self.assertIsNone(metadata.get('end_execution_time'))
 
-        # Check if the other fields have the expected values
+        # Check if the other fields have the backend values
         self.assertEqual(metadata.get('backend_id'), planqk_backend_id)
         self.assertEqual(metadata.get('provider'), self.get_provider_id())
         self.assertEqual(metadata.get('shots'), self.get_test_shots())

@@ -1,16 +1,11 @@
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.azure_test_utils import init_azure_provider, BACKEND_ID_AZURE_IONQ_HARMONY, AZURE_NAME_IONQ_HARMONY
-from tests.acceptance.backends.base_job_test import BaseJobTest
-from tests.utils import is_valid_uuid, transform_decimal_to_bitsrings
-from qiskit.result.models import ExperimentResultData
-
-from planqk.qiskit.client.backend_dtos import PROVIDER
 from tests.acceptance.backends.azure_test_utils import init_azure_provider, BACKEND_ID_AZURE_IONQ_HARMONY, \
     AZURE_NAME_IONQ_HARMONY
 from tests.acceptance.backends.base_job_test import BaseJobTest
 from tests.utils import is_valid_uuid
+from tests.utils import transform_decimal_to_bitsrings
 
 
 class AzureIonqHarmonyJobTests(BaseJobTest):
