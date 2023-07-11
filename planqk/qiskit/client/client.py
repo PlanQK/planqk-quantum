@@ -1,13 +1,13 @@
 import json
 import logging
 import os
-import urllib
-from typing import List, Optional
-from urllib.parse import quote
+from typing import List, Optional, Callable
 
 import requests
+from requests import Response, HTTPError
 
 from planqk.credentials import DefaultCredentialsProvider
+from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto
 from planqk.qiskit.client.client_dtos import JobDto
 
@@ -38,56 +38,59 @@ class _PlanqkClient(object):
         cls._credentials = credentials
 
     @classmethod
-    def get_backends(cls, name: Optional[str] = None) -> List[BackendDto]:
-        headers = cls._get_default_headers()
+    def perform_request(cls, request_func: Callable[..., Response], url, params=None, data=None, headers=None):
+        headers = {**cls._get_default_headers(), **(headers or {})}
+        try:
+            response = request_func(url, json=data, params=params, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Cannot connect to middleware under {url}: {e}")
+            raise e
+        except HTTPError as e:
+            if e.response.status_code == 401:
+                raise InvalidAccessTokenError
+            else:
+                raise PlanqkClientError(e.response)
 
+    @classmethod
+    def get_backends(cls, name: Optional[str] = None) -> List[BackendDto]:
         params = {}
         if name is not None:
             params["name"] = name
 
-        response = requests.get(f"{base_url()}/backends", params=params, headers=headers)
-        response.raise_for_status()
+        response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params)
 
-        return [BackendDto.from_dict(backend_info) for backend_info in response.json()]
+        return [BackendDto.from_dict(backend_info) for backend_info in response]
 
     @classmethod
     def get_backend(cls, backend_id: str):
-        headers = cls._get_default_headers()
-        response = requests.get(f"{base_url()}/backends/{backend_id}", headers=headers)
+        response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}")
         response.raise_for_status()
         return response.json()
 
     @classmethod
     def submit_job(cls, job: JobDto) -> str:
-        headers = cls._get_default_headers()
-        headers["Content-TYPE"] = "application/json"
+        headers = {"content-type": "application/json"}
 
         job_dict = job.__dict__
 
-        response = requests.post(f"{base_url()}/jobs", json=job_dict, headers=headers)
-        response.raise_for_status()
-        return response.json()["id"]
+        response = cls.perform_request(requests.post, f"{base_url()}/jobs", data=job_dict, headers=headers)
+        return response["id"]
 
     @classmethod
     def get_job(cls, job_id: str) -> JobDto:
-        headers = cls._get_default_headers()
-        encoded_job_id = urllib.parse.quote_plus(job_id)
-        response = requests.get(f"{base_url()}/jobs/{encoded_job_id}", headers=headers)
-        response.raise_for_status()
-        return JobDto.from_dict(response.json())
+        response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}")
+        return JobDto.from_dict(response)
 
     @classmethod
     def get_job_result(cls, job_id: str) -> dict:
-        headers = cls._get_default_headers()
-        response = requests.get(f"{base_url()}/jobs/{job_id}/result", headers=headers)
-        response.raise_for_status()
-        return response.json()
+        response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}/result")
+        return response
 
     @classmethod
     def cancel_job(cls, job_id: str) -> None:
-        headers = cls._get_default_headers()
-        response = requests.delete(f"{base_url()}/jobs/{job_id}", headers=headers)
-        response.raise_for_status()
+        cls.perform_request(requests.delete, f"{base_url()}/jobs/{job_id}")
 
     @classmethod
     def _get_default_headers(cls):
