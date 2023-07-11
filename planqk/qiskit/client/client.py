@@ -59,14 +59,10 @@ class _PlanqkClient(object):
 
     @classmethod
     def submit_job(cls, job: JobDto) -> str:
-        # TODO: type job request
         headers = cls._get_default_headers()
         headers["Content-TYPE"] = "application/json"
 
         job_dict = job.__dict__
-
-        # TODO: in azure
-        # _dict_values_to_string(job_dict.get("metadata"))
 
         response = requests.post(f"{base_url()}/jobs", json=job_dict, headers=headers)
         response.raise_for_status()

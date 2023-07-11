@@ -60,6 +60,10 @@ class PlanqkBackend(BackendV2, ABC):
         self._target = self._planqk_backend_to_target()
         self._configuration = self._planqk_backend_dto_to_configuration()
 
+        # num_qubits must be set again as some backends (e.g. Rigetti) do not use consecutive qubit indices resulting in
+        # wrong qubit count inferred by the function target#add_instruction
+        self._target .num_qubits = self._backend_info.configuration.qubit_count
+
     def _planqk_backend_to_target(self) -> Target:
         """Converts properties of a PlanQK backend into Qiskit Target object.
 
@@ -67,11 +71,11 @@ class PlanqkBackend(BackendV2, ABC):
             target for Qiskit backend
         """
         # building target
-        target = Target(description=f"Target for PlanQK backend {self.name}")
-
         configuration: ConfigurationDto = self._backend_info.configuration
         qubit_count: int = configuration.qubit_count
-        # gate model devices
+        target = Target(description=f"Target for PlanQK backend {self.name}")
+
+        # gate model devices target.num_qubits
         if self._backend_info.type == TYPE.QPU:
 
             connectivity: ConnectivityDto = self._backend_info.configuration.connectivity
@@ -116,7 +120,7 @@ class PlanqkBackend(BackendV2, ABC):
                 # for more than 2 qubits
                 else:
                     instruction_props = None
-                # TODO other architcture not inoq
+
                 target.add_instruction(instruction, instruction_props)
 
         # gate model simulators

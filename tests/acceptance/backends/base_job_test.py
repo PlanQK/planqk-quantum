@@ -102,7 +102,7 @@ class BaseJobTest(ABC, unittest.TestCase):
 
         # PlanQK Backend: HARDWARE_PROVIDER.IONQ_CIRCUIT_V1 Aria 1
         self.assertEqual(self.get_backend_id(), actual.name)
-        self.assertEqual(expected.num_qubits, actual.num_qubits)
+        self.assert_num_of_qubits(expected.num_qubits, actual.num_qubits)
         self.assertEqual(expected.backend_version, actual.backend_version)
         self.assertTrue(str(expected.coupling_map), str(actual.coupling_map))
         self.assertTrue(actual.description.startswith("PlanQK Backend:"))
@@ -124,6 +124,9 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertEqual(expected.options, actual.options)
         self.assertEqual(expected.target, actual.target)
         self.assertEqual(expected.version, actual.version)
+
+    def assert_num_of_qubits(self, expected: int, actual: int):
+        self.assertEqual(expected, actual)
 
     def assert_instructions(self, expected: List[Instruction], actual: List[Instruction]):
         # self.assertEqual(len(backend), len(config))

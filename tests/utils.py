@@ -12,9 +12,18 @@ def get_sample_circuit() -> QuantumCircuit:
     circuit.cx(1, 2)
     circuit.measure([0, 1, 2], [0, 1, 2])
 
-    # circuit = transpile(circuit, backend)
-    # vars(circuit)
     return circuit
+
+
+def get_width_sample_circuit(n_bits : int) -> QuantumCircuit:
+    circuit = QuantumCircuit(n_bits, n_bits)
+    circuit.h(range(n_bits))
+
+    # perform measurement
+    circuit.measure(range(n_bits), range(n_bits))
+
+    return circuit
+
 
 
 def is_valid_uuid(uuid_to_test):
