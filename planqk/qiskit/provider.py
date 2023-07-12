@@ -26,9 +26,6 @@ class PlanqkQuantumProvider(Provider):
                    criteria.
         """
 
-        # if kwargs.get("local"):  # TODO local backend
-        #   return [BraketLocalBackend(name="default")]
-
         backend_dtos = _PlanqkClient.get_backends(name)
 
         # only gate models are supported

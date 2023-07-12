@@ -1,16 +1,11 @@
 """Util function for provider."""
-import json
 from typing import Callable, Dict, Optional
 
 from braket.circuits import Circuit, Instruction, gates, result_types
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import QubitReferenceType, OpenQASMSerializationProperties, IRType
-from braket.device_schema import (
-    DeviceCapabilities,
-)
 from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.schema_common import BraketSchemaBase
 from numpy import pi
 from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction as QiskitInstruction
@@ -78,7 +73,6 @@ qiskit_to_braket_gate_names_mapping = {
     "ryy": "yy",
     "ecr": "ecr",
 }
-
 
 qiskit_gate_names_to_braket_gates: Dict[str, Callable] = {
     "u1": lambda lam: [gates.Rz(lam)],
@@ -152,7 +146,7 @@ qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] 
 }
 
 
-def _op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
+def op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
     """Converts PlanQK operation to Qiskit Instruction.
 
     Args:
@@ -216,6 +210,49 @@ def wrap_circuit_in_verbatim_box(circuit: Circuit) -> Circuit:
            as the original one and with result types preserved.
     """
     return Circuit(circuit.result_types).add_verbatim_box(Circuit(circuit.instructions))
+
+
+def convert_continuous_qubit_indices(connectivity_graph: dict,) -> dict:
+    """
+    This function was copied from the following source:
+    https://github.com/qiskit-community/qiskit-braket-provider/blob/984101cec132777c2559a41e9fc4f9ef208e391e/qiskit_braket_provider/providers/adapter.py#L306
+
+    Aspen qubit indices are discontinuous (label between x0 and x7, x being
+    the number of the octagon) while the Qiskit transpiler creates and/or
+    handles coupling maps with continuous indices. This function converts the
+    discontinous connectivity graph from Aspen to a continuous one.
+
+    Args:
+        connectivity_graph (dict): connectivity graph from Aspen. For example
+        4 qubit system, the connectivity graph will be:
+            {"0": ["1", "2", "7"], "1": ["0","2","7"], "2": ["0","1","7"],
+            "7": ["0","1","2"]}
+
+    Returns:
+        dict: Connectivity graph with continuous indices. For example for an
+        input connectivity graph with discontinuous indices (qubit 0, 1, 2 and
+        then qubit 7) as shown here:
+            {"0": ["1", "2", "7"], "1": ["0","2","7"], "2": ["0","1","7"],
+            "7": ["0","1","2"]}
+        the qubit index 7 will be mapped to qubit index 3 for the qiskit
+        transpilation step. Thereby the resultant continous qubit indices
+        output will be:
+            {"0": ["1", "2", "3"], "1": ["0","2","3"], "2": ["0","1","3"],
+            "3": ["0","1","2"]}
+    """
+    # Creates list of existing qubit indices which are discontinuous.
+    indices = [int(key) for key in connectivity_graph.keys()]
+    indices.sort()
+    # Creates a list of continuous indices for number of qubits.
+    map_list = list(range(len(indices)))
+    # Creates a dictionary to remap the discountinous indices to continuous.
+    mapper = dict(zip(indices, map_list))
+    # Performs the remapping from the discontinous to the continuous indices.
+    continous_connectivity_graph = {
+        mapper[int(k)]: [mapper[int(v)] for v in val]
+        for k, val in connectivity_graph.items()
+    }
+    return continous_connectivity_graph
 
 
 def transform_to_qasm_3_program(braket_circuit: Circuit,

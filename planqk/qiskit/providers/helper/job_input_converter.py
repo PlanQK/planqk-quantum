@@ -1,7 +1,5 @@
-import json
 from typing import List, Tuple
 
-from azure.quantum.target import IonQ
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit, wrap_circuits_in_verbatim_box

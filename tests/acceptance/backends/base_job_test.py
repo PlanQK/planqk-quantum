@@ -230,7 +230,7 @@ class BaseJobTest(ABC, unittest.TestCase):
         result_entry: ExperimentResult = result.results[0]
         exp_result_entry: ExperimentResult = exp_result.results[0]
         self.assertEqual(exp_result_entry.shots, result_entry.shots)
-        self.assert_experimental_result_data(exp_result_entry.data, result_entry.data)
+        self.assert_experimental_result_data(result_entry.data, exp_result_entry.data)
         self.assertIsNotNone(result.date)
 
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):

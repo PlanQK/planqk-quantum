@@ -42,7 +42,6 @@ class PlanqkJob(JobV1):
         if job_id is not None:
             self._job_id = job_id
             self._refresh()
-            # TODO get backend from job details bakcend id
 
         else:
             self.submit()

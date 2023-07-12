@@ -67,7 +67,7 @@ class _PlanqkClient(object):
     def get_backend(cls, backend_id: str):
         response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}")
         response.raise_for_status()
-        return response.json()
+        return response
 
     @classmethod
     def submit_job(cls, job: JobDto) -> str:

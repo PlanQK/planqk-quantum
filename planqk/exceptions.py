@@ -22,7 +22,7 @@ class PlanqkClientError(Exception):
         error_msg = error_json['error_message'] if error_json is not None else None
         status = error_json['status'] if error_json is not None else None
         status_code = self.response.status_code
-        return f'{error_msg} (HTTP error: {status})' if error_msg is not None else f' HTTP error: {status_code}'
+        return f'{error_msg} (HTTP error: {status})' if error_msg is not None else f'HTTP error code: {status_code}'
 
 
 class CredentialUnavailableError(PlanqkError):
@@ -30,7 +30,7 @@ class CredentialUnavailableError(PlanqkError):
 
 
 class InvalidAccessTokenError(PlanqkError):
-    def __init__(self, value="Could not verify your access token."):
+    def __init__(self, value="Invalid personal access token provided."):
         self.value = value
         super().__init__(self.value)
 

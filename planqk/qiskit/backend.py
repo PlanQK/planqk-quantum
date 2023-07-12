@@ -9,7 +9,7 @@ from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target, InstructionProperties
 from qiskit_braket_provider.exception import QiskitBraketException
 
-from planqk.qiskit.providers.helper.adapter import _op_to_instruction
+from planqk.qiskit.providers.helper.adapter import op_to_instruction
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto
 from .client.client_dtos import JobDto
 from .job import PlanqkJob
@@ -33,10 +33,10 @@ class PlanqkBackend(BackendV2, ABC):
         """PlanqkBackend for execution circuits against PlanQK devices.
 
         Example:
-            >>> provider = PlanqkProvider()
-            >>> backend = provider.get_backend("SV1")
-            >>> transpiled_circuit = transpile(input, backend=backend)
-            >>> backend.run(transpiled_circuit, shots=10).result().get_counts()
+            provider = PlanqkProvider()
+            backend = provider.get_backend("SV1")
+            transpiled_circuit = transpile(input, backend=backend)
+            backend.run(transpiled_circuit, shots=10).result().get_counts()
             {"100": 10, "001": 10}
 
         Args:
@@ -60,6 +60,7 @@ class PlanqkBackend(BackendV2, ABC):
         self._target = self._planqk_backend_to_target()
         self._configuration = self._planqk_backend_dto_to_configuration()
 
+        # TODO WORKAROUND:
         # num_qubits must be set again as some backends (e.g. Rigetti) do not use consecutive qubit indices resulting in
         # wrong qubit count inferred by the function target#add_instruction
         self._target .num_qubits = self._backend_info.configuration.qubit_count
@@ -82,7 +83,7 @@ class PlanqkBackend(BackendV2, ABC):
             instructions: List[QiskitInstruction] = []
 
             for operation in configuration.gates:
-                instruction = _op_to_instruction(operation.name)  # TODO cchek if finction impl
+                instruction = op_to_instruction(operation.name)
                 if instruction is not None:
                     # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
                     if instruction.num_qubits <= 2:
@@ -114,6 +115,10 @@ class PlanqkBackend(BackendV2, ABC):
                                     instruction_props[(dst, src)] = None
                     # building coupling map for device with connectivity graph
                     else:
+                        # if self._backend_info.hardware_provider == HARDWARE_PROVIDER.RIGETTI:
+                        #     # Rigetti uses discontinuous qubit indices but qiskit expects continuous indices
+                        #     connectivity.graph = convert_continuous_qubit_indices(connectivity.graph)
+
                         for src, connections in connectivity.graph.items():
                             for dst in connections:
                                 instruction_props[(int(src), int(dst))] = None
@@ -128,7 +133,7 @@ class PlanqkBackend(BackendV2, ABC):
             instructions = []
 
             for operation in configuration.gates:
-                instruction = _op_to_instruction(operation.name)
+                instruction = op_to_instruction(operation.name)
                 if instruction is not None:
                     # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
                     if instruction.num_qubits <= 2:
@@ -195,13 +200,14 @@ class PlanqkBackend(BackendV2, ABC):
         )
 
     def _get_gate_config_from_target(self, name) -> GateConfig:
-        operations = [operation for operation in self._target.operations if operation.name.casefold() == name.casefold()]
+        operations = [operation for operation in self._target.operations
+                      if operation.name.casefold() == name.casefold()]
         if len(operations) == 1:
             operation = operations[0]
             return GateConfig(
                 name=name,
                 parameters=operation.params,
-                qasm_def=None)
+                qasm_def='')
 
     @property
     def target(self):
@@ -225,7 +231,7 @@ class PlanqkBackend(BackendV2, ABC):
 
         # TODO input params
 
-        input = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
+        input_circ = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
 
         # import qiskit.qasm3 as q3  TODO try in verbatim box
         # qasm_circuit_ibm = q3.dumps(input)
@@ -236,8 +242,8 @@ class PlanqkBackend(BackendV2, ABC):
 
         job_request = JobDto(self._backend_info.id,
                              provider=self._backend_info.provider.name,
-                             input_format=input[0],
-                             input=input[1],
+                             input_format=input_circ[0],
+                             input=input_circ[1],
                              shots=shots,
                              input_params=input_params)
 
