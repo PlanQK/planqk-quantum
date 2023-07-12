@@ -20,8 +20,9 @@ class PlanqkClientError(Exception):
     def __str__(self):
         error_json = json.loads(self.response.text) if self.response.text else None
         error_msg = error_json['error_message'] if error_json is not None else None
+        status = error_json['status'] if error_json is not None else None
         status_code = self.response.status_code
-        return f'{status_code} - {error_msg}' if error_msg is not None else f'{status_code}'
+        return f'{error_msg} (HTTP error: {status})' if error_msg is not None else f' HTTP error: {status_code}'
 
 
 class CredentialUnavailableError(PlanqkError):
