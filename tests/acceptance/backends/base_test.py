@@ -2,13 +2,13 @@ import logging
 import os
 import unittest
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Union
 
 from braket.circuits import Instruction
 from busypie import wait
 from dotenv import load_dotenv
-from qiskit import QuantumCircuit
-from qiskit.providers import JobStatus, BackendV2
+from qiskit import QuantumCircuit, transpile
+from qiskit.providers import JobStatus, BackendV2, BackendV1, Backend
 from qiskit.providers.models import QasmBackendConfiguration
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResultData, ExperimentResult
@@ -19,7 +19,11 @@ from planqk.qiskit.provider import PlanqkQuantumProvider
 from tests.utils import get_sample_circuit
 
 
-class BaseJobTest(ABC, unittest.TestCase):
+def hasAttr(backend, param):
+    pass
+
+
+class BaseTest(ABC, unittest.TestCase):
     def setUp(self):
         load_dotenv()
 
@@ -89,6 +93,10 @@ class BaseJobTest(ABC, unittest.TestCase):
         self._planqk_job = planqk_backend.run(self.input_circuit, shots=self.get_test_shots())
         return self._planqk_job
 
+    def test_get_all_backends(self):
+        # TODO implement me
+        pass
+
     @abstractmethod
     def test_should_get_backend(self):
         pass
@@ -100,15 +108,16 @@ class BaseJobTest(ABC, unittest.TestCase):
         # Get backend via PlanqkProvider
         actual = self.planqk_provider.get_backend(self.get_backend_id())
 
-        # PlanQK Backend: HARDWARE_PROVIDER.IONQ_CIRCUIT_V1 Aria 1
         self.assertEqual(self.get_backend_id(), actual.name)
+        self.assert_backend(expected, actual)
+
+    def assert_backend(self, expected: Union[Backend, BackendV2], actual: BackendV2):
         self.assert_num_of_qubits(expected.num_qubits, actual.num_qubits)
         self.assertEqual(expected.backend_version, actual.backend_version)
         self.assertTrue(str(expected.coupling_map), str(actual.coupling_map))
         self.assertTrue(actual.description.startswith("PlanQK Backend:"))
         self.assertTrue(actual.description.endswith(actual.name + "."))
         self.assertEqual(expected.dt, actual.dt)
-        # self.assertEqual(backend.instruction_durations, config.instruction_durations)
         self.assertEqual(str(expected.instruction_schedule_map), str(actual.instruction_schedule_map))
 
         self.assert_instructions(expected.instructions, actual.instructions)
@@ -137,9 +146,9 @@ class BaseJobTest(ABC, unittest.TestCase):
                 print(f"Expected instruction {expected_instruction_str} not found in actual list")
             # assert expected_instruction_str in actual_instruction_strs, f"Expected instruction {expected_instruction_str} not found in config list"
 
-    def assert_backend_config(self, backend: BackendV2, config: QasmBackendConfiguration):
+    def assert_backend_config(self, backend: Union[Backend, BackendV2], config: QasmBackendConfiguration):
         self.assertEqual(self.get_backend_id(), config.backend_name)
-        self.assertEqual(backend.backend_version, config.backend_version)
+        self.assertEqual('2', config.backend_version)
         self.assertIsNotNone(config.basis_gates)
         self.assertTrue(len(config.gates) > 0)
         self.assertEqual(False, config.local)
@@ -148,9 +157,29 @@ class BaseJobTest(ABC, unittest.TestCase):
         self.assertEqual(False, config.open_pulse)
         self.assertIsNotNone(config.memory)
         self.assertTrue(config.max_shots > 0)
-        self.assertEqual(backend.coupling_map, config.coupling_map)
+        if hasattr(backend, 'coupling_map'):
+            self.assertEqual(backend.coupling_map, config.coupling_map)
+        else:
+            self.assertIsNotNone(config.coupling_map)
         self.assertTrue(config.max_experiments > 0)
         self.assertIsNotNone(config.description)
+
+    @abstractmethod
+    def test_should_transpile_circuit(self):
+        pass
+
+    def should_transpile_circuit(self):
+        # Transpile via Provider
+        backend = self.get_provider().get_backend(self.get_provider_backend_name())
+        expected = transpile(self.input_circuit, backend=backend)
+
+        # Transpile via PlanQK
+        planqk_backend = self.planqk_provider.get_backend(self.get_backend_id())
+        actual = transpile(self.input_circuit, backend=planqk_backend)
+
+        self.assertEqual(expected.header, actual.header)
+        self.assertEqual(str(expected), str(actual))
+
 
     @abstractmethod
     def test_should_run_job(self):

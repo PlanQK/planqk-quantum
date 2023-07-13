@@ -1,13 +1,13 @@
 from qiskit_braket_provider import AWSBraketProvider
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.base_job_test import BaseJobTest
+from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, BRAKET_NAME_SV1, \
     BRAKET_NAME_DM1
 from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_SV1, BACKEND_ID_AWS_DM1
 
 
-class AwsDm1JobTests(BaseJobTest):
+class AwsDm1Tests(BaseTest):
 
     def setUp(self):
         super().setUp()
@@ -41,6 +41,10 @@ class AwsDm1JobTests(BaseJobTest):
 
     def test_should_get_backend(self):
         self.should_get_backend()
+
+    def test_should_transpile_circuit(self):
+        # For simulators transpilation is not required
+        pass
 
     def test_should_run_job(self):
         self.should_run_job()

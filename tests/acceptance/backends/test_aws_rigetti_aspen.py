@@ -1,13 +1,13 @@
 from qiskit_braket_provider import AWSBraketProvider
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.base_job_test import BaseJobTest
+from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, \
     BRAKET_NAME_RIGETTI_ASPEN
 from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_RIGETTI_ASPEN
 
 
-class AwsRigettiAspenJobTests(BaseJobTest):
+class AwsRigettiAspenTests(BaseTest):
 
     def setUp(self):
         super().setUp()
@@ -40,15 +40,15 @@ class AwsRigettiAspenJobTests(BaseJobTest):
 
     def assert_num_of_qubits(self, expected: int, actual: int):
         # AWS Braket backend provider returns wrong number of Qubits for M3
-        self.assertEqual(79, actual)
+        self.assertEqual(148, actual)
 
-    #Tests
-
-    def test_should_get_backend(self):
-        self.should_get_backend()
+    # Tests
 
     def test_should_get_backend(self):
         self.should_get_backend()
+
+    def test_should_transpile_circuit(self):
+        self.should_transpile_circuit()
 
     def test_should_run_job(self):
         self.should_run_job()

@@ -3,20 +3,15 @@ from qiskit.result.models import ExperimentResultData
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from tests.acceptance.backends.azure_test_utils import init_azure_provider, BACKEND_ID_AZURE_IONQ_HARMONY, \
     AZURE_NAME_IONQ_HARMONY
-from tests.acceptance.backends.base_job_test import BaseJobTest
+from tests.acceptance.backends.test_azure_ionq_sim import AzureIonqSimTests
 from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings
 
 
-class AzureIonqHarmonyJobTests(BaseJobTest):
+class AzureIonqHarmonyTests(AzureIonqSimTests):
 
     def setUp(self):
         super().setUp()
-
-        self.azure_provider = init_azure_provider()
-
-    def get_provider(self):
-        return self.azure_provider
 
     def get_provider_id(self):
         return PROVIDER.AZURE.name
@@ -51,6 +46,9 @@ class AzureIonqHarmonyJobTests(BaseJobTest):
 
     def test_should_get_backend(self):
         self.should_get_backend()
+
+    def test_should_transpile_circuit(self):
+        self.should_transpile_circuit()
 
     def test_should_run_job(self):
         self.should_run_job()

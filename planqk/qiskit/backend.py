@@ -60,11 +60,6 @@ class PlanqkBackend(BackendV2, ABC):
         self._target = self._planqk_backend_to_target()
         self._configuration = self._planqk_backend_dto_to_configuration()
 
-        # TODO WORKAROUND:
-        # num_qubits must be set again as some backends (e.g. Rigetti) do not use consecutive qubit indices resulting in
-        # wrong qubit count inferred by the function target#add_instruction
-        self._target .num_qubits = self._backend_info.configuration.qubit_count
-
     def _planqk_backend_to_target(self) -> Target:
         """Converts properties of a PlanQK backend into Qiskit Target object.
 
