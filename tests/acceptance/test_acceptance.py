@@ -75,12 +75,12 @@ class AcceptanceTestSuite(unittest.TestCase):
         self.maxDiff = None
 
     def test_should_list_all_backends(self):
-        # Get backend names via AzureProvider
+        # Get actual names via AzureProvider
         exp_backend_names = []
         for backend in self.azure_provider.backends():
             exp_backend_names.append(backend.name())
 
-        # Get backend names via PlanqkProvider
+        # Get actual names via PlanqkProvider
         backend_names = []
         for backend in self.planqk_provider.backends():
             backend_names.append(backend.name())
@@ -88,12 +88,12 @@ class AcceptanceTestSuite(unittest.TestCase):
         assert set(backend_names) == set(exp_backend_names).intersection(SUPPORTED_BACKENDS)
 
     def test_should_get_backend(self):
-        # Get backend via AzureProvider
+        # Get actual via AzureProvider
         exp_backend = self.azure_provider.get_backend("ionq.qpu")
 
         self.planqk_provider.backends()
 
-        # Get backend via PlanqkProvider
+        # Get actual via PlanqkProvider
         backend = self.planqk_provider.get_backend("azure.ionq.simulator")
 
         assert backend.name() == exp_backend.name()

@@ -11,7 +11,7 @@ from qiskit_braket_provider.exception import QiskitBraketException
 
 from planqk.qiskit.providers.helper.adapter import op_to_instruction
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto
-from .client.client_dtos import JobDto
+from .client.job_dtos import JobDto
 from .job import PlanqkJob
 from .providers.helper.job_input_converter import convert_circuit_to_backend_input
 
@@ -34,18 +34,18 @@ class PlanqkBackend(BackendV2, ABC):
 
         Example:
             provider = PlanqkProvider()
-            backend = provider.get_backend("SV1")
-            transpiled_circuit = transpile(input, backend=backend)
-            backend.run(transpiled_circuit, shots=10).result().get_counts()
+            actual = provider.get_backend("SV1")
+            transpiled_circuit = transpile(input, actual=actual)
+            actual.run(transpiled_circuit, shots=10).result().get_counts()
             {"100": 10, "001": 10}
 
         Args:
-            backend_info: PlanQK backend infos
-            provider: Qiskit provider for this backend
-            name: name of backend
-            description: description of backend
+            backend_info: PlanQK actual infos
+            provider: Qiskit provider for this actual
+            name: name of actual
+            description: description of actual
             online_date: online date
-            backend_version: backend version
+            backend_version: actual version
             **fields: other arguments
         """
         super().__init__(
@@ -61,15 +61,15 @@ class PlanqkBackend(BackendV2, ABC):
         self._configuration = self._planqk_backend_dto_to_configuration()
 
     def _planqk_backend_to_target(self) -> Target:
-        """Converts properties of a PlanQK backend into Qiskit Target object.
+        """Converts properties of a PlanQK actual into Qiskit Target object.
 
         Returns:
-            target for Qiskit backend
+            target for Qiskit actual
         """
         # building target
         configuration: ConfigurationDto = self._backend_info.configuration
         qubit_count: int = configuration.qubit_count
-        target = Target(description=f"Target for PlanQK backend {self.name}")
+        target = Target(description=f"Target for PlanQK actual {self.name}")
 
         # gate model devices target.num_qubits
         if self._backend_info.type == TYPE.QPU:
@@ -162,7 +162,7 @@ class PlanqkBackend(BackendV2, ABC):
 
         else:
             raise QiskitBraketException(
-                "Cannot create target from PlanQK backend information."
+                "Cannot create target from PlanQK actual information."
             )
 
         return target
@@ -231,9 +231,9 @@ class PlanqkBackend(BackendV2, ABC):
         # import qiskit.qasm3 as q3  TODO try in verbatim box
         # qasm_circuit_ibm = q3.dumps(input)
         # qasm_circuit_ibm = qasm_circuit_ibm.replace('\ninclude "stdgates.inc";', '')
-        # TODO this is braket backend specific -> move
+        # TODO this is braket actual specific -> move
         input_params = {'disable_qubit_rewiring': False,
-                        'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in backend
+                        'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in actual
 
         job_request = JobDto(self._backend_info.id,
                              provider=self._backend_info.provider.name,
@@ -245,7 +245,7 @@ class PlanqkBackend(BackendV2, ABC):
         return PlanqkJob(backend=self, job_details=job_request)
 
     def retrieve_job(self, job_id: str) -> PlanqkJob:
-        """Return a single job submitted to the backend.
+        """Return a single job submitted to the actual.
 
         Args:
             job_id: ID of the job to retrieve.
@@ -257,10 +257,10 @@ class PlanqkBackend(BackendV2, ABC):
         return PlanqkJob(backend=self, job_id=job_id)
 
     def configuration(self) -> QasmBackendConfiguration:
-        """Return the backend configuration.
+        """Return the actual configuration.
 
         Returns:
-            QasmBackendConfiguration: the configuration for the backend.
+            QasmBackendConfiguration: the configuration for the actual.
         """
 
         return self._configuration

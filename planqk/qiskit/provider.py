@@ -19,7 +19,7 @@ class PlanqkQuantumProvider(Provider):
     def backends(self, name=None, **kwargs):
         """Return a list of backends matching the specified filtering.
            Args:
-               name (str): name of the backend.
+               name (str): name of the actual.
                **kwargs: dict used for filtering.
            Returns:
                List[Backend]: a list of Backends that match the filtering
@@ -54,3 +54,6 @@ class PlanqkQuantumProvider(Provider):
             job = provider.get_job(job_id)
             if job is not None:
                 return job
+
+    def get_access_token(self):
+        return _PlanqkClient.get_credentials().get_access_token()

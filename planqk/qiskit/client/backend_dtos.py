@@ -1,4 +1,3 @@
-import inspect
 from dataclasses import dataclass
 from datetime import time, datetime
 from enum import Enum
@@ -6,7 +5,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from planqk.qiskit.client.client_dtos import INPUT_FORMAT
+from planqk.qiskit.client.dto_utils import init_with_defined_params
+from planqk.qiskit.client.job_dtos import INPUT_FORMAT
 
 
 class PROVIDER(Enum):
@@ -32,11 +32,11 @@ class STATUS(Enum):
     """
     STATUS Enum:
 
-    UNKNOWN: The backend status is unknown.
-    ONLINE: The backend is online, processing submitted jobs and accepting new ones.
-    PAUSED: The backend is accepting jobs, but not currently processing them.
-    OFFLINE: The backend is not accepting new jobs, e.g. due to maintenance.
-    RETIRED: The backend is not available for use anymore.
+    UNKNOWN: The actual status is unknown.
+    ONLINE: The actual is online, processing submitted jobs and accepting new ones.
+    PAUSED: The actual is accepting jobs, but not currently processing them.
+    OFFLINE: The actual is not accepting new jobs, e.g. due to maintenance.
+    RETIRED: The actual is not available for use anymore.
     """
     UNKNOWN = "UNKNOWN"
     ONLINE = "ONLINE"
@@ -54,10 +54,7 @@ class DocumentationDto:
 
     @classmethod
     def from_dict(cls, data: Dict): #TODO das auf alle inits anwenden
-        init_params = inspect.signature(cls.__init__).parameters
-        valid_data = {k: v for k, v in data.items() if k in init_params}
-        return cls(**valid_data)
-
+        return init_with_defined_params(cls, data)
 
 @dataclass
 class QubitDto:
@@ -75,7 +72,7 @@ class GateDto:
 
     @classmethod
     def from_dict(cls, data: Dict):
-        return cls(**data)
+        return init_with_defined_params(cls, data)
 
 
 @dataclass
@@ -85,8 +82,7 @@ class ConnectivityDto:
 
     @classmethod
     def from_dict(cls, data: Dict):
-        return cls(**data)
-
+        return init_with_defined_params(cls, data)
 
 @dataclass
 class ShotsRangeDto:
@@ -95,7 +91,7 @@ class ShotsRangeDto:
 
     @classmethod
     def from_dict(cls, data: Dict):
-        return cls(**data)
+        return init_with_defined_params(cls, data)
 
 
 @dataclass
@@ -130,26 +126,17 @@ class AvailabilityTimesDto:
 
     @classmethod
     def from_dict(cls, data: Dict):
-        return cls(**data)
-
-
-class CostGranularity(Enum):
-    SHOT = "SHOT"
-    JOB = "JOB"
-
+        return init_with_defined_params(cls, data)
 
 @dataclass
 class CostDto:
-    granularity: CostGranularity
+    granularity: str
     currency: str
     value: float
 
-    def __post_init__(self):
-        self.granularity = CostGranularity(self.granularity)
-
     @classmethod
     def from_dict(cls, data: Dict):
-        return cls(**data)
+        return init_with_defined_params(cls, data)
 
 
 @dataclass
@@ -175,8 +162,9 @@ class BackendDto:
         self.status = STATUS(self.status)
         self.documentation = DocumentationDto.from_dict(self.documentation)
         self.configuration = ConfigurationDto.from_dict(self.configuration)
-        #self.availability = ConfigurationDto(self.configuration)
+        self.availability = [AvailabilityTimesDto.from_dict(avail_entry) for avail_entry in self.availability]
+        self.costs = [CostDto.from_dict(cost_entry) for cost_entry in self.costs]
 
     @classmethod
     def from_dict(cls, data: Dict):
-        return cls(**data)
+        return init_with_defined_params(cls, data)

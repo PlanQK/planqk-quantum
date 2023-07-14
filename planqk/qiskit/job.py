@@ -5,7 +5,7 @@ from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 
 from planqk.qiskit.client.client import _PlanqkClient
-from planqk.qiskit.client.client_dtos import JobDto
+from planqk.qiskit.client.job_dtos import JobDto
 
 
 class ErrorData(object):

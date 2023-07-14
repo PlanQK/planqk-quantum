@@ -66,13 +66,13 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.maxDiff = None
 
     def test_should_list_all_backends(self):
-        # Get backend names via AWS Braket
+        # Get actual names via AWS Braket
         exp_backend_names = []
         exp_backends = self.braket_provider.backends()
         for backend in exp_backends:
             exp_backend_names.append(backend.name)
 
-        # Get backend names via PlanqkProvider
+        # Get actual names via PlanqkProvider
         backend_names = []
         backends = self.planqk_provider.backends()
         for backend in backends:
@@ -81,7 +81,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         assert set(backend_names) == set(exp_backend_names).intersection(SUPPORTED_BACKENDS)
 
         exp_backends_dict = {backend.name: backend for backend in exp_backends}
-        # Assert backend properties
+        # Assert actual properties
         for backend in backends:
             exp_backend = exp_backends_dict[backend.name]
             self.assertBackend(exp_backend, backend)
@@ -95,9 +95,9 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertTrue(actual.description.startswith("PlanQK Backend:"))
         self.assertTrue(actual.description.endswith(actual.name + "."))
         self.assertEqual(expected.dt, actual.dt)
-        # self.assertEqual(backend.instruction_durations, config.instruction_durations)
+        # self.assertEqual(actual.instruction_durations, config.instruction_durations)
         self.assertEqual(str(expected.instruction_schedule_map), str(actual.instruction_schedule_map))
-        # self.assertEqual(str(backend.instructions), str(config.instructions))
+        # self.assertEqual(str(actual.instructions), str(config.instructions))
         self.assert_instructions(expected.instructions, actual.instructions)
         self.assertEqual(expected.max_circuits, actual.max_circuits)
         with self.assertRaises(Exception) as backend_exc:
@@ -105,7 +105,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         with self.assertRaises(Exception) as expected_exc:
             _ = expected.meas_map()
         self.assertEqual(type(backend_exc.exception), type(expected_exc.exception))
-        # self.assertEqual(backend.online_date.replace(microsecond=0).astimezone(None), config.online_date.astimezone(None))
+        # self.assertEqual(actual.online_date.replace(microsecond=0).astimezone(None), config.online_date.astimezone(None))
         self.assertCountEqual(expected.operation_names, actual.operation_names)
         self.assertCountEqual(str(expected.operations), str(actual.operations))
         self.assertEqual(expected.options, actual.options)
@@ -114,7 +114,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertEqual(expected.version, actual.version)
 
     def assert_instructions(self, expected: List[Instruction], actual: List[Instruction]):
-        # self.assertEqual(len(backend), len(config))
+        # self.assertEqual(len(actual), len(config))
         expected_instruction_strs = [str(entry) for entry in expected]
         actual_instruction_strs = [str(entry) for entry in actual]
         for expected_instruction_str in expected_instruction_strs:
@@ -125,7 +125,7 @@ class AwsBraketTestSuite(unittest.TestCase):
     def test_should_get_backend(self):
         exp_backend = self.braket_provider.get_backend("Lucy")
 
-        # Get backend via PlanqkProvider
+        # Get actual via PlanqkProvider
         backend = self.planqk_provider.get_backend("Lucy")
         self.assertBackend(exp_backend, backend)
 
@@ -154,7 +154,7 @@ class AwsBraketTestSuite(unittest.TestCase):
         self.assertIsNotNone(metadata.get('creation_time'))
         self.assertIsNotNone(metadata.get('end_execution_time'))
 
-        # Check if the other fields have the backend values
+        # Check if the other fields have the actual values
         self.assertEqual(metadata.get('planqk_backend_id'), 'backends-sim-sv1')
         self.assertEqual(metadata.get('provider'), 'AWS')
         self.assertEqual(metadata.get('shots'), 1)

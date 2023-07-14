@@ -39,7 +39,7 @@ class AwsRigettiAspenTests(BaseTest):
         return is_valid_aws_arn(job_id)
 
     def assert_num_of_qubits(self, expected: int, actual: int):
-        # AWS Braket backend provider returns wrong number of Qubits for M3
+        # AWS Braket actual provider returns wrong number of Qubits for M3
         self.assertEqual(148, actual)
 
     # Tests

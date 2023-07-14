@@ -9,8 +9,8 @@ with open('./requirements.txt', 'r') as fh:
 setup(
     name='planqk-quantum',
     version="1.12.1",
-    author='StoneOne AG',
-    author_email='info@stoneone.de',
+    author='Anaqor AG',
+    author_email='info@anaqor.io',
     url='https://github.com/planqk/planqk-quantum',
     description='Python library for the PlanQK Quantum Platform',
     long_description=long_description,

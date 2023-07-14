@@ -1,7 +1,6 @@
 from uuid import UUID
 
-from qiskit import QuantumCircuit, transpile
-from qiskit.providers import Backend
+from qiskit import QuantumCircuit
 
 
 def get_sample_circuit() -> QuantumCircuit:
@@ -13,6 +12,33 @@ def get_sample_circuit() -> QuantumCircuit:
     circuit.measure([0, 1, 2], [0, 1, 2])
 
     return circuit
+
+SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT = """global phase: 3π/2
+                ┌──────────┐┌────────┐          ┌─┐      
+       q_0 -> 0 ┤ Ry(-π/2) ├┤ Rz(-π) ├──■───────┤M├──────
+                └──────────┘└────────┘┌─┴─┐     └╥┘┌─┐   
+       q_1 -> 1 ──────────────────────┤ X ├──■───╫─┤M├───
+                                      └───┘┌─┴─┐ ║ └╥┘┌─┐
+       q_2 -> 2 ───────────────────────────┤ X ├─╫──╫─┤M├
+                                           └───┘ ║  ║ └╥┘
+ ancilla_0 -> 3 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ ancilla_1 -> 4 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ ancilla_2 -> 5 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ ancilla_3 -> 6 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ ancilla_4 -> 7 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ ancilla_5 -> 8 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ ancilla_6 -> 9 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+ancilla_7 -> 10 ─────────────────────────────────╫──╫──╫─
+                                                 ║  ║  ║ 
+           c: 3/═════════════════════════════════╩══╩══╩═
+                                                 0  1  2 """
 
 
 def get_width_sample_circuit(n_bits : int) -> QuantumCircuit:

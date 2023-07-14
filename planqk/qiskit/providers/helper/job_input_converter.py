@@ -5,7 +5,7 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit, wrap_circuits_in_verbatim_box
 from qiskit_ionq.helpers import qiskit_circ_to_ionq_circ
 
-from planqk.qiskit.client.client_dtos import INPUT_FORMAT
+from planqk.qiskit.client.job_dtos import INPUT_FORMAT
 from planqk.qiskit.providers.helper.adapter import transform_to_qasm_3_program
 
 
@@ -52,4 +52,4 @@ def convert_circuit_to_backend_input(supported_input_formats: List[INPUT_FORMAT]
         if convert_circuit:
             return input_format, convert_circuit(circuit)
     raise UnsupportedFormatException("Could not convert input "
-                                     "to any of the supported inputs formats of the backend")
+                                     "to any of the supported inputs formats of the actual")

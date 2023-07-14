@@ -9,7 +9,7 @@ from requests import Response, HTTPError
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto
-from planqk.qiskit.client.client_dtos import JobDto
+from planqk.qiskit.client.job_dtos import JobDto, JobResultDto
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,10 @@ class _PlanqkClient(object):
         cls._credentials = credentials
 
     @classmethod
+    def get_credentials(cls):
+        return cls._credentials;
+
+    @classmethod
     def perform_request(cls, request_func: Callable[..., Response], url, params=None, data=None, headers=None):
         headers = {**cls._get_default_headers(), **(headers or {})}
         try:
@@ -64,10 +68,9 @@ class _PlanqkClient(object):
         return [BackendDto.from_dict(backend_info) for backend_info in response]
 
     @classmethod
-    def get_backend(cls, backend_id: str):
+    def get_backend(cls, backend_id: str) -> BackendDto:
         response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}")
-        response.raise_for_status()
-        return response
+        return BackendDto.from_dict(response)
 
     @classmethod
     def submit_job(cls, job: JobDto) -> str:
@@ -84,9 +87,9 @@ class _PlanqkClient(object):
         return JobDto.from_dict(response)
 
     @classmethod
-    def get_job_result(cls, job_id: str) -> dict:
+    def get_job_result(cls, job_id: str) -> JobResultDto:
         response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}/result")
-        return response
+        return JobResultDto.from_dict(response)
 
     @classmethod
     def cancel_job(cls, job_id: str) -> None:

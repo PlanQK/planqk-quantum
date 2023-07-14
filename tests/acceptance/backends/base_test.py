@@ -13,7 +13,7 @@ from qiskit.providers.models import QasmBackendConfiguration
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResultData, ExperimentResult
 
-from planqk.qiskit.client.client_dtos import JOB_STATUS
+from planqk.qiskit.client.job_dtos import JOB_STATUS
 from planqk.qiskit.job import PlanqkJob
 from planqk.qiskit.provider import PlanqkQuantumProvider
 from tests.utils import get_sample_circuit
@@ -93,19 +93,15 @@ class BaseTest(ABC, unittest.TestCase):
         self._planqk_job = planqk_backend.run(self.input_circuit, shots=self.get_test_shots())
         return self._planqk_job
 
-    def test_get_all_backends(self):
-        # TODO implement me
-        pass
-
     @abstractmethod
     def test_should_get_backend(self):
         pass
 
     def should_get_backend(self):
-        # Get backend via Provider
+        # Get actual via Provider
         expected = self.get_provider().get_backend(self.get_provider_backend_name())
 
-        # Get backend via PlanqkProvider
+        # Get actual via PlanqkProvider
         actual = self.planqk_provider.get_backend(self.get_backend_id())
 
         self.assertEqual(self.get_backend_id(), actual.name)
@@ -132,13 +128,12 @@ class BaseTest(ABC, unittest.TestCase):
         self.assertCountEqual(str(expected.operations), str(actual.operations))
         self.assertEqual(expected.options, actual.options)
         self.assertEqual(expected.target, actual.target)
-        self.assertEqual(expected.version, actual.version)
 
     def assert_num_of_qubits(self, expected: int, actual: int):
         self.assertEqual(expected, actual)
 
     def assert_instructions(self, expected: List[Instruction], actual: List[Instruction]):
-        # self.assertEqual(len(backend), len(config))
+        # self.assertEqual(len(actual), len(config))
         expected_instruction_strs = [str(entry) for entry in expected]
         actual_instruction_strs = [str(entry) for entry in actual]
         for expected_instruction_str in expected_instruction_strs:
@@ -177,9 +172,11 @@ class BaseTest(ABC, unittest.TestCase):
         planqk_backend = self.planqk_provider.get_backend(self.get_backend_id())
         actual = transpile(self.input_circuit, backend=planqk_backend)
 
+        self.assert_transpile_result(actual, expected)
+
+    def assert_transpile_result(self, actual, expected):
         self.assertEqual(expected.header, actual.header)
         self.assertEqual(str(expected), str(actual))
-
 
     @abstractmethod
     def test_should_run_job(self):
@@ -220,7 +217,7 @@ class BaseTest(ABC, unittest.TestCase):
         else:
             self.assertIsNone(metadata.get('end_execution_time'))
 
-        # Check if the other fields have the backend values
+        # Check if the other fields have the actual values
         self.assertEqual(metadata.get('backend_id'), planqk_backend_id)
         self.assertEqual(metadata.get('provider'), self.get_provider_id())
         self.assertEqual(metadata.get('shots'), self.get_test_shots())

@@ -30,3 +30,4 @@ def init_azure_provider() -> AzureQuantumProvider:
     return AzureQuantumProvider(
         workspace=workspace
     )
+
