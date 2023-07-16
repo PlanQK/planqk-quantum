@@ -8,12 +8,6 @@ from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import JobDto
 
 
-class ErrorData(object):
-    def __init__(self, code: str, message: str):
-        self.code = code
-        self.message = message
-
-
 JobStatusMap = {
     "CREATED": JobStatus.INITIALIZING,
     "PENDING": JobStatus.QUEUED,
@@ -84,8 +78,9 @@ class PlanqkJob(JobV1):
             success=True,
             status=status,
             data=ExperimentResultData(
-                counts=result_data.get("counts", {}),
-                memory=result_data.get("memory", []))
+                counts=result_data.counts if result_data.counts is not None else {},
+                memory=result_data.memory if result_data.memory is not None else []
+            )
         )
 
         self._result = Result(
@@ -117,7 +112,7 @@ class PlanqkJob(JobV1):
 
     def status(self) -> JobStatus:
         """
-        Return the status of the job if it has reached the state DONE. If it is still running, it polls for the result.
+        Return the status of the job.
         """
         self._refresh()
         return JobStatusMap[self._job_details.status]

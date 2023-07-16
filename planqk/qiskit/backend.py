@@ -15,8 +15,6 @@ from .client.job_dtos import JobDto
 from .job import PlanqkJob
 from .providers.helper.job_input_converter import convert_circuit_to_backend_input
 
-TASK_ID_DIVIDER = ";"
-
 
 class PlanqkBackend(BackendV2, ABC):
 
@@ -34,7 +32,7 @@ class PlanqkBackend(BackendV2, ABC):
 
         Example:
             provider = PlanqkProvider()
-            actual = provider.get_backend("SV1")
+            actual = provider.get_backend("azure.ionq.simulator")
             transpiled_circuit = transpile(input, actual=actual)
             actual.run(transpiled_circuit, shots=10).result().get_counts()
             {"100": 10, "001": 10}
@@ -212,11 +210,26 @@ class PlanqkBackend(BackendV2, ABC):
     def max_circuits(self):
         return None
 
+    @property
+    def min_shots(self):
+        return self._backend_info.configuration.shots_range.min
+
+    @property
+    def max_shots(self):
+        return self._backend_info.configuration.shots_range.max
+
     @classmethod
     def _default_options(cls):
         return Options()
 
-    def run(self, circuit, **kwargs):
+    def run(self, circuit, **kwargs) -> PlanqkJob:
+        """Run a circuit on the backend as job.
+            Args:
+                circuit (QuantumCircuit): circuit to run. Currently only a single circuit can be executed per job.
+                **kwargs: additional arguments for the execution (see below)
+            Returns:
+                PlanqkJob: The job instance for the circuit that was run.
+        """
         if isinstance(circuit, (list, tuple)):
             if len(circuit) > 1:
                 raise RuntimeError("Multi-experiment jobs are not supported")
@@ -245,13 +258,13 @@ class PlanqkBackend(BackendV2, ABC):
         return PlanqkJob(backend=self, job_details=job_request)
 
     def retrieve_job(self, job_id: str) -> PlanqkJob:
-        """Return a single job submitted to the actual.
+        """Return a single job.
 
         Args:
-            job_id: ID of the job to retrieve.
+            job_id: id of the job to retrieve.
 
         Returns:
-            The job with the given ID.
+            The job with the given id.
         """
 
         return PlanqkJob(backend=self, job_id=job_id)

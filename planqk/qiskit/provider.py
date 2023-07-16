@@ -8,20 +8,29 @@ from planqk.qiskit.backend import PlanqkBackend
 from planqk.qiskit.client.backend_dtos import TYPE
 from planqk.qiskit.client.client import _PlanqkClient
 
-logger = logging.getLogger(__name__)
-
-
 class PlanqkQuantumProvider(Provider):
 
     def __init__(self, access_token=None):
+        """Initialize the PlanQK provider.
+              Args:
+                    access_token (str): access token used for authentication with PlanQK. If not token is provided,
+                    the token is retrieved from the environment variable PLANQK_ACCESS_TOKEN that can be either set
+                    manually or by using the PlanQK CLI.
+        """
         _PlanqkClient.set_credentials(DefaultCredentialsProvider(access_token))
 
     def backends(self, name=None, **kwargs):
-        """Return a list of backends matching the specified filtering.
+        """
+        Return the list of backends supported by PlanQK.
+
            Args:
-               name (str): name of the actual.
-               **kwargs: dict used for filtering.
+
+               name (str): name of the backend.
+
+               **kwargs: dict used for filtering - currently not supported.
+
            Returns:
+
                List[Backend]: a list of Backends that match the filtering
                    criteria.
         """
@@ -48,12 +57,7 @@ class PlanqkQuantumProvider(Provider):
             )
         return backends
 
-    def get_job(self, job_id):
-        """ Returns the Job instance associated with the given id."""
-        for provider in self._providers:
-            job = provider.get_job(job_id)
-            if job is not None:
-                return job
-
-    def get_access_token(self):
+    @staticmethod
+    def get_access_token():
+        """Returns the access token used for authentication with PlanQK."""
         return _PlanqkClient.get_credentials().get_access_token()
