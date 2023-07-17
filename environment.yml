@@ -22,3 +22,5 @@ dependencies:
       ## azure quantum
       - azure-quantum[qiskit]
       - qiskit-ionq
+      ## dwave
+      - dwave-ocean-sdk==6.4.1
