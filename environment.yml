@@ -13,12 +13,10 @@ dependencies:
       - pytest-cov
       - pytest-asyncio
       - busypie
-      - responses
       - retrying
       - python-dotenv
       # prod dependencies
       - requests==2.*
-      #- qiskit-qasm3-import==0.2.0
       ## aws braket
       - qiskit_braket_provider==0.0.4
       ## azure quantum
