@@ -2,7 +2,7 @@ rigetti_mock = {
     "id": "aws.rigetti.aspen",
     "internal_id": "mock_internal_id_1",
     "provider": "AWS",
-    "hardware_provider": "RIGETTI",
+    "hardware_provider": "Rigetti",
     "name": "mock_backend_1",
     "documentation": {
         "description": "Mock actual 1",
@@ -48,7 +48,7 @@ oqc_lucy_mock = {
     "id": "aws.oqc.lucy",
     "internal_id": "mock_internal_id_2",
     "provider": "AWS",
-    "hardware_provider": "OQC",
+    "hardware_provider": "Oxford Quantum Computers",
     "name": "mock_backend_2",
     "documentation": {
         "description": "Mock actual 2",

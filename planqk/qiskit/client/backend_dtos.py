@@ -19,13 +19,28 @@ class TYPE(Enum):
     SIMULATOR = "SIMULATOR"
     UNKNOWN = "UNKNOWN"
 
+    @classmethod
+    def from_str(cls, type_str):
+        try:
+            return TYPE(type_str)
+        except KeyError:
+            return cls.UKNOWN
+
 
 class HARDWARE_PROVIDER(Enum):
-    IONQ = "IONQ"
-    RIGETTI = "RIGETTI"
-    OQC = "OQC"
-    AWS = "AWS"
-    AZURE = "AZURE"
+    IONQ = "IonQ"
+    RIGETTI = "Rigetti"
+    OQC = "Oxford Quantum Computers"
+    AWS = "AWS Braket"
+    AZURE = "Azure Quantum"
+    UKNOWN = "Unknown"
+
+    @classmethod
+    def from_str(cls, hw_provider_str):
+        try:
+            return HARDWARE_PROVIDER(hw_provider_str)
+        except KeyError:
+            return cls.UKNOWN
 
 
 class STATUS(Enum):
@@ -44,17 +59,25 @@ class STATUS(Enum):
     OFFLINE = "OFFLINE"
     RETIRED = "RETIRED"
 
+    @classmethod
+    def from_str(cls, status_str):
+        try:
+            return STATUS(status_str)
+        except KeyError:
+            return cls.UKNOWN
+
 
 @dataclass
 class DocumentationDto:
     description: Optional[str] = None
     url: Optional[str] = None
-    #status_url: Optional[str] = None
+    # status_url: Optional[str] = None
     location: Optional[str] = None
 
     @classmethod
-    def from_dict(cls, data: Dict): #TODO das auf alle inits anwenden
+    def from_dict(cls, data: Dict):  # TODO das auf alle inits anwenden
         return init_with_defined_params(cls, data)
+
 
 @dataclass
 class QubitDto:
@@ -84,6 +107,7 @@ class ConnectivityDto:
     def from_dict(cls, data: Dict):
         return init_with_defined_params(cls, data)
 
+
 @dataclass
 class ShotsRangeDto:
     min: int
@@ -111,11 +135,9 @@ class ConfigurationDto:
         self.supported_input_formats = [INPUT_FORMAT(input_format) for input_format in self.supported_input_formats]
         self.shots_range = ShotsRangeDto.from_dict(self.shots_range)
 
-
     @classmethod
     def from_dict(cls, data: Dict):
         return cls(**data)
-
 
 
 @dataclass
@@ -127,6 +149,7 @@ class AvailabilityTimesDto:
     @classmethod
     def from_dict(cls, data: Dict):
         return init_with_defined_params(cls, data)
+
 
 @dataclass
 class CostDto:
@@ -157,7 +180,7 @@ class BackendDto:
 
     def __post_init__(self):
         self.provider = PROVIDER(self.provider)
-        self.hardware_provider = HARDWARE_PROVIDER(self.hardware_provider)
+        self.hardware_provider = HARDWARE_PROVIDER.from_str(self.hardware_provider)
         self.type = TYPE(self.type)
         self.status = STATUS(self.status)
         self.documentation = DocumentationDto.from_dict(self.documentation)
