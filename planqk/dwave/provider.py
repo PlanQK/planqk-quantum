@@ -61,7 +61,6 @@ class PlanqkDwaveProvider(ABC):
     def get_sampler(self, name: str, **config):
         sampler = self._supported_samplers_dict.get(name)
         if sampler is None:
-            # list of samplers to str
             supported_samplers = [str(s) for s in self._supported_samplers_list]
             supported_samplers = ", ".join(supported_samplers)
             raise ValueError(f"Sampler '{name}' not supported. Supported samplers: {supported_samplers}.")
