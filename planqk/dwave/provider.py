@@ -46,14 +46,9 @@ class PlanqkDwaveProvider(ABC):
         self._supported_samplers_list = SUPPORTED_SAMPLERS
         self._supported_samplers_dict = {v.name: v for v in self._supported_samplers_list}
 
-        # TODO: change DWAVE_ENDPOINT variable name to PLANQK_DWAVE_ENDPOINT
-        endpoint = os.environ.get("DWAVE_ENDPOINT", "https://platform.planqk.de/dwave/sapi/v2")
+        endpoint = os.environ.get("PLANQK_DWAVE_API_ENDPOINT", "https://platform.planqk.de/dwave/sapi/v2")
         os.environ["DWAVE_API_ENDPOINT"] = endpoint
         os.environ["DWAVE_API_TOKEN"] = self._credentials_provider.get_access_token()
-
-        # TODO: prefix SERVICE_EXECUTION_ID with PLANQK_
-        service_execution_id = os.environ.get("SERVICE_EXECUTION_ID", "None")
-        os.environ["DWAVE_API_HEADERS"] = f"x-planqk-service-execution-id: {service_execution_id}"
 
     def supported_samplers(self):
         return self._supported_samplers_list
