@@ -7,27 +7,30 @@ from json import JSONDecodeError
 
 from planqk.exceptions import CredentialUnavailableError
 
-_TOKEN_ENV_VARIABLE = 'PLANQK_QUANTUM_ACCESS_TOKEN'
+_PERSONAL_ACCESS_TOKEN_NAME = 'PLANQK_PERSONAL_ACCESS_TOKEN'
+_SERVICE_EXECUTION_TOKEN_NAME = 'PLANQK_SERVICE_EXECUTION_TOKEN'
+_SERVICE_EXECUTION_TOKEN_NAME_DEPRECATED = 'SERVICE_EXECUTION_TOKEN'
 
 logger = logging.getLogger(__name__)
 
 
 class CredentialProvider(ABC):
-
     @abstractmethod
     def get_access_token(self) -> str:
         pass
 
 
 class EnvironmentCredential(CredentialProvider):
-
     def get_access_token(self) -> str:
-        access_token = os.environ.get(_TOKEN_ENV_VARIABLE)
+        access_token = os.environ.get(_SERVICE_EXECUTION_TOKEN_NAME)
+        # backwards compatibility, remove in future
         if not access_token:
-            access_token = os.environ.get("SERVICE_EXECUTION_TOKEN")
-            if not access_token:
-                message = f'Environment variable {_TOKEN_ENV_VARIABLE} or SERVICE_EXECUTION_TOKEN not set'
-                raise CredentialUnavailableError(message)
+            access_token = os.environ.get(_SERVICE_EXECUTION_TOKEN_NAME_DEPRECATED)
+        if not access_token:
+            access_token = os.environ.get(_PERSONAL_ACCESS_TOKEN_NAME)
+        if not access_token:
+            message = f'Environment variable {_PERSONAL_ACCESS_TOKEN_NAME} or {_SERVICE_EXECUTION_TOKEN_NAME} not set'
+            raise CredentialUnavailableError(message)
         return access_token
 
 
