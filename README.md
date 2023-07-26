@@ -10,8 +10,8 @@ This means that you are able to seamlessly integrate and reuse your existing Qis
 
 Check out the following guides on how to get started with PlanQK:
 
-- [PlanQK Quickstart Guide](https://docs.platform.planqk.de/tutorials/tutorial-qiskit.html)
-- [Using the PlanQK Quantum SDK](https://docs.platform.planqk.de/docs/getting-started/using-sdk.html)
+- [PlanQK Quickstart Guide](https://docs.platform.planqk.de/getting-started/quickstart.html)
+- [Using the PlanQK Quantum SDK](https://docs.platform.planqk.de/getting-started/using-sdk.html)
 
 ## Installation
 
