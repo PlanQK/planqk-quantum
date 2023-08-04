@@ -4,9 +4,6 @@ from azure.identity import ClientSecretCredential
 from azure.quantum import Workspace
 from azure.quantum.qiskit import AzureQuantumProvider
 
-BACKEND_ID_AZURE_IONQ_HARMONY = "azure.ionq.harmony"
-BACKEND_ID_AZURE_IONQ_SIM= "azure.ionq.simulator"
-
 AZURE_NAME_IONQ_HARMONY = "ionq.qpu"
 AZURE_NAME_IONQ_SIM = "ionq.simulator"
 

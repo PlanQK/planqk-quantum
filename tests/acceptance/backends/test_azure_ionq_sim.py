@@ -4,8 +4,8 @@ from qiskit.providers import Backend, BackendV2
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.azure_test_utils import init_azure_provider, AZURE_NAME_IONQ_SIM, \
-    BACKEND_ID_AZURE_IONQ_SIM
+from tests.acceptance.backends.azure_test_utils import init_azure_provider, AZURE_NAME_IONQ_SIM
+from tests.acceptance.backends.backends_list import BACKEND_ID_AZURE_IONQ_SIM
 from tests.acceptance.backends.base_test import BaseTest
 from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings

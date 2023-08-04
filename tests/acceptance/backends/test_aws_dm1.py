@@ -4,7 +4,7 @@ from planqk.qiskit.client.backend_dtos import PROVIDER
 from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, BRAKET_NAME_SV1, \
     BRAKET_NAME_DM1
-from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_SV1, BACKEND_ID_AWS_DM1
+from tests.acceptance.backends.backends_list import BACKEND_ID_AWS_SV1, BACKEND_ID_AWS_DM1
 
 
 class AwsDm1Tests(BaseTest):

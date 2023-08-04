@@ -1,8 +1,8 @@
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.azure_test_utils import init_azure_provider, BACKEND_ID_AZURE_IONQ_HARMONY, \
-    AZURE_NAME_IONQ_HARMONY
+from tests.acceptance.backends.azure_test_utils import init_azure_provider, AZURE_NAME_IONQ_HARMONY
+from tests.acceptance.backends.backends_list import BACKEND_ID_AZURE_IONQ_HARMONY
 from tests.acceptance.backends.test_azure_ionq_sim import AzureIonqSimTests
 from tests.utils import is_valid_uuid, SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT
 from tests.utils import transform_decimal_to_bitsrings

@@ -10,7 +10,7 @@ from qiskit.transpiler import Target, InstructionProperties
 from qiskit_braket_provider.exception import QiskitBraketException
 
 from planqk.qiskit.providers.helper.adapter import op_to_instruction
-from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto
+from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
 from .providers.helper.job_input_converter import convert_circuit_to_backend_input
@@ -235,15 +235,12 @@ class PlanqkBackend(BackendV2, ABC):
                 raise RuntimeError("Multi-experiment jobs are not supported")
             circuit = circuit[0]
 
-        shots = kwargs.get('shots', 1)  # TODO externalize - use backen min default
+        shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
         # TODO input params
 
         input_circ = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
 
-        # import qiskit.qasm3 as q3  TODO try in verbatim box
-        # qasm_circuit_ibm = q3.dumps(input)
-        # qasm_circuit_ibm = qasm_circuit_ibm.replace('\ninclude "stdgates.inc";', '')
         # TODO this is braket actual specific -> move
         input_params = {'disable_qubit_rewiring': False,
                         'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in actual
@@ -277,3 +274,8 @@ class PlanqkBackend(BackendV2, ABC):
         """
 
         return self._configuration
+
+    @property
+    def backend_provider(self) -> PROVIDER:
+        """Return the provider offering the quantum backend resource."""
+        return self._backend_info.provider

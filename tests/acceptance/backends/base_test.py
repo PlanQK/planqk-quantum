@@ -22,23 +22,30 @@ from tests.utils import get_sample_circuit
 def hasAttr(backend, param):
     pass
 
-
 class BaseTest(ABC, unittest.TestCase):
-    def setUp(self):
+
+    planqk_access_token = None
+
+    def load_env_vars(self):
         load_dotenv()
 
-        PLANQK_QUANTUM_BASE_URL = os.getenv('PLANQK_QUANTUM_BASE_URL')
-        PLANQK_ACCESS_TOKEN = os.getenv('PLANQK_ACCESS_TOKEN')
-
-        self.assertIsNotNone(PLANQK_QUANTUM_BASE_URL,
+        self.assertIsNotNone(os.getenv('PLANQK_QUANTUM_BASE_URL'),
                              "Env variable PLANQK_QUANTUM_BASE_URL (PlanQK quantum base url) not set")
-        self.assertIsNotNone(PLANQK_ACCESS_TOKEN,
+        self.assertIsNotNone(os.getenv('PLANQK_ACCESS_TOKEN'),
                              "Env variable PLANQK_ACCESS_TOKEN (PlanQK API access token) not set")
 
-        self.planqk_provider = PlanqkQuantumProvider(PLANQK_ACCESS_TOKEN)
+
+    def setUp(self):
+        self.load_env_vars()
+        self.planqk_provider = PlanqkQuantumProvider(self.planqk_access_token)
 
         # Ensure to see the diff of large objects
         self.maxDiff = None
+
+
+    @property
+    def planqk_access_token(self):
+        return os.getenv('PLANQK_ACCESS_TOKEN')
 
     @abstractmethod
     def get_provider(self):

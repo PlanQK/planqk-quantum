@@ -65,7 +65,7 @@ class TestPlanqkClient(unittest.TestCase):
         mock_get.return_value.json.return_value = job_mock
 
         # When
-        job = _PlanqkClient.get_job("123")
+        job = _PlanqkClient.get_job("123", None)
 
         # Then
         self.assertEqual(job_mock["backend_id"], job.backend_id)

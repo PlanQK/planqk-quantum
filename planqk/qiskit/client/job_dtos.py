@@ -12,6 +12,7 @@ from planqk.qiskit.client.dto_utils import init_with_defined_params
 class INPUT_FORMAT(str, Enum):
     OPEN_QASM_V3 = "OPEN_QASM_V3"
     IONQ_CIRCUIT_V1 = "IONQ_CIRCUIT_V1"
+    QISKIT_PRIMITIVE = "QISKIT_PRIMITIVE"
 
 
 class JOB_STATUS(str, Enum):
@@ -56,6 +57,22 @@ class JobDto:
 
     def to_dict(self):
         return asdict(self)
+
+@dataclass
+class RuntimeJobParamsDto():
+    program_id: str
+    image: Optional[str]
+    hgp: Optional[str]
+    log_level: Optional[str]
+    session_id: Optional[str]
+    max_execution_time: Optional[int] = None
+    start_session: Optional[bool] = False
+    session_time: Optional[int] = None
+
+    def to_dict(self):
+        return asdict(self)
+
+
 
 
 @dataclass
