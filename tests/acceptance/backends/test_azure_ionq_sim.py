@@ -59,10 +59,11 @@ class AzureIonqSimTests(BaseTest):
         self.assertTrue(len(actual.operations) > 0)
         self.assertIsNotNone(actual.target)
         self.assertEqual(2, actual.version)
+        #TODO more exhaustive tests for instructions
 
 
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
-        num_qubits = len(self.input_circuit.qubits)
+        num_qubits = len(self.get_input_circuit.qubits)
         exp_counts = transform_decimal_to_bitsrings(exp_result.counts, num_qubits)
         # Ionq simulator returns probabilities, hence, Azure SDK generates random memory values -> memory not asserted
         self.assertEqual(result.counts, exp_counts)

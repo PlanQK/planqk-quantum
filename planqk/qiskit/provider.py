@@ -77,7 +77,7 @@ class PlanqkQuantumProvider(Provider):
         """
         try:
             backend_dto = _PlanqkClient.get_backend(backend_id=name)
-            if provider is not  None and backend_dto.provider != provider:
+            if provider is not None and backend_dto.provider != provider:
                 raise QiskitBackendNotFoundError(
                     "No backend matches the criteria. "
                     "Reason: Required provider {0} does not match with returned backend provider {1}.".format(

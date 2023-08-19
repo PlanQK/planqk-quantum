@@ -25,19 +25,6 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
         # Mock close_session method of API client as it is called by the session object after a program has run
         self._api_client = type('Mock_API_Client', (), {'close_session': lambda self: None})
 
-        # self._account = self._discover_account(
-        #     token=token,
-        #     url=url,
-        #     instance=instance,
-        #     channel=channel,
-        #     filename=filename,
-        #     name=name,
-        #     proxies=ProxyConfiguration(**proxies) if proxies else None,
-        #     verify=verify,
-        # )
-
-        # TODO token
-
     def backend(
             self,
             name: str = None,

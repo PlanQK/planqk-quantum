@@ -35,7 +35,7 @@ class AzureIonqHarmonyTests(AzureIonqSimTests):
         return is_valid_uuid(job_id)
 
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
-        num_qubits = len(self.input_circuit.qubits)
+        num_qubits = len(self.get_input_circuit.qubits)
         exp_counts = transform_decimal_to_bitsrings(exp_result.counts, num_qubits)
         # Ionq harmony returns probabilities, hence, Azure SDK generates random memory values -> memory not asserted
         self.assertEqual(result.counts, exp_counts)

@@ -1,0 +1,2 @@
+IBM_QASM_SIMULATOR_NAME="ibmq_qasm_simulator"
+IBM_NAIROBI_NAME="ibm_nairobi"

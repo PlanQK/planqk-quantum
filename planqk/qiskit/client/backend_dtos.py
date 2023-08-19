@@ -123,6 +123,7 @@ class ShotsRangeDto:
 @dataclass
 class ConfigurationDto:
     gates: List[GateDto]
+    instructions: List[str]
     qubits: List[QubitDto]
     qubit_count: int
     connectivity: ConnectivityDto

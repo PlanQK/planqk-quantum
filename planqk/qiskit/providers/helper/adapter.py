@@ -8,7 +8,7 @@ from braket.circuits.serialization import QubitReferenceType, OpenQASMSerializat
 from braket.ir.openqasm import Program as OpenQASMProgram
 from numpy import pi
 from qiskit import QuantumCircuit
-from qiskit.circuit import Instruction as QiskitInstruction
+from qiskit.circuit import Instruction as QiskitInstruction, Reset
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import (
     CCXGate,
@@ -41,6 +41,9 @@ from qiskit.circuit.library import (
     YGate,
     ZGate,
 )
+from qiskit.providers import Provider
+
+from planqk.qiskit.client.backend_dtos import PROVIDER
 
 qiskit_to_braket_gate_names_mapping = {
     "u1": "u1",
@@ -113,7 +116,7 @@ qiskit_gate_names_to_braket_gates: Dict[str, Callable] = {
 }
 
 # TODP mark add copyright from braket
-qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] = {
+qiskit_gate_name_to_braket_gate_mapping: Dict[str, Optional[QiskitInstruction]] = {
     "u1": U1Gate(Parameter("theta")),
     "u2": U2Gate(Parameter("theta"), Parameter("lam")),
     "u3": U3Gate(Parameter("theta"), Parameter("phi"), Parameter("lam")),
@@ -145,18 +148,38 @@ qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] 
     "ecr": ECRGate(),
 }
 
+ibm_name_mapping = {
+        "id": IGate(),
+        "sx": SXGate(),
+        "x": XGate(),
+        "cx": CXGate(),
+        "rz": RZGate(Parameter("λ")),
+        "reset": Reset(),
+        "ecr": ECRGate(),
+        "cz": CZGate(),
+}
 
-def op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
+
+def op_to_instruction(operation: str, provider: PROVIDER) -> Optional[QiskitInstruction]:
     """Converts PlanQK operation to Qiskit Instruction.
 
     Args:
         operation: operation
+        provider: backend provider
 
     Returns:
         Circuit Instruction
     """
+
     operation = operation.lower()
-    return qiskit_gate_name_to_planqk_gate_mapping.get(operation, None)
+
+    if provider == PROVIDER.AWS:
+        gate = qiskit_gate_name_to_braket_gate_mapping.get(operation, None)
+    elif provider == PROVIDER.IBM:
+        gate = ibm_name_mapping.get(operation, None)
+    #TODO Azure
+
+    return gate
 
 
 # TODO metnion copyrigtht
