@@ -2,10 +2,10 @@ from qiskit import QuantumCircuit
 from qiskit_braket_provider import AWSBraketProvider
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
+from tests.acceptance.backends.backends_list import BACKEND_ID_AWS_RIGETTI_ASPEN
 from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, \
     BRAKET_NAME_RIGETTI_ASPEN
-from tests.acceptance.backends.backends_list import BACKEND_ID_AWS_RIGETTI_ASPEN
 from tests.utils import get_width_sample_circuit
 
 
@@ -45,10 +45,6 @@ class AwsRigettiAspenTests(BaseTest):
 
     def get_input_circuit(self) -> QuantumCircuit:
         return get_width_sample_circuit(79)
-
-    def assert_num_of_qubits(self, expected: int, actual: int):
-        # AWS Braket actual provider returns wrong number of Qubits for M3
-        self.assertEqual(148, actual)
 
     # Tests
 

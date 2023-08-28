@@ -4,6 +4,7 @@ import unittest
 from abc import ABC, abstractmethod
 from typing import List, Union
 
+import pytest
 from busypie import wait
 from dotenv import load_dotenv
 from qiskit import QuantumCircuit, transpile
@@ -14,6 +15,7 @@ from qiskit.result import Result
 from qiskit.result.models import ExperimentResultData, ExperimentResult
 from qiskit.transpiler import Target
 
+from planqk.qiskit.client.backend_dtos import STATUS
 from planqk.qiskit.client.job_dtos import JOB_STATUS
 from planqk.qiskit.job import PlanqkJob
 from planqk.qiskit.provider import PlanqkQuantumProvider
@@ -98,10 +100,15 @@ class BaseTest(ABC, unittest.TestCase):
 
     def _run_job(self) -> PlanqkJob:
         planqk_backend = self.planqk_provider.get_backend(self.get_backend_id())
+        if planqk_backend._backend_info.status == STATUS.OFFLINE:
+            self.skipTest("Backend {0} is offline. Cannot run job".format(self.get_backend_id()))
+
         self._planqk_job = planqk_backend.run(self.get_input_circuit(), shots=self.get_test_shots())
         return self._planqk_job
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
+    @pytest.mark.run(order=1)
     def test_should_get_backend(self):
         pass
 
@@ -207,6 +214,7 @@ class BaseTest(ABC, unittest.TestCase):
         self.assertEqual(expected.qargs, actual.qargs)
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
     def test_should_transpile_circuit(self):
         pass
 
@@ -226,6 +234,7 @@ class BaseTest(ABC, unittest.TestCase):
         self.assertEqual(str(expected), str(actual))
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
     def test_should_run_job(self):
         pass
 
@@ -234,6 +243,7 @@ class BaseTest(ABC, unittest.TestCase):
         self.is_valid_job_id(self._planqk_job.id)
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
     def test_should_retrieve_job(self):
         pass
 
@@ -277,6 +287,7 @@ class BaseTest(ABC, unittest.TestCase):
         self.assertEqual(metadata.get('tags'), [])
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
     def test_should_retrieve_job_result(self):
         pass
 
@@ -310,6 +321,7 @@ class BaseTest(ABC, unittest.TestCase):
         self.assertEqual(exp_result.memory, result.memory)
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
     def test_should_cancel_job(self):
         pass
 
@@ -328,6 +340,7 @@ class BaseTest(ABC, unittest.TestCase):
         wait().until_asserted(assert_job_cancelled)
 
     @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
     def test_should_retrieve_job_status(self):
         pass
 

@@ -8,7 +8,7 @@ from qiskit_ibm_runtime import RuntimeEncoder
 from qiskit_ionq.helpers import qiskit_circ_to_ionq_circ
 
 from planqk.qiskit.client.job_dtos import INPUT_FORMAT
-from planqk.qiskit.providers.helper.adapter import transform_to_qasm_3_program
+from planqk.qiskit.providers.aws_converters import transform_to_qasm_3_program
 
 
 def _convert_to_open_qasm_3(circuit: Circuit, **kwargs):
@@ -36,11 +36,13 @@ def _convert_to_ionq(circuit: Circuit):
     # Transform byte json to string json
     return input_data
 
+
 def _convert_to_qiskit_primitive(circuit: Circuit):
     # Transforms circuit to base64 encoded byte stream
     input_json_str = json.dumps(circuit, cls=RuntimeEncoder)
     # Transform back to json but with the base64 encoded byte stream
     return json.loads(input_json_str)
+
 
 input_format_converter_factory = {
     INPUT_FORMAT.OPEN_QASM_V3: _convert_to_open_qasm_3,

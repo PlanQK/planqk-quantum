@@ -8,7 +8,7 @@ from braket.circuits.serialization import QubitReferenceType, OpenQASMSerializat
 from braket.ir.openqasm import Program as OpenQASMProgram
 from numpy import pi
 from qiskit import QuantumCircuit
-from qiskit.circuit import Instruction as QiskitInstruction, Reset
+from qiskit.circuit import Instruction as QiskitInstruction
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import (
     CCXGate,
@@ -41,9 +41,6 @@ from qiskit.circuit.library import (
     YGate,
     ZGate,
 )
-from qiskit.providers import Provider
-
-from planqk.qiskit.client.backend_dtos import PROVIDER
 
 qiskit_to_braket_gate_names_mapping = {
     "u1": "u1",
@@ -148,39 +145,6 @@ qiskit_gate_name_to_braket_gate_mapping: Dict[str, Optional[QiskitInstruction]] 
     "ecr": ECRGate(),
 }
 
-ibm_name_mapping = {
-        "id": IGate(),
-        "sx": SXGate(),
-        "x": XGate(),
-        "cx": CXGate(),
-        "rz": RZGate(Parameter("λ")),
-        "reset": Reset(),
-        "ecr": ECRGate(),
-        "cz": CZGate(),
-}
-
-
-def op_to_instruction(operation: str, provider: PROVIDER) -> Optional[QiskitInstruction]:
-    """Converts PlanQK operation to Qiskit Instruction.
-
-    Args:
-        operation: operation
-        provider: backend provider
-
-    Returns:
-        Circuit Instruction
-    """
-
-    operation = operation.lower()
-
-    if provider == PROVIDER.AWS:
-        gate = qiskit_gate_name_to_braket_gate_mapping.get(operation, None)
-    elif provider == PROVIDER.IBM:
-        gate = ibm_name_mapping.get(operation, None)
-    #TODO Azure
-
-    return gate
-
 
 # TODO metnion copyrigtht
 def convert_qiskit_to_planqk_circuit(circuit: QuantumCircuit) -> Circuit:
@@ -235,7 +199,7 @@ def wrap_circuit_in_verbatim_box(circuit: Circuit) -> Circuit:
     return Circuit(circuit.result_types).add_verbatim_box(Circuit(circuit.instructions))
 
 
-def convert_continuous_qubit_indices(connectivity_graph: dict,) -> dict:
+def convert_continuous_qubit_indices(connectivity_graph: dict, ) -> dict:
     """
     This function was copied from the following source:
     https://github.com/qiskit-community/qiskit-braket-provider/blob/984101cec132777c2559a41e9fc4f9ef208e391e/qiskit_braket_provider/providers/adapter.py#L306

@@ -1,14 +1,12 @@
 import os
-from typing import List
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import Measure, Instruction
-from qiskit_ibm_runtime import Session, Sampler, Options, QiskitRuntimeService
+from qiskit_ibm_runtime import Session, Sampler, QiskitRuntimeService
 
 from planqk.qiskit import PlanqkJob
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
-from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_LAGOS, BACKEND_ID_IBM_QASM_SIM
+from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_QASM_SIM
 from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.ibm_test_utils import IBM_QASM_SIMULATOR_NAME
 from tests.utils import get_width_sample_circuit
@@ -52,13 +50,13 @@ class IbmPrimitiveQasmSimulatorTests(BaseTest):
     def _run_job(self) -> PlanqkJob:
         planqk_backend = self.planqk_provider.get_backend(self.get_backend_id())
 
-        #options = Options()
-        #options.resilience_level = 1
-        #options.optimization_level = 3
+        # options = Options()
+        # options.resilience_level = 1
+        # options.optimization_level = 3
 
         with Session(self.planqk_provider, backend=planqk_backend.name, max_time=None) as session:
             sampler = Sampler(session=session)
-            self._planqk_job = sampler.run(self.get_input_circuit(), shots=1000) #TODO memory=True
+            self._planqk_job = sampler.run(self.get_input_circuit(), shots=1000)  # TODO memory=True
             # https://qiskit.org/ecosystem/ibm-runtime/tutorials/how-to-getting-started-with-sampler.html
             session.close()
 
@@ -76,13 +74,6 @@ class IbmPrimitiveQasmSimulatorTests(BaseTest):
         job = planqk_backend.retrieve_job(job_id)
 
         self.assert_job(job, exp_job)
-
-
-    def assert_instructions(self, exp_instructions: List[Instruction], act_instructions: List[Instruction]):
-        # Qiskit creates a one measure instruction forall qubits we provide a measure instruction for each qubit
-        act_instructions = [instruction for instruction in act_instructions if instruction[0].name != "measure"]
-        act_instructions.append(tuple([Measure(), None]))
-        super().assert_instructions(exp_instructions, act_instructions)
 
     def get_input_circuit(self) -> QuantumCircuit:
         return get_width_sample_circuit(1)
@@ -104,7 +95,7 @@ class IbmPrimitiveQasmSimulatorTests(BaseTest):
         with Session(self.get_provider(), backend=planqk_backend.name, max_time=None) as session:
             sampler = Sampler(session=session)
             job_1 = sampler.run(self.get_input_circuit, shots=10)
-            #TODO:
+            # TODO:
             job_2 = sampler.run(self.get_input_circuit, shots=10)
             session.close()
 

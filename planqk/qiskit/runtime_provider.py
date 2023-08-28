@@ -1,17 +1,14 @@
 import logging
-import unittest
 from typing import Optional, Union, Callable, Type, Sequence, Dict
 
-from qiskit.providers import QiskitBackendNotFoundError
-from qiskit_ibm_runtime import RuntimeOptions, ParameterNamespace, RuntimeJob
+from qiskit_ibm_runtime import RuntimeOptions, ParameterNamespace
 from qiskit_ibm_runtime.accounts import ChannelType
 from qiskit_ibm_runtime.program import ResultDecoder
 
 from planqk.qiskit import PlanqkQuantumProvider, PlanqkJob
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import RuntimeJobParamsDto, JobDto, INPUT_FORMAT
-from planqk.qiskit.providers.helper.job_input_converter import convert_circuit_to_backend_input
+from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
 
 logger = logging.getLogger(__name__)
 

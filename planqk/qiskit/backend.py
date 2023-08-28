@@ -1,17 +1,17 @@
 import datetime
 from abc import ABC
 
-from qiskit.circuit import Gate, Delay, Parameter
+from qiskit.circuit import Delay, Parameter
 from qiskit.circuit import Measure
 from qiskit.providers import BackendV2, Provider, Options
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
-from planqk.qiskit.providers.helper.adapter import op_to_instruction
+from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
-from .providers.helper.job_input_converter import convert_circuit_to_backend_input
+from .providers.adapter import ProviderAdapterFactory
 
 
 class PlanqkBackend(BackendV2, ABC):
@@ -71,37 +71,30 @@ class PlanqkBackend(BackendV2, ABC):
         qubits = configuration.qubits
         connectivity: ConnectivityDto = self._backend_info.configuration.connectivity
 
-        def single_qubit_gate_props():
-            if is_simulator:
-                return {None: None}
-            return {(int(qubit.id),): None for qubit in qubits}
+        adapter = ProviderAdapterFactory.get_adapter(self._backend_info.provider)
 
+        single_qubit_props = adapter.single_qubit_gate_props(qubits, is_simulator)
+        multi_qubit_props = adapter.multi_qubit_gate_props(qubits, connectivity, is_simulator)
         for gate in configuration.gates:
             name = gate.name
-            gate_len = len(gate.coupling_map[0]) if hasattr(gate, "coupling_map") else 0
-            gate = op_to_instruction(name, self._backend_info.provider) or Gate(name, gate_len, [])
+            gate = adapter.op_to_instruction(name)
 
-            if is_simulator:
-                target.add_instruction(gate, single_qubit_gate_props())
-            else:
-                if gate.num_qubits == 1:
-                    target.add_instruction(gate, single_qubit_gate_props())
-                elif gate.num_qubits == 2:
-                    if connectivity.fully_connected:
-                        gate_props = {(int(qubit1.id), int(qubit2.id)): None for qubit1 in qubits for qubit2 in qubits
-                                      if qubit1.id != qubit2.id}
-                    else:
-                        gate_props = {(int(qubit), int(connected_qubit)): None
-                                      for qubit, connections in connectivity.graph.items()
-                                      for connected_qubit in connections}
-                    target.add_instruction(gate, gate_props)
-                # three or more qubit gates are not supported
+            if gate is None:
+                continue
 
-        target.add_instruction(Measure(), single_qubit_gate_props())
+            if gate.num_qubits == 1:
+                target.add_instruction(gate, single_qubit_props)
+            elif gate.num_qubits == 2:
+                target.add_instruction(gate, multi_qubit_props)
+            elif gate.num_qubits == 0 and single_qubit_props == {None: None}:
+                # For gates without qubit number qargs can not be determined
+                target.add_instruction(gate, {None: None})
+
+        target.add_instruction(Measure(), single_qubit_props)
 
         if "delay" in configuration.instructions and "delay" not in target:
-            gate_props = {None: None} if is_simulator else single_qubit_gate_props()
-            target.add_instruction(Delay(Parameter("t")), gate_props)
+            # gate_props = {None: None} if is_simulator else single_qubit_gate_props()
+            target.add_instruction(Delay(Parameter("t")), single_qubit_props)
 
         return target
 

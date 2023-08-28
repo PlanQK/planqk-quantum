@@ -48,7 +48,7 @@ class _PlanqkClient(object):
         try:
             response = request_func(url, json=data, params=params, headers=headers)
             response.raise_for_status()
-            return response.json()
+            return response.json() if response.status_code != 204 else None
         except requests.exceptions.ConnectionError as e:
             logger.error(f"Cannot connect to middleware under {url}: {e}")
             raise e
@@ -64,7 +64,6 @@ class _PlanqkClient(object):
         params = {}
         if base_info is not None:
             params["baseInfo"] = base_info
-
 
         response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params, headers=headers)
 

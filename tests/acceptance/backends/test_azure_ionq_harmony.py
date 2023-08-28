@@ -1,10 +1,10 @@
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.azure_test_utils import init_azure_provider, AZURE_NAME_IONQ_HARMONY
+from tests.acceptance.backends.azure_test_utils import AZURE_NAME_IONQ_HARMONY
 from tests.acceptance.backends.backends_list import BACKEND_ID_AZURE_IONQ_HARMONY
 from tests.acceptance.backends.test_azure_ionq_sim import AzureIonqSimTests
-from tests.utils import is_valid_uuid, SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT
+from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings
 
 
@@ -28,6 +28,9 @@ class AzureIonqHarmonyTests(AzureIonqSimTests):
     def is_simulator(self) -> bool:
         return False
 
+    def supports_memory_result(self) -> bool:
+        return False
+
     def get_provider_job_id(self, job_id: str) -> str:
         return job_id
 
@@ -42,9 +45,9 @@ class AzureIonqHarmonyTests(AzureIonqSimTests):
         # But it is checked if a memory is returned
         self.assertIsNone(result.memory)
 
-    def assert_transpile_result(self, actual, expected):
+    def assert_transpile_result(self, expected, actual):
         self.assertEqual(expected.header, actual.header)
-        self.assertEqual(SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT, str(actual))
+        self.assertEqual(str(expected), str(actual))
 
     # Tests
 
