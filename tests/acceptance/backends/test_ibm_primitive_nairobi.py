@@ -1,17 +1,6 @@
-import os
-from typing import List
-
-from qiskit.circuit import Instruction, Delay, Measure
-from qiskit_ibm_runtime import Session, Sampler, Options, QiskitRuntimeService
-
-from planqk.qiskit import PlanqkJob
-from planqk.qiskit.client.backend_dtos import PROVIDER
-from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
-from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_LAGOS, BACKEND_ID_IBM_QASM_SIM, \
-    BACKEND_ID_IBM_NAIROBI
-from tests.acceptance.backends.base_test import BaseTest
+from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_NAIROBI
 from tests.acceptance.backends.ibm_primitive_base_test import IbmPrimitiveBaseTest
-from tests.acceptance.backends.ibm_test_utils import IBM_QASM_SIMULATOR_NAME, IBM_NAIROBI_NAME
+from tests.acceptance.backends.ibm_test_utils import IBM_NAIROBI_NAME
 
 
 class IbmPrimitiveNairobiBackendTests(IbmPrimitiveBaseTest):
@@ -30,9 +19,6 @@ class IbmPrimitiveNairobiBackendTests(IbmPrimitiveBaseTest):
 
     def supports_memory_result(self) -> bool:
         return True
-
-    def get_provider_job_id(self, job_id: str) -> str:
-        return job_id
 
     # Tests
 

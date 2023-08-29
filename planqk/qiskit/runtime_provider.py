@@ -5,9 +5,10 @@ from qiskit_ibm_runtime import RuntimeOptions, ParameterNamespace
 from qiskit_ibm_runtime.accounts import ChannelType
 from qiskit_ibm_runtime.program import ResultDecoder
 
-from planqk.qiskit import PlanqkQuantumProvider, PlanqkJob
+from planqk.qiskit import PlanqkQuantumProvider
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.client.job_dtos import RuntimeJobParamsDto, JobDto, INPUT_FORMAT
+from planqk.qiskit.planqk_runtime_job import PlanqkRuntimeJob
 from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
 
 logger = logging.getLogger(__name__)
@@ -112,7 +113,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
                              input_params=input_params)
 
         # TODO return RuntimeJob
-        return PlanqkJob(backend=backend, job_details=job_request)
+        return PlanqkRuntimeJob(backend=backend, job_details=job_request)
 
         # _PlanqkClient.submit_job()
         #

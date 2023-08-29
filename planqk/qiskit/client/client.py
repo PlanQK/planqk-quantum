@@ -86,14 +86,14 @@ class _PlanqkClient(object):
         return BackendDto.from_dict(response)
 
     @classmethod
-    def submit_job(cls, job: JobDto) -> str:
+    def submit_job(cls, job: JobDto) -> JobDto:
         headers = {"content-type": "application/json"}
 
         # Create dict from job object and remove attributes with None values from it
         job_dict = cls.remove_none_values(job.__dict__)
 
         response = cls.perform_request(requests.post, f"{base_url()}/jobs", data=job_dict, headers=headers)
-        return response["id"]
+        return JobDto.from_dict(response)
 
     @classmethod
     def get_job(cls, job_id: str, provider: Optional[PROVIDER] = None) -> JobDto:

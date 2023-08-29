@@ -7,7 +7,6 @@ from qiskit.result.models import ExperimentResult, ExperimentResultData
 from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import JobDto
 
-
 JobStatusMap = {
     "CREATED": JobStatus.INITIALIZING,
     "PENDING": JobStatus.QUEUED,
@@ -53,7 +52,8 @@ class PlanqkJob(JobV1):
         if self._job_details is None:
             raise RuntimeError("Cannot submit job as no job details are set.")
 
-        self._job_id = _PlanqkClient.submit_job(self._job_details)
+        self._job_details = _PlanqkClient.submit_job(self._job_details)
+        self._job_id = self._job_details.id
 
     def result(self) -> Result:
         """

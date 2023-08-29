@@ -53,10 +53,10 @@ class TestPlanqkClient(unittest.TestCase):
 
         # When
         job = JobDto(rigetti_mock["id"], PROVIDER.AWS.name)
-        job_id = _PlanqkClient.submit_job(job)
+        job_details = _PlanqkClient.submit_job(job)
 
         # Then
-        self.assertEqual("123", job_id)
+        self.assertEqual("123", job_details.id)
 
     @patch("requests.get")
     def test_get_job(self, mock_get):
@@ -145,7 +145,6 @@ class TestPlanqkClient(unittest.TestCase):
         # Then
         self.assertEqual(str(error_response.exception),
                          "The backend with id 123 could not be found (HTTP error: 404)")
-
 
     def assert_backend(self, expected: dict, actual: BackendDto):
         # main attributes

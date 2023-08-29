@@ -1,10 +1,7 @@
-import dataclasses
-from dataclasses import dataclass, asdict
-from typing import Optional, Dict, Set, Union, List
 import json
+from dataclasses import dataclass, asdict
 from enum import Enum
-
-from pydantic import validator
+from typing import Optional, Dict, Set, Union, List
 
 from planqk.qiskit.client.dto_utils import init_with_defined_params
 
@@ -30,6 +27,7 @@ class JobDto:
     provider: str
     shots: int = 1
     id: Optional[str] = None
+    session_id: Optional[str] = None
     input: Optional[Union[str, Dict]] = None
     input_format: Optional[INPUT_FORMAT] = None
     input_params: Optional[Dict] = None
@@ -43,7 +41,7 @@ class JobDto:
     status: Optional[JOB_STATUS] = None
     tags: Optional[Set[str]] = None
 
-    #TODO make me extensible
+    # TODO make me extensible
 
     def __post_init__(self):
         if self.error_data is not None and isinstance(self.error_data, str):
@@ -58,6 +56,7 @@ class JobDto:
     def to_dict(self):
         return asdict(self)
 
+
 @dataclass
 class RuntimeJobParamsDto():
     program_id: str
@@ -71,8 +70,6 @@ class RuntimeJobParamsDto():
 
     def to_dict(self):
         return asdict(self)
-
-
 
 
 @dataclass
@@ -98,4 +95,3 @@ class JobResultDto:
     @staticmethod
     def is_bitstring(s: str) -> bool:
         return set(s).issubset('01')
-
