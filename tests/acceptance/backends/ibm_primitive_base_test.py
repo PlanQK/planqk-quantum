@@ -25,6 +25,7 @@ class IbmPrimitiveBaseTest(BaseTest):
 
     def tearDown(self):
         # Cancel job to avoid costs
+        super().tearDown()
         if hasattr(self, '_planqk_runtime_jobs') and self._planqk_runtime_jobs is not None:
             for job in self._planqk_runtime_jobs:
                 try:
@@ -55,8 +56,8 @@ class IbmPrimitiveBaseTest(BaseTest):
 
         with Session(self.planqk_provider, backend=planqk_backend.name, max_time=None) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(self.get_input_circuit(), shots=10)  # TODO memory=True
-            self._planqk_runtime_jobs.append(job)
+            self._planqk_job = sampler.run(self.get_input_circuit(), shots=10)  # TODO memory=True
+
             # https://qiskit.org/ecosystem/ibm-runtime/tutorials/how-to-getting-started-with-sampler.html
             session.close()
 
