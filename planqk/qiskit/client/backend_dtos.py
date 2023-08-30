@@ -12,6 +12,7 @@ from planqk.qiskit.client.job_dtos import INPUT_FORMAT
 class PROVIDER(Enum):
     AZURE = "AZURE"
     AWS = "AWS"
+    IBM = "IBM"
 
 
 class TYPE(Enum):
@@ -33,6 +34,7 @@ class HARDWARE_PROVIDER(Enum):
     OQC = "Oxford Quantum Computers"
     AWS = "AWS Braket"
     AZURE = "Azure Quantum"
+    IBM = "IBM Q"
     UKNOWN = "Unknown"
 
     @classmethod
@@ -121,6 +123,7 @@ class ShotsRangeDto:
 @dataclass
 class ConfigurationDto:
     gates: List[GateDto]
+    instructions: List[str]
     qubits: List[QubitDto]
     qubit_count: int
     connectivity: ConnectivityDto

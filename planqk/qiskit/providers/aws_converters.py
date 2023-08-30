@@ -113,7 +113,7 @@ qiskit_gate_names_to_braket_gates: Dict[str, Callable] = {
 }
 
 # TODP mark add copyright from braket
-qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] = {
+qiskit_gate_name_to_braket_gate_mapping: Dict[str, Optional[QiskitInstruction]] = {
     "u1": U1Gate(Parameter("theta")),
     "u2": U2Gate(Parameter("theta"), Parameter("lam")),
     "u3": U3Gate(Parameter("theta"), Parameter("phi"), Parameter("lam")),
@@ -144,19 +144,6 @@ qiskit_gate_name_to_planqk_gate_mapping: Dict[str, Optional[QiskitInstruction]] 
     "zz": RZZGate(Parameter("theta")),
     "ecr": ECRGate(),
 }
-
-
-def op_to_instruction(operation: str) -> Optional[QiskitInstruction]:
-    """Converts PlanQK operation to Qiskit Instruction.
-
-    Args:
-        operation: operation
-
-    Returns:
-        Circuit Instruction
-    """
-    operation = operation.lower()
-    return qiskit_gate_name_to_planqk_gate_mapping.get(operation, None)
 
 
 # TODO metnion copyrigtht
@@ -212,7 +199,7 @@ def wrap_circuit_in_verbatim_box(circuit: Circuit) -> Circuit:
     return Circuit(circuit.result_types).add_verbatim_box(Circuit(circuit.instructions))
 
 
-def convert_continuous_qubit_indices(connectivity_graph: dict,) -> dict:
+def convert_continuous_qubit_indices(connectivity_graph: dict, ) -> dict:
     """
     This function was copied from the following source:
     https://github.com/qiskit-community/qiskit-braket-provider/blob/984101cec132777c2559a41e9fc4f9ef208e391e/qiskit_braket_provider/providers/adapter.py#L306

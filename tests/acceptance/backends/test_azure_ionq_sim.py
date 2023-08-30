@@ -4,8 +4,8 @@ from qiskit.providers import Backend, BackendV2
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.azure_test_utils import init_azure_provider, AZURE_NAME_IONQ_SIM, \
-    BACKEND_ID_AZURE_IONQ_SIM
+from tests.acceptance.backends.azure_test_utils import init_azure_provider, AZURE_NAME_IONQ_SIM
+from tests.acceptance.backends.backends_list import BACKEND_ID_AZURE_IONQ_SIM
 from tests.acceptance.backends.base_test import BaseTest
 from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings
@@ -36,33 +36,59 @@ class AzureIonqSimTests(BaseTest):
     def is_simulator(self) -> bool:
         return True
 
+    def supports_memory_result(self) -> bool:
+        return True
+
     def get_provider_job_id(self, job_id: str) -> str:
         return job_id
 
     def is_valid_job_id(self, job_id: str) -> bool:
         return is_valid_uuid(job_id)
 
-
     def assert_backend(self, expected: Union[Backend, BackendV2], actual: BackendV2):
-        self.assertIsNotNone(actual.num_qubits)
-        self.assertIsNotNone(actual.backend_version)
-        self.assertIsNotNone(str(actual.coupling_map))
+        exp_config = expected._configuration
+        self.assertEqual(exp_config.backend_name, self.get_provider_backend_name())
+
+        actual_inst_names = sorted([inst[0].name for inst in actual.instructions], key=str)
+        self.assertEqual(exp_config.basis_gates, actual_inst_names)
+        self.assertEqual(exp_config.backend_name, self.get_provider_backend_name())
+        self.assertEqual(exp_config.coupling_map, actual.coupling_map)
+        self.assertEqual(exp_config.num_qubits, actual.num_qubits)
+
         self.assertTrue(actual.description.startswith("PlanQK Backend:"))
         self.assertTrue(actual.description.endswith(actual.name + "."))
         self.assertIsNone(actual.dt)
-        self.assertIsNotNone(str(actual.instruction_schedule_map))
 
-        self.assertTrue(len(actual.instructions) > 0)
+        # Instructions are not returned by Azure Provider
+
+        self.assertEqual(exp_config.basis_gates, actual_inst_names)
+        # Ensure that instructions have no coupling infos
+        self.assertTrue(len([inst[1] for inst in actual.instructions if inst[1] is not None]) == 0)
+
+        # check that the values of the instructions were not set
+        for inst in actual.instructions:
+            self.assertIsNone(inst[0].condition, "Condition attribute is not None")
+            self.assertEqual(inst[0].condition_bits, [], "Condition bits are not an empty list")
+            self.assertEqual(inst[0].decompositions, [], "Decompositions are not an empty list")
+            self.assertIsNone(inst[0].definition, "Definition attribute is not None")
+            self.assertIsNone(inst[0].duration, "Duration attribute is not None")
+            self.assertIsNone(inst[0].label, "Label attribute is not None")
+            if inst[0].name != 'measure':  # Measure is create by SDK and has no qubits
+                self.assertEqual(inst[0].num_clbits, 0, "Number of classical bits is not 0")
+                self.assertEqual(inst[0].num_qubits, 0, "Number of qubits is not 0")
+            self.assertEqual(inst[0].params, [], "Params are not an empty list")
+            self.assertEqual(inst[0].unit, 'dt', "Unit attribute is not 'dt'")
+
+        # Operations are not returned by Azure Provider
+
         self.assert_backend_config(expected, actual.configuration())
-        self.assertIsNone(actual.max_circuits)
         self.assertTrue(len(actual.operation_names) > 0)
         self.assertTrue(len(actual.operations) > 0)
         self.assertIsNotNone(actual.target)
         self.assertEqual(2, actual.version)
 
-
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
-        num_qubits = len(self.input_circuit.qubits)
+        num_qubits = len(self.get_input_circuit.qubits)
         exp_counts = transform_decimal_to_bitsrings(exp_result.counts, num_qubits)
         # Ionq simulator returns probabilities, hence, Azure SDK generates random memory values -> memory not asserted
         self.assertEqual(result.counts, exp_counts)

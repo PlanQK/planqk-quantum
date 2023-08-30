@@ -1,19 +1,17 @@
 import datetime
 from abc import ABC
-from typing import Union, List, Optional, Tuple, Dict
 
-from qiskit.circuit import Instruction as QiskitInstruction
+from qiskit.circuit import Delay, Parameter
 from qiskit.circuit import Measure
 from qiskit.providers import BackendV2, Provider, Options
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
-from qiskit.transpiler import Target, InstructionProperties
-from qiskit_braket_provider.exception import QiskitBraketException
+from qiskit.transpiler import Target
 
-from planqk.qiskit.providers.helper.adapter import op_to_instruction
-from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto
+from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
+from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
-from .providers.helper.job_input_converter import convert_circuit_to_backend_input
+from .providers.adapter import ProviderAdapterFactory
 
 
 class PlanqkBackend(BackendV2, ABC):
@@ -67,101 +65,36 @@ class PlanqkBackend(BackendV2, ABC):
         # building target
         configuration: ConfigurationDto = self._backend_info.configuration
         qubit_count: int = configuration.qubit_count
-        target = Target(description=f"Target for PlanQK actual {self.name}")
+        target = Target(description=f"Target for PlanQK actual {self.name}", num_qubits=qubit_count)
 
-        # gate model devices target.num_qubits
-        if self._backend_info.type == TYPE.QPU:
+        is_simulator = self._backend_info.type == TYPE.SIMULATOR
+        qubits = configuration.qubits
+        connectivity: ConnectivityDto = self._backend_info.configuration.connectivity
 
-            connectivity: ConnectivityDto = self._backend_info.configuration.connectivity
-            instructions: List[QiskitInstruction] = []
+        adapter = ProviderAdapterFactory.get_adapter(self._backend_info.provider)
 
-            for operation in configuration.gates:
-                instruction = op_to_instruction(operation.name)
-                if instruction is not None:
-                    # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
-                    if instruction.num_qubits <= 2:
-                        instructions.append(instruction)
+        single_qubit_props = adapter.single_qubit_gate_props(qubits, is_simulator)
+        multi_qubit_props = adapter.multi_qubit_gate_props(qubits, connectivity, is_simulator)
+        for gate in configuration.gates:
+            name = gate.name
+            gate = adapter.op_to_instruction(name)
 
-            # add measurement instructions
-            target.add_instruction(
-                Measure(), {(i,): None for i in range(qubit_count)}
-            )
+            if gate is None:
+                continue
 
-            for instruction in instructions:
-                instruction_props: Optional[
-                    Dict[
-                        Union[Tuple[int], Tuple[int, int]], Optional[InstructionProperties]
-                    ]
-                ] = {}
-                # adding 1 qubit instructions
-                if instruction.num_qubits == 1:
-                    for i in range(qubit_count):
-                        instruction_props[(i,)] = None
-                # adding 2 qubit instructions
-                elif instruction.num_qubits == 2:
-                    # building coupling map for fully connected device
-                    if connectivity.fully_connected:
-                        for src in range(qubit_count):
-                            for dst in range(qubit_count):
-                                if src != dst:
-                                    instruction_props[(src, dst)] = None
-                                    instruction_props[(dst, src)] = None
-                    # building coupling map for device with connectivity graph
-                    else:
-                        # if self._backend_info.hardware_provider == HARDWARE_PROVIDER.RIGETTI:
-                        #     # Rigetti uses discontinuous qubit indices but qiskit expects continuous indices
-                        #     connectivity.graph = convert_continuous_qubit_indices(connectivity.graph)
+            if gate.num_qubits == 1:
+                target.add_instruction(gate, single_qubit_props)
+            elif gate.num_qubits == 2:
+                target.add_instruction(gate, multi_qubit_props)
+            elif gate.num_qubits == 0 and single_qubit_props == {None: None}:
+                # For gates without qubit number qargs can not be determined
+                target.add_instruction(gate, {None: None})
 
-                        for src, connections in connectivity.graph.items():
-                            for dst in connections:
-                                instruction_props[(int(src), int(dst))] = None
-                # for more than 2 qubits
-                else:
-                    instruction_props = None
+        target.add_instruction(Measure(), single_qubit_props)
 
-                target.add_instruction(instruction, instruction_props)
-
-        # gate model simulators
-        elif self._backend_info.type == TYPE.SIMULATOR:
-            instructions = []
-
-            for operation in configuration.gates:
-                instruction = op_to_instruction(operation.name)
-                if instruction is not None:
-                    # TODO: remove when target will be supporting > 2 qubit gates  # pylint:disable=fixme
-                    if instruction.num_qubits <= 2:
-                        instructions.append(instruction)
-
-            # add measurement instructions
-            target.add_instruction(
-                Measure(), {(i,): None for i in range(qubit_count)}
-            )
-
-            for instruction in instructions:
-                simulator_instruction_props: Optional[
-                    Dict[
-                        Union[Tuple[int], Tuple[int, int]],
-                        Optional[InstructionProperties],
-                    ]
-                ] = {}
-                # adding 1 qubit instructions
-                if instruction.num_qubits == 1:
-                    for i in range(qubit_count):
-                        simulator_instruction_props[(i,)] = None
-                # adding 2 qubit instructions
-                elif instruction.num_qubits == 2:
-                    # building coupling map for fully connected device
-                    for src in range(qubit_count):
-                        for dst in range(qubit_count):
-                            if src != dst:
-                                simulator_instruction_props[(src, dst)] = None
-                                simulator_instruction_props[(dst, src)] = None
-                target.add_instruction(instruction, simulator_instruction_props)
-
-        else:
-            raise QiskitBraketException(
-                "Cannot create target from PlanQK actual information."
-            )
+        if "delay" in configuration.instructions and "delay" not in target:
+            # gate_props = {None: None} if is_simulator else single_qubit_gate_props()
+            target.add_instruction(Delay(Parameter("t")), single_qubit_props)
 
         return target
 
@@ -235,15 +168,12 @@ class PlanqkBackend(BackendV2, ABC):
                 raise RuntimeError("Multi-experiment jobs are not supported")
             circuit = circuit[0]
 
-        shots = kwargs.get('shots', 1)  # TODO externalize - use backen min default
+        shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
         # TODO input params
 
         input_circ = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
 
-        # import qiskit.qasm3 as q3  TODO try in verbatim box
-        # qasm_circuit_ibm = q3.dumps(input)
-        # qasm_circuit_ibm = qasm_circuit_ibm.replace('\ninclude "stdgates.inc";', '')
         # TODO this is braket actual specific -> move
         input_params = {'disable_qubit_rewiring': False,
                         'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in actual
@@ -277,3 +207,8 @@ class PlanqkBackend(BackendV2, ABC):
         """
 
         return self._configuration
+
+    @property
+    def backend_provider(self) -> PROVIDER:
+        """Return the provider offering the quantum backend resource."""
+        return self._backend_info.provider

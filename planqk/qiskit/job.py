@@ -7,7 +7,6 @@ from qiskit.result.models import ExperimentResult, ExperimentResultData
 from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import JobDto
 
-
 JobStatusMap = {
     "CREATED": JobStatus.INITIALIZING,
     "PENDING": JobStatus.QUEUED,
@@ -22,7 +21,8 @@ JobStatusMap = {
 class PlanqkJob(JobV1):
     version = 1
 
-    def __init__(self, backend: Optional[Backend], job_id: Optional[str] = None, job_details: Optional[JobDto] = None):
+    def __init__(self, backend: Optional[Backend], job_id: Optional[str] = None, job_details: Optional[JobDto] = None,
+                 provider_token: str = None):
 
         if job_id is None and job_details is None:
             raise ValueError("Either 'job_id' or 'job_details' must be provided.")
@@ -32,6 +32,7 @@ class PlanqkJob(JobV1):
         self._result = None
         self._backend = backend
         self._job_details = job_details
+        self._provider_token = provider_token
 
         if job_id is not None:
             self._job_id = job_id
@@ -51,7 +52,8 @@ class PlanqkJob(JobV1):
         if self._job_details is None:
             raise RuntimeError("Cannot submit job as no job details are set.")
 
-        self._job_id = _PlanqkClient.submit_job(self._job_details)
+        self._job_details = _PlanqkClient.submit_job(self._job_details)
+        self._job_id = self._job_details.id
 
     def result(self) -> Result:
         """
@@ -71,7 +73,7 @@ class PlanqkJob(JobV1):
                 + f"error: {self.error_data})"
             )
 
-        result_data = _PlanqkClient.get_job_result(self._job_id)
+        result_data = _PlanqkClient.get_job_result(self._job_id, self.backend().backend_provider)
 
         experiment_result = ExperimentResult(
             shots=self._job_details.shots,
@@ -102,13 +104,13 @@ class PlanqkJob(JobV1):
         """
         if self.job_id is None:
             raise ValueError("Job Id is not set.")
-        self._job_details = _PlanqkClient.get_job(self._job_id)
+        self._job_details = _PlanqkClient.get_job(self._job_id, self.backend().backend_provider)
 
     def cancel(self):
         """
         Attempt to cancel the job.
         """
-        _PlanqkClient.cancel_job(self._job_id)
+        _PlanqkClient.cancel_job(self._job_id, self.backend().backend_provider)
 
     def status(self) -> JobStatus:
         """

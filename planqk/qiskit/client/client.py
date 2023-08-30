@@ -8,7 +8,7 @@ from requests import Response, HTTPError
 
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
-from planqk.qiskit.client.backend_dtos import BackendDto
+from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER
 from planqk.qiskit.client.job_dtos import JobDto, JobResultDto
 
 logger = logging.getLogger(__name__)
@@ -42,12 +42,13 @@ class _PlanqkClient(object):
         return cls._credentials;
 
     @classmethod
-    def perform_request(cls, request_func: Callable[..., Response], url, params=None, data=None, headers=None):
+    def perform_request(cls, request_func: Callable[..., Response], url: str, params=None, data=None, headers=None):
         headers = {**cls._get_default_headers(), **(headers or {})}
+
         try:
             response = request_func(url, json=data, params=params, headers=headers)
             response.raise_for_status()
-            return response.json()
+            return response.json() if response.status_code != 204 else None
         except requests.exceptions.ConnectionError as e:
             logger.error(f"Cannot connect to middleware under {url}: {e}")
             raise e
@@ -58,42 +59,67 @@ class _PlanqkClient(object):
                 raise PlanqkClientError(e.response)
 
     @classmethod
-    def get_backends(cls, name: Optional[str] = None) -> List[BackendDto]:
+    def get_backends(cls, base_info: Optional[bool] = None) -> List[BackendDto]:
+        headers = {}
         params = {}
-        if name is not None:
-            params["name"] = name
+        if base_info is not None:
+            params["baseInfo"] = base_info
 
-        response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params)
+        response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params, headers=headers)
+
+        return [BackendDto.from_dict(backend_info) for backend_info in response]
+
+    @classmethod
+    def get_backend_summaries(cls) -> List[BackendDto]:
+        headers = {}
+        params = {"baseInfo": "true"}
+
+        response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params, headers=headers)
 
         return [BackendDto.from_dict(backend_info) for backend_info in response]
 
     @classmethod
     def get_backend(cls, backend_id: str) -> BackendDto:
-        response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}")
+        headers = {}
+
+        response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}", headers=headers)
         return BackendDto.from_dict(response)
 
     @classmethod
-    def submit_job(cls, job: JobDto) -> str:
+    def submit_job(cls, job: JobDto) -> JobDto:
         headers = {"content-type": "application/json"}
 
-        job_dict = job.__dict__
+        # Create dict from job object and remove attributes with None values from it
+        job_dict = cls.remove_none_values(job.__dict__)
 
         response = cls.perform_request(requests.post, f"{base_url()}/jobs", data=job_dict, headers=headers)
-        return response["id"]
-
-    @classmethod
-    def get_job(cls, job_id: str) -> JobDto:
-        response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}")
         return JobDto.from_dict(response)
 
     @classmethod
-    def get_job_result(cls, job_id: str) -> JobResultDto:
-        response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}/result")
+    def get_job(cls, job_id: str, provider: Optional[PROVIDER] = None) -> JobDto:
+        params = {}
+        if provider is not None:
+            params["provider"] = provider.name
+
+        response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}", params=params)
+        return JobDto.from_dict(response)
+
+    @classmethod
+    def get_job_result(cls, job_id: str, provider: Optional[PROVIDER] = None) -> JobResultDto:
+        params = {}
+        if provider is not None:
+            params["provider"] = provider.name
+
+        response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}/result", params=params)
         return JobResultDto.from_dict(response)
 
     @classmethod
-    def cancel_job(cls, job_id: str) -> None:
-        cls.perform_request(requests.delete, f"{base_url()}/jobs/{job_id}")
+    def cancel_job(cls, job_id: str, provider: Optional[PROVIDER] = None) -> None:
+        params = {}
+        if provider is not None:
+            params["provider"] = provider.name
+
+        cls.perform_request(requests.delete, f"{base_url()}/jobs/{job_id}", params=params)
 
     @classmethod
     def _get_default_headers(cls):
@@ -104,3 +130,9 @@ class _PlanqkClient(object):
             headers["x-planqk-service-execution-id"] = service_execution_id()
 
         return headers
+
+    @classmethod
+    def remove_none_values(cls, d):
+        if not isinstance(d, dict):
+            return d
+        return {k: cls.remove_none_values(v) for k, v in d.items() if v is not None}

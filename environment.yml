@@ -8,6 +8,7 @@ dependencies:
   - pip:
       # dev dependencies
       - qiskit
+      - qiskit-ibm-runtime
       - setuptools
       - pytest
       - pytest-cov
@@ -18,7 +19,8 @@ dependencies:
       # prod dependencies
       - requests==2.*
       ## aws braket
-      - qiskit_braket_provider==0.0.4
+        #we need the latest dev version as this fixes the issue with the Rigetti's qubit ids
+      - git+https://github.com/qiskit-community/qiskit-braket-provider.git@main
       ## azure quantum
       - azure-quantum[qiskit]
       - qiskit-ionq

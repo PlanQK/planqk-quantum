@@ -5,7 +5,7 @@ from planqk.qiskit.client.backend_dtos import PROVIDER
 from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, \
     BRAKET_NAME_IONQ_HARMONY
-from tests.acceptance.backends.test_braket_backend import BACKEND_ID_AWS_IONQ_HARMONY
+from tests.acceptance.backends.backends_list import BACKEND_ID_AWS_IONQ_HARMONY
 
 
 class AwsIonqHarmonyTests(BaseTest):

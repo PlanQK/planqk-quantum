@@ -1,10 +1,10 @@
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
-from tests.acceptance.backends.azure_test_utils import init_azure_provider, BACKEND_ID_AZURE_IONQ_HARMONY, \
-    AZURE_NAME_IONQ_HARMONY
+from tests.acceptance.backends.azure_test_utils import AZURE_NAME_IONQ_HARMONY
+from tests.acceptance.backends.backends_list import BACKEND_ID_AZURE_IONQ_HARMONY
 from tests.acceptance.backends.test_azure_ionq_sim import AzureIonqSimTests
-from tests.utils import is_valid_uuid, SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT
+from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings
 
 
@@ -28,6 +28,9 @@ class AzureIonqHarmonyTests(AzureIonqSimTests):
     def is_simulator(self) -> bool:
         return False
 
+    def supports_memory_result(self) -> bool:
+        return False
+
     def get_provider_job_id(self, job_id: str) -> str:
         return job_id
 
@@ -35,16 +38,16 @@ class AzureIonqHarmonyTests(AzureIonqSimTests):
         return is_valid_uuid(job_id)
 
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
-        num_qubits = len(self.input_circuit.qubits)
+        num_qubits = len(self.get_input_circuit.qubits)
         exp_counts = transform_decimal_to_bitsrings(exp_result.counts, num_qubits)
         # Ionq harmony returns probabilities, hence, Azure SDK generates random memory values -> memory not asserted
         self.assertEqual(result.counts, exp_counts)
         # But it is checked if a memory is returned
         self.assertIsNone(result.memory)
 
-    def assert_transpile_result(self, actual, expected):
+    def assert_transpile_result(self, expected, actual):
         self.assertEqual(expected.header, actual.header)
-        self.assertEqual(SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT, str(actual))
+        self.assertEqual(str(expected), str(actual))
 
     # Tests
 
