@@ -112,41 +112,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
                              shots=shots,
                              input_params=input_params)
 
-        # TODO return RuntimeJob
         return PlanqkRuntimeJob(backend=backend, job_details=job_request)
-
-        # _PlanqkClient.submit_job()
-        #
-        #
-        # response = self._api_client.program_run(
-        #     program_id=program_id,
-        #     backend_name=qrt_options.backend,
-        #     params=inputs,
-        #     image=qrt_options.image,
-        #     hgp=hgp_name,
-        #     log_level=qrt_options.log_level,
-        #     session_id=session_id,
-        #     job_tags=qrt_options.job_tags,
-        #     max_execution_time=qrt_options.max_execution_time,
-        #     start_session=start_session,
-        #     session_time=qrt_options.session_time,
-        #
-        #
-        # backend = self.backend(name=response["backend"], instance=hgp_name)
-        #
-        # job = RuntimeJob(
-        #     backend=backend,
-        #     api_client=self._api_client,
-        #     client_params=self._client_params,
-        #     job_id=response["id"],
-        #     program_id=program_id,
-        #     params=inputs,
-        #     user_callback=callback,
-        #     result_decoder=result_decoder,
-        #     image=qrt_options.image,
-        #     service=self,
-        # )
-        # return job
 
     @property
     def channel(self) -> str:

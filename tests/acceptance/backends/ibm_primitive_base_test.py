@@ -57,7 +57,6 @@ class IbmPrimitiveBaseTest(BaseTest):
         with Session(self.planqk_provider, backend=planqk_backend.name, max_time=None) as session:
             sampler = Sampler(session=session)
             self._planqk_job = sampler.run(self.get_input_circuit(), shots=10)  # TODO memory=True
-
             # https://qiskit.org/ecosystem/ibm-runtime/tutorials/how-to-getting-started-with-sampler.html
             session.close()
 
@@ -82,14 +81,15 @@ class IbmPrimitiveBaseTest(BaseTest):
             session.close()
 
     def should_retrieve_job(self):
-        planqk_job = self._run_job()
-        job_id = planqk_job.id
+        panqk_rt_job = self._run_job()
+        job_id = panqk_rt_job.id
         planqk_backend_id = self.get_backend_id()
 
-        # Get job via Qiskit runtime
-        exp_job = self.get_provider().job(job_id)
+        # Get job via Qiskit runtime - returns all jobs in session
+        exp_jobs = self.get_provider().jobs(backend_name=self.get_provider_backend_name(),
+                                            session_id=panqk_rt_job.session_id)
         # Get job via PlanQK
         planqk_backend = self.planqk_provider.get_backend(planqk_backend_id)
         job = planqk_backend.retrieve_job(job_id)
 
-        self.assert_job(job, exp_job)
+        self.assert_job(job, exp_jobs[0])

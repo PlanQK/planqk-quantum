@@ -12,7 +12,7 @@ from planqk.qiskit.client.client import _PlanqkClient
 
 class PlanqkQuantumProvider(Provider):
 
-    def __init__(self, access_token: str=None):
+    def __init__(self, access_token: str = None):
         """Initialize the PlanQK provider.
               Args:
                     access_token (str): access token used for authentication with PlanQK. If not token is provided,
@@ -44,19 +44,7 @@ class PlanqkQuantumProvider(Provider):
             backend_info.id for backend_info in backend_dtos
             if provider is None or backend_info.provider == provider
         ]
-
-        # backends = []
-        # for backend_dto in supported_backend_infos:
-        #     backends.append(
-        #         PlanqkBackend(
-        #             backend_info=backend_dto,
-        #             provider=self,
-        #             name=backend_dto.name,
-        #             description=f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.name}.",
-        #             online_date=datetime.strptime(backend_dto.updated_at, "%Y-%m-%d %H:%M:%S"),
-        #             backend_version="2",
-        #         )
-        #     )
+        # TODO filter QPUs
         return supported_backend_ids
 
     def get_backend(self, name=None, provider: PROVIDER = None, **kwargs):
