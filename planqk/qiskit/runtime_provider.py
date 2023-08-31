@@ -1,12 +1,14 @@
 import logging
-from typing import Optional, Union, Callable, Type, Sequence, Dict
+from datetime import datetime
+from typing import Optional, Union, Callable, Type, Sequence, Dict, List, Any
 
-from qiskit_ibm_runtime import RuntimeOptions, ParameterNamespace
+from qiskit_ibm_runtime import RuntimeOptions, ParameterNamespace, RuntimeProgram, ibm_backend
 from qiskit_ibm_runtime.accounts import ChannelType
 from qiskit_ibm_runtime.program import ResultDecoder
 
 from planqk.qiskit import PlanqkQuantumProvider
 from planqk.qiskit.client.backend_dtos import PROVIDER
+from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import RuntimeJobParamsDto, JobDto, INPUT_FORMAT
 from planqk.qiskit.planqk_runtime_job import PlanqkRuntimeJob
 from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
@@ -112,7 +114,135 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
                              shots=shots,
                              input_params=input_params)
 
-        return PlanqkRuntimeJob(backend=backend, job_details=job_request)
+        return PlanqkRuntimeJob(backend=backend, job_details=job_request, result_decoder=result_decoder)
+
+    @staticmethod
+    def delete_account(
+            filename: Optional[str] = None,
+            name: Optional[str] = None,
+            channel: Optional[ChannelType] = None,
+    ) -> bool:
+        raise NotImplementedError("Deleting an account is not supported.")
+
+    @staticmethod
+    def save_account(
+            token: Optional[str] = None,
+            url: Optional[str] = None,
+            instance: Optional[str] = None,
+            channel: Optional[ChannelType] = None,
+            filename: Optional[str] = None,
+            name: Optional[str] = None,
+            proxies: Optional[dict] = None,
+            verify: Optional[bool] = None,
+            overwrite: Optional[bool] = False,
+    ) -> None:
+        raise NotImplementedError("Saving an account is not supported.")
+
+    @staticmethod
+    def saved_accounts(
+            default: Optional[bool] = None,
+            channel: Optional[ChannelType] = None,
+            filename: Optional[str] = None,
+            name: Optional[str] = None,
+    ) -> dict:
+        raise NotImplementedError("Listing saved accounts is not supported.")
+
+    def pprint_programs(
+            self,
+            refresh: bool = False,
+            detailed: bool = False,
+            limit: int = 20,
+            skip: int = 0,
+    ) -> None:
+        raise NotImplementedError("Pretty print information about available runtime programs is not supported.")
+
+    def programs(
+            self, refresh: bool = False, limit: int = 20, skip: int = 0
+    ) -> List[RuntimeProgram]:
+        raise NotImplementedError("Listing available runtime programs is not supported.")
+
+    def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
+        raise NotImplementedError("Retrieving a runtime program is not supported.")
+
+    def upload_program(self, data: str, metadata: Optional[Union[Dict, str]] = None) -> str:
+        raise NotImplementedError("Uploading a runtime program is not supported.")
+
+    def update_program(
+            self,
+            program_id: str,
+            data: str = None,
+            metadata: Optional[Union[Dict, str]] = None,
+            name: str = None,
+            description: str = None,
+            max_execution_time: int = None,
+            spec: Optional[Dict] = None,
+    ) -> None:
+        raise NotImplementedError("Updating a runtime program is not supported.")
+
+    def delete_program(self, program_id: str) -> None:
+        raise NotImplementedError("Deleting a runtime program is not supported.")
+
+    def set_program_visibility(self, program_id: str, public: bool) -> None:
+        raise NotImplementedError("Setting the visibility of a runtime program is not supported.")
+
+    def job(self, job_id: str) -> PlanqkRuntimeJob:
+        """Retrieve a runtime job.
+
+                Args:
+                    job_id: Job ID.
+
+                Returns:
+                    Runtime job retrieved.
+                Raises:
+                    PlanqkClientError: If the job cannot be retrieved.
+                """
+        job_details = _PlanqkClient.get_job(job_id, PROVIDER.IBM)
+        backend = self.get_backend(job_details.backend_id)
+
+        return PlanqkRuntimeJob(backend=backend, job_id=job_id, job_details=job_details)
+
+    def jobs(
+            self,
+            limit: Optional[int] = 10,
+            skip: int = 0,
+            backend_name: Optional[str] = None,
+            pending: bool = None,
+            program_id: str = None,
+            instance: Optional[str] = None,
+            job_tags: Optional[List[str]] = None,
+            session_id: Optional[str] = None,
+            created_after: Optional[datetime] = None,
+            created_before: Optional[datetime] = None,
+            descending: bool = True,
+    ) -> List[PlanqkRuntimeJob]:
+        raise NotImplementedError("Retrieving runtime jobs is not supported.")
+
+    def delete_job(self, job_id: str) -> None:
+        """Delete a runtime job.
+
+        Note that this operation cannot be reversed.
+
+        Args:
+            job_id: ID of the job to delete.
+
+        Raises:
+            PlanqkClientError: If the job cannot be deleted.
+        """
+        job = self.job(job_id)
+        job.cancel()
+
+    def least_busy(
+            self,
+            min_num_qubits: Optional[int] = None,
+            instance: Optional[str] = None,
+            filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+            **kwargs: Any,
+    ) -> ibm_backend.IBMBackend:
+        raise NotImplementedError("Retrieving the least busy backend is not supported.")
+
+    @property
+    def auth(self) -> str:
+        raise NotImplementedError("Retrieving the authentication type is not supported.")
 
     @property
     def channel(self) -> str:
@@ -122,3 +252,12 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             The channel type used.
         """
         return self._channel
+
+    @property
+    def runtime(self):  # type:ignore
+        """Return self for compatibility with IBMQ provider.
+
+        Returns:
+            self
+        """
+        return self

@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Any, Dict
 
 import requests
 from requests import Response, HTTPError
@@ -9,7 +9,7 @@ from requests import Response, HTTPError
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER
-from planqk.qiskit.client.job_dtos import JobDto, JobResultDto
+from planqk.qiskit.client.job_dtos import JobDto
 
 logger = logging.getLogger(__name__)
 
@@ -105,13 +105,13 @@ class _PlanqkClient(object):
         return JobDto.from_dict(response)
 
     @classmethod
-    def get_job_result(cls, job_id: str, provider: Optional[PROVIDER] = None) -> JobResultDto:
+    def get_job_result(cls, job_id: str, provider: Optional[PROVIDER] = None) -> Dict[str, Any]:
         params = {}
         if provider is not None:
             params["provider"] = provider.name
 
         response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}/result", params=params)
-        return JobResultDto.from_dict(response)
+        return response
 
     @classmethod
     def cancel_job(cls, job_id: str, provider: Optional[PROVIDER] = None) -> None:

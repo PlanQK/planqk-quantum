@@ -51,7 +51,7 @@ class PlanqkQuantumProvider(Provider):
         """Return a single backend matching the specified filtering.
 
         Args:
-            name (str): name of the backend.
+            :param name: name of the backend.
             :param provider: the provider of the backend
             **kwargs: dict used for filtering.
 

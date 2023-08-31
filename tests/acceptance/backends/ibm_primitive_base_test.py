@@ -3,6 +3,7 @@ import os
 from abc import abstractmethod
 
 import pytest
+from qiskit.primitives import SamplerResult
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
 from planqk.qiskit import PlanqkJob
@@ -57,7 +58,6 @@ class IbmPrimitiveBaseTest(BaseTest):
         with Session(self.planqk_provider, backend=planqk_backend.name, max_time=None) as session:
             sampler = Sampler(session=session)
             self._planqk_job = sampler.run(self.get_input_circuit(), shots=10)  # TODO memory=True
-            # https://qiskit.org/ecosystem/ibm-runtime/tutorials/how-to-getting-started-with-sampler.html
             session.close()
 
         return self._planqk_job
@@ -81,15 +81,38 @@ class IbmPrimitiveBaseTest(BaseTest):
             session.close()
 
     def should_retrieve_job(self):
-        panqk_rt_job = self._run_job()
-        job_id = panqk_rt_job.id
+        planqk_rt_job = self._run_job()
+        job_id = planqk_rt_job.id
         planqk_backend_id = self.get_backend_id()
 
-        # Get job via Qiskit runtime - returns all jobs in session
-        exp_jobs = self.get_provider().jobs(backend_name=self.get_provider_backend_name(),
-                                            session_id=panqk_rt_job.session_id)
+        # Get job via Qiskit runtime
+        exp_job = self.get_provider().job(job_id)
         # Get job via PlanQK
-        planqk_backend = self.planqk_provider.get_backend(planqk_backend_id)
-        job = planqk_backend.retrieve_job(job_id)
+        job = self.planqk_provider.job(job_id)
 
-        self.assert_job(job, exp_jobs[0])
+        self.assert_job(job, exp_job)
+
+    def should_retrieve_job_result(self):
+        # Given:
+        planqk_rt_job = self._run_job()
+        job_id = planqk_rt_job.id
+
+        # Get result via PlanQK
+        result: SamplerResult = planqk_rt_job.result()
+
+        # Get job result via Qiskit runtime
+        exp_job = self.get_provider().job(job_id)
+        exp_result: SamplerResult = exp_job.result()
+
+        self.assert_sampler_result(exp_result, result)
+
+    def assert_sampler_result(self, exp_result: SamplerResult, result: SamplerResult):
+        # Assertions for quasi_dists
+        self.assertEqual(len(result.quasi_dists), len(exp_result.quasi_dists))
+        for exp_quasi_dist, res_quasi_dist in zip(exp_result.quasi_dists, result.quasi_dists):
+            self.assertEqual(res_quasi_dist, exp_quasi_dist)
+
+        # Assertions for metadata
+        self.assertEqual(len(result.metadata), len(exp_result.metadata))
+        for exp_meta, res_meta in zip(exp_result.metadata, result.metadata):
+            self.assertEqual(res_meta, exp_meta)

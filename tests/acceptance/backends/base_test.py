@@ -307,16 +307,17 @@ class BaseTest(ABC, unittest.TestCase):
         provider_job_id = self.get_provider_job_id(job_id)
         exp_result: Result = backend.retrieve_job(provider_job_id).result()
 
-        self.assertEqual(result.backend_name, planqk_backend_id)
-        self.assertEqual(self.get_provider_job_id(result.job_id), exp_result.job_id)
+        self.assert_result(exp_result, result)
+
+    def assert_result(self, exp_result: Result, result: Result):
         self.assertEqual(exp_result.success, result.success)
         result_entry: ExperimentResult = result.results[0]
         exp_result_entry: ExperimentResult = exp_result.results[0]
         self.assertEqual(exp_result_entry.shots, result_entry.shots)
-        self.assert_experimental_result_data(result_entry.data, exp_result_entry.data)
+        self.assert_experimental_result_data(exp_result_entry.data, result_entry.data)
         self.assertIsNotNone(result.date)
 
-    def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
+    def assert_experimental_result_data(self, exp_result: ExperimentResultData, result: ExperimentResultData):
         self.assertEqual(exp_result.counts, result.counts)
         self.assertEqual(exp_result.memory, result.memory)
 

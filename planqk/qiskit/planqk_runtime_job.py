@@ -1,23 +1,73 @@
+import json
 from datetime import datetime
-from typing import Optional, Type, Any, Callable, Dict
+from typing import Optional, Type, Any, Callable, Dict, Union, Sequence
 
-from qiskit.providers import Backend
+from qiskit.providers import Backend, JobStatus
+from qiskit_ibm_runtime import RuntimeJobMaxTimeoutError, RuntimeJobFailureError, RuntimeInvalidStateError
+from qiskit_ibm_runtime.constants import DEFAULT_DECODERS
 from qiskit_ibm_runtime.program import ResultDecoder
 
 from planqk.qiskit import PlanqkJob
+from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import JobDto
+from planqk.qiskit.job import JobStatusMap
 
 
 class PlanqkRuntimeJob(PlanqkJob):
 
     def __init__(self, backend: Optional[Backend], job_id: Optional[str] = None, job_details: Optional[JobDto] = None,
-                 provider_token: str = None):
-        super().__init__(backend, job_id, job_details, provider_token)
+                 result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None):
+        super().__init__(backend, job_id, job_details)
         self._session_id = self._job_details.input_params['session_id']
         self._program_id = self._job_details.input_params['program_id']
 
+        decoder = result_decoder or DEFAULT_DECODERS.get(self._program_id, None) or ResultDecoder
+        if isinstance(decoder, Sequence):
+            self._interim_result_decoder, self._final_result_decoder = decoder
+        else:
+            self._interim_result_decoder = self._final_result_decoder = decoder
+
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         raise NotImplementedError("Interim results are not supported for PlanQK runtime jobs.")
+
+    def result(  # pylint: disable=arguments-differ
+            self,
+            timeout: Optional[float] = None,
+            decoder: Optional[Type[ResultDecoder]] = None,
+    ) -> Any:
+        """Return the results of the job.
+
+        Args:
+            timeout: Number of seconds to wait for job.
+            decoder: A :class:`ResultDecoder` subclass used to decode job results.
+
+        Returns:
+            Runtime job result.
+
+        Raises:
+            RuntimeJobFailureError: If the job failed.
+            RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
+            RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
+        """
+        _decoder = decoder or self._final_result_decoder
+        if self._result is None or (_decoder != self._final_result_decoder):
+            self.wait_for_final_state(timeout=timeout)
+            status = JobStatusMap[self._job_details.status]
+            if status == JobStatus.ERROR:
+                error_message = self._reason if self._reason else self._error_message
+                if self._reason == "RAN TOO LONG":
+                    raise RuntimeJobMaxTimeoutError(error_message)
+                raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
+            if status is JobStatus.CANCELLED:
+                raise RuntimeInvalidStateError(
+                    "Unable to retrieve result for job {}. "
+                    "Job was cancelled.".format(self.job_id())
+                )
+
+            result_raw = _PlanqkClient.get_job_result(self._job_id, self.backend().backend_provider)
+
+            self._result = _decoder.decode(json.dumps(result_raw)) if result_raw else None
+        return self._result
 
     def stream_results(
             self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None

@@ -21,25 +21,23 @@ JobStatusMap = {
 class PlanqkJob(JobV1):
     version = 1
 
-    def __init__(self, backend: Optional[Backend], job_id: Optional[str] = None, job_details: Optional[JobDto] = None,
-                 provider_token: str = None):
+    def __init__(self, backend: Optional[Backend], job_id: Optional[str] = None, job_details: Optional[JobDto] = None):
 
         if job_id is None and job_details is None:
-            raise ValueError("Either 'job_id' or 'job_details' must be provided.")
-        if job_id is not None and job_details is not None:
-            raise ValueError("Only one of 'job_id' or 'job_details' can be provided.")
+            raise ValueError("Either 'job_id', 'job_details' or both must be provided.")
 
         self._result = None
         self._backend = backend
         self._job_details = job_details
-        self._provider_token = provider_token
 
-        if job_id is not None:
+        if job_id is not None and job_details is None:
             self._job_id = job_id
             self._refresh()
-
-        else:
+        elif job_id is None and job_details is not None:
             self.submit()
+        else:
+            self._job_id = job_id
+            self._job_details = job_details
 
         job_details_dict = self._job_details.to_dict()
         super().__init__(backend=backend, job_id=self._job_id, **job_details_dict)
@@ -68,7 +66,7 @@ class PlanqkJob(JobV1):
         status = JobStatusMap[self._job_details.status]
         if not status == JobStatus.DONE:
             raise RuntimeError(
-                f'{"Cannot retrieve results as job execution failed"}'
+                f'{"Cannot retrieve results as job execution did not complete successfully. "}'
                 + f"(status: {self.status}."
                 + f"error: {self.error_data})"
             )
@@ -80,8 +78,8 @@ class PlanqkJob(JobV1):
             success=True,
             status=status,
             data=ExperimentResultData(
-                counts=result_data.counts if result_data.counts is not None else {},
-                memory=result_data.memory if result_data.memory is not None else []
+                counts=result_data["counts"] if result_data["counts"] is not None else {},
+                memory=result_data["memory"] if result_data["memory"] is not None else []
             )
         )
 
