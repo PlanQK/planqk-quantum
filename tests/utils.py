@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from qiskit import QuantumCircuit
+from qiskit.circuit.library import RealAmplitudes
+from qiskit.quantum_info import SparsePauliOp
 
 
 def get_sample_circuit() -> QuantumCircuit:
@@ -12,6 +14,22 @@ def get_sample_circuit() -> QuantumCircuit:
     circuit.measure([0, 1, 2], [0, 1, 2])
 
     return circuit
+
+
+def get_estimator_circuit():
+    psi = RealAmplitudes(num_qubits=2, reps=2)
+
+    h1 = SparsePauliOp.from_list([("IZ", 1)])
+    h2 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
+
+    theta = [0, 1, 1, 2, 3, 5]
+
+    return {
+        'circuits': [psi, psi],
+        'observables': [h1, h2],
+        'parameter_values': [theta] * 2
+    }
+
 
 SAMPLE_CIRCUIT_HARMONY_TRANSPILATION_RESULT = """global phase: 3π/2
                 ┌──────────┐┌────────┐          ┌─┐      
@@ -41,7 +59,7 @@ ancilla_7 -> 10 ─────────────────────�
                                                  0  1  2 """
 
 
-def get_width_sample_circuit(n_bits : int) -> QuantumCircuit:
+def get_width_sample_circuit(n_bits: int) -> QuantumCircuit:
     circuit = QuantumCircuit(n_bits, n_bits)
     circuit.h(range(n_bits))
 
@@ -49,7 +67,6 @@ def get_width_sample_circuit(n_bits : int) -> QuantumCircuit:
     circuit.measure(range(n_bits), range(n_bits))
 
     return circuit
-
 
 
 def is_valid_uuid(uuid_to_test):

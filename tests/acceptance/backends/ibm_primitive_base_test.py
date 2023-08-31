@@ -3,13 +3,14 @@ import os
 from abc import abstractmethod
 
 import pytest
-from qiskit.primitives import SamplerResult
-from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
+from qiskit.primitives import SamplerResult, EstimatorResult
+from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator
 
 from planqk.qiskit import PlanqkJob
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
 from tests.acceptance.backends.base_test import BaseTest
+from tests.utils import get_estimator_circuit
 
 
 class IbmPrimitiveBaseTest(BaseTest):
@@ -59,7 +60,6 @@ class IbmPrimitiveBaseTest(BaseTest):
             sampler = Sampler(session=session)
             self._planqk_job = sampler.run(self.get_input_circuit(), shots=10)  # TODO memory=True
             session.close()
-
         return self._planqk_job
 
     @abstractmethod
@@ -106,11 +106,44 @@ class IbmPrimitiveBaseTest(BaseTest):
 
         self.assert_sampler_result(exp_result, result)
 
+    @abstractmethod
+    @pytest.mark.skip(reason='abstract method')
+    def test_should_retrieve_estimator_job_result(self):
+        pass
+
+    def should_retrieve_estimator_job_result(self):
+        planqk_backend = self.planqk_provider.get_backend(self.get_backend_id())
+
+        # Given: Estimator job
+        with Session(self.planqk_provider, backend=planqk_backend.name, max_time=None) as session:
+            estimator_params = get_estimator_circuit()
+            estimator = Estimator(session=session)
+            self._planqk_job = estimator.run(**estimator_params)
+            session.close()
+
+        # Get result via PlanQK
+        result: EstimatorResult = self._planqk_job.result()
+
+        # Get job result via Qiskit runtime
+        exp_job = self.get_provider().job(self._planqk_job.job_id())
+        exp_result: EstimatorResult = exp_job.result()
+
+        self.assert_estimator_result(exp_result, result)
+
     def assert_sampler_result(self, exp_result: SamplerResult, result: SamplerResult):
         # Assertions for quasi_dists
         self.assertEqual(len(result.quasi_dists), len(exp_result.quasi_dists))
         for exp_quasi_dist, res_quasi_dist in zip(exp_result.quasi_dists, result.quasi_dists):
             self.assertEqual(res_quasi_dist, exp_quasi_dist)
+
+        # Assertions for metadata
+        self.assertEqual(len(result.metadata), len(exp_result.metadata))
+        for exp_meta, res_meta in zip(exp_result.metadata, result.metadata):
+            self.assertEqual(res_meta, exp_meta)
+
+    def assert_estimator_result(self, exp_result: EstimatorResult, result: EstimatorResult):
+        # Assertions for values
+        self.assertTrue((exp_result.values == result.values).all())
 
         # Assertions for metadata
         self.assertEqual(len(result.metadata), len(exp_result.metadata))

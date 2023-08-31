@@ -46,6 +46,9 @@ class IbmPrimitiveQasmSimulatorTests(IbmPrimitiveBaseTest):
     def test_should_retrieve_job_result(self):
         self.should_retrieve_job_result()
 
+    def test_should_retrieve_estimator_job_result(self):
+        self.should_retrieve_estimator_job_result()  # TODO move test execution to parent -> not abstract
+
     def test_should_cancel_job(self):
         # Canceling jobs is not possible as simulator jobs complete instantly
         pass
