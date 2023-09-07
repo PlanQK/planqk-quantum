@@ -15,6 +15,7 @@ JobStatusMap = {
     "FAILED": JobStatus.ERROR,
     "CANCELLING": JobStatus.RUNNING,
     "CANCELLED": JobStatus.CANCELLED,
+    "UNKNOWN": JobStatus.INITIALIZING,
 }
 
 
