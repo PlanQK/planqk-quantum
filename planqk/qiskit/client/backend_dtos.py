@@ -12,7 +12,9 @@ from planqk.qiskit.client.job_dtos import INPUT_FORMAT
 class PROVIDER(Enum):
     AZURE = "AZURE"
     AWS = "AWS"
+    DWAVE = "DWAVE"
     IBM = "IBM"
+    IBM_CLOUD = "IBM_CLOUD"
 
 
 class TYPE(Enum):
@@ -34,7 +36,7 @@ class HARDWARE_PROVIDER(Enum):
     OQC = "Oxford Quantum Computers"
     AWS = "AWS Braket"
     AZURE = "Azure Quantum"
-    IBM = "IBM Q"
+    IBM = "IBM Quantum"
     UKNOWN = "Unknown"
 
     @classmethod
@@ -168,28 +170,29 @@ class CostDto:
 @dataclass
 class BackendDto:
     id: str
-    internal_id: str
     provider: PROVIDER
-    hardware_provider: HARDWARE_PROVIDER
-    name: str
-    documentation: DocumentationDto
-    configuration: ConfigurationDto
-    type: TYPE
-    status: STATUS
-    availability: List[AvailabilityTimesDto]
-    costs: List[CostDto]
-    updated_at: datetime
+    internal_id: Optional[str] = None
+    hardware_provider: Optional[HARDWARE_PROVIDER] = None
+    name: Optional[str] = None
+    documentation: Optional[DocumentationDto] = None
+    configuration: Optional[ConfigurationDto] = None
+    type: Optional[TYPE] = None
+    status: Optional[STATUS] = None
+    availability: Optional[List[AvailabilityTimesDto]] = None
+    costs: Optional[List[CostDto]] = None
+    updated_at: Optional[datetime] = None
     avg_queue_time: Optional[int] = None
 
     def __post_init__(self):
         self.provider = PROVIDER(self.provider)
-        self.hardware_provider = HARDWARE_PROVIDER.from_str(self.hardware_provider)
-        self.type = TYPE(self.type)
-        self.status = STATUS(self.status)
-        self.documentation = DocumentationDto.from_dict(self.documentation)
-        self.configuration = ConfigurationDto.from_dict(self.configuration)
-        self.availability = [AvailabilityTimesDto.from_dict(avail_entry) for avail_entry in self.availability]
-        self.costs = [CostDto.from_dict(cost_entry) for cost_entry in self.costs]
+        self.hardware_provider = HARDWARE_PROVIDER.from_str(self.hardware_provider) if self.hardware_provider else None
+        self.type = TYPE(self.type) if self.type else None
+        self.status = STATUS(self.status) if self.status else None
+        self.documentation = DocumentationDto.from_dict(self.documentation) if self.documentation else None
+        self.configuration = ConfigurationDto.from_dict(self.configuration) if self.configuration else None
+        self.availability = [AvailabilityTimesDto.from_dict(avail_entry) for avail_entry in
+                             self.availability] if self.availability else None
+        self.costs = [CostDto.from_dict(cost_entry) for cost_entry in self.costs] if self.costs else None
 
     @classmethod
     def from_dict(cls, data: Dict):

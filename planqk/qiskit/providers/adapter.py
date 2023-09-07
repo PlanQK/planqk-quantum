@@ -28,7 +28,7 @@ class ProviderAdapterFactory:
             return AwsAdapter()
         elif provider == PROVIDER.AZURE:
             return AzureAdapter()
-        elif provider == PROVIDER.IBM:
+        elif provider == PROVIDER.IBM or provider == PROVIDER.IBM_CLOUD:
             return IbmAdapter()
         else:
             raise ValueError(f"Provider {provider} not supported")

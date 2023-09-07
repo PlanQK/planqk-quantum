@@ -42,9 +42,8 @@ class PlanqkQuantumProvider(Provider):
 
         supported_backend_ids = [
             backend_info.id for backend_info in backend_dtos
-            if provider is None or backend_info.provider == provider
+            if (provider is None or backend_info.provider == provider) and backend_info.provider != PROVIDER.DWAVE
         ]
-        # TODO filter QPUs
         return supported_backend_ids
 
     def get_backend(self, name=None, provider: PROVIDER = None, **kwargs):
