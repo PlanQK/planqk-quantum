@@ -95,7 +95,7 @@ class QubitDto:
 @dataclass
 class GateDto:
     name: str
-    is_native: bool
+    native_gate: bool
 
     @classmethod
     def from_dict(cls, data: Dict):
@@ -104,7 +104,7 @@ class GateDto:
 
 @dataclass
 class ConnectivityDto:
-    is_fully_connected: bool
+    fully_connected: bool
     graph: Optional[Dict[str, List[str]]] = None
 
     @classmethod
@@ -131,7 +131,7 @@ class ConfigurationDto:
     connectivity: ConnectivityDto
     supported_input_formats: List[INPUT_FORMAT]
     shots_range: ShotsRangeDto
-    supports_memory_result: Optional[bool] = False
+    memory_result_supported: Optional[bool] = False
 
     def __post_init__(self):
         self.gates = [GateDto.from_dict(gate) for gate in self.gates]
