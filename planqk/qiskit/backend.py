@@ -100,10 +100,10 @@ class PlanqkBackend(BackendV2, ABC):
 
     def _planqk_backend_dto_to_configuration(self) -> QasmBackendConfiguration:
         basis_gates = [self._get_gate_config_from_target(basis_gate.name)
-                       for basis_gate in self._backend_info.configuration.gates if basis_gate.native
+                       for basis_gate in self._backend_info.configuration.gates if basis_gate.is_native
                        and self._get_gate_config_from_target(basis_gate.name) is not None]
         gates = [self._get_gate_config_from_target(gate.name)
-                 for gate in self._backend_info.configuration.gates if not gate.native
+                 for gate in self._backend_info.configuration.gates if not gate.is_native
                  and self._get_gate_config_from_target(gate.name) is not None]
 
         return QasmBackendConfiguration(
@@ -116,7 +116,7 @@ class PlanqkBackend(BackendV2, ABC):
             simulator=self._backend_info.type == TYPE.SIMULATOR,
             conditional=False,
             open_pulse=False,
-            memory=self._backend_info.configuration.memory_result_returned,
+            memory=self._backend_info.configuration.supports_memory_result,
             max_shots=self._backend_info.configuration.shots_range.max,
             coupling_map=self.coupling_map,
             supported_instructions=self._target.instructions,
