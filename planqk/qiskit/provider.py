@@ -79,9 +79,9 @@ class PlanqkQuantumProvider(Provider):
         return PlanqkBackend(
             backend_info=backend_dto,
             provider=self,
-            name=backend_dto.name,
-            description=f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.name}.",
-            online_date=datetime.strptime(backend_dto.updated_at, "%Y-%m-%d %H:%M:%S"),
+            name=backend_dto.id,
+            description=f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.id}.",
+            online_date=datetime.strptime(backend_dto.updated_at, "%Y-%m-%d"),
             backend_version="2",
         )
 
