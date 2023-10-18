@@ -59,11 +59,9 @@ class _PlanqkClient(object):
                 raise PlanqkClientError(e.response)
 
     @classmethod
-    def get_backends(cls, base_info: Optional[bool] = None) -> List[BackendDto]:
+    def get_backends(cls) -> List[BackendDto]:
         headers = {}
-        params = {}
-        if base_info is not None:
-            params["baseInfo"] = base_info
+        params = {"onlyQiskit": True}
 
         response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params, headers=headers)
 

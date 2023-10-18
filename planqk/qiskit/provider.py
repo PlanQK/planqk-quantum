@@ -38,7 +38,7 @@ class PlanqkQuantumProvider(Provider):
                    :param name:
                    :param provider: the provider of the backend
         """
-        backend_dtos = _PlanqkClient.get_backends(base_info=True)
+        backend_dtos = _PlanqkClient.get_backends()
 
         supported_backend_ids = [
             backend_info.id for backend_info in backend_dtos
