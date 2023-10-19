@@ -27,24 +27,25 @@ class TYPE(Enum):
         try:
             return TYPE(type_str)
         except KeyError:
-            return cls.UKNOWN
+            return cls.UNKNOWN
 
 
 class HARDWARE_PROVIDER(Enum):
-    IONQ = "IonQ"
-    RIGETTI = "Rigetti"
-    OQC = "Oxford Quantum Computers"
+    IONQ = "IONQ"
+    RIGETTI = "RIGETTI"
+    OQC = "OQC"
     AWS = "AWS Braket"
-    AZURE = "Azure Quantum"
-    IBM = "IBM Quantum"
-    UKNOWN = "Unknown"
+    AZURE = "AZURE"
+    IBM = "IBM"
+    DWAVE = "DWAVE"
+    UNKNOWN = "UNKNOWN"
 
     @classmethod
     def from_str(cls, hw_provider_str):
         try:
             return HARDWARE_PROVIDER(hw_provider_str)
         except KeyError:
-            return cls.UKNOWN
+            return cls.UNKNOWN
 
 
 class STATUS(Enum):
@@ -68,7 +69,7 @@ class STATUS(Enum):
         try:
             return STATUS(status_str)
         except KeyError:
-            return cls.UKNOWN
+            return cls.UNKNOWN
 
 
 @dataclass
