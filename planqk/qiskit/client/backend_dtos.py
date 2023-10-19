@@ -34,7 +34,7 @@ class HARDWARE_PROVIDER(Enum):
     IONQ = "IONQ"
     RIGETTI = "RIGETTI"
     OQC = "OQC"
-    AWS = "AWS Braket"
+    AWS = "AWS"
     AZURE = "AZURE"
     IBM = "IBM"
     DWAVE = "DWAVE"
