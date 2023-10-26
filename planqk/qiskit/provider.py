@@ -76,6 +76,10 @@ class PlanqkQuantumProvider(Provider):
                     "No backend matches the criteria. Reason: " + error_detail['error_message'])
             raise e
 
+        backend_state_dto = _PlanqkClient.get_backend_state(backend_id=name)
+        if backend_state_dto:
+            backend_dto.status = backend_state_dto.status
+
         return PlanqkBackend(
             backend_info=backend_dto,
             provider=self,

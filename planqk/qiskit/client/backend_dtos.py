@@ -169,6 +169,21 @@ class CostDto:
 
 
 @dataclass
+class BackendStateInfosDto:
+    status: STATUS
+    queue_avg_time: Optional[int] = None
+    queue_size: Optional[int] = None
+    provider_token_valid: Optional[bool] = None
+
+    def __post_init__(self):
+        self.status = STATUS(self.status) if self.status else None
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return init_with_defined_params(cls, data)
+
+
+@dataclass
 class BackendDto:
     id: str
     provider: PROVIDER

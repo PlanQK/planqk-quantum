@@ -8,7 +8,7 @@ from requests import Response, HTTPError
 
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
-from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER
+from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER, BackendStateInfosDto
 from planqk.qiskit.client.job_dtos import JobDto
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,13 @@ class _PlanqkClient(object):
 
         response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}", headers=headers)
         return BackendDto.from_dict(response)
+
+    @classmethod
+    def get_backend_state(cls, backend_id: str) -> BackendStateInfosDto:
+        headers = {}
+
+        response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}/status", headers=headers)
+        return BackendStateInfosDto.from_dict(response)
 
     @classmethod
     def submit_job(cls, job: JobDto) -> JobDto:
