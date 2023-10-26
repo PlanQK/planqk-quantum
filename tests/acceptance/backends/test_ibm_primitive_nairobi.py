@@ -35,8 +35,7 @@ class IbmPrimitiveNairobiBackendTests(IbmPrimitiveBaseTest):
         self.should_run_job()
 
     def test_should_run_multiple_jobs_in_session(self):
-        # self.should_run_multiple_jobs_in_session()
-        pass
+        self.should_run_multiple_jobs_in_session()
 
     def test_should_retrieve_job(self):
         self.should_retrieve_job()
