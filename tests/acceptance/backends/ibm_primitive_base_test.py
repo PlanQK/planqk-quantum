@@ -6,7 +6,7 @@ import pytest
 from qiskit.primitives import SamplerResult, EstimatorResult
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator
 
-from planqk.qiskit import PlanqkJob
+from planqk.qiskit import PlanqkJob, PlanqkQuantumProvider
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
 from tests.acceptance.backends.base_test import BaseTest
@@ -61,6 +61,12 @@ class IbmPrimitiveBaseTest(BaseTest):
             self._planqk_job = sampler.run(self.get_input_circuit(), shots=10)  # TODO memory=True
             session.close()
         return self._planqk_job
+
+    def should_not_run_job_with_classic_provider(self):
+        classic_provider = PlanqkQuantumProvider(self.planqk_access_token)
+        planqk_backend = classic_provider.get_backend(self.get_backend_id())
+        with self.assertRaises(ValueError):
+            planqk_backend.run(self.get_input_circuit(), shots=self.get_test_shots())
 
     @abstractmethod
     @pytest.mark.skip(reason='abstract method')

@@ -3,6 +3,7 @@ import os
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService
 
+from planqk.qiskit.client.backend_dtos import PROVIDER
 from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_CLOUD_BRISBANE, BACKEND_ID_IBM_CLOUD_CUSCO, \
     BACKEND_ID_IBM_CLOUD_KYIV, BACKEND_ID_IBM_CLOUD_NAZCA, BACKEND_ID_IBM_CLOUD_SHERBROOKE
 from tests.acceptance.backends.ibm_primitive_base_test import IbmPrimitiveBaseTest
@@ -43,6 +44,9 @@ class IbmPrimitiveEagleBackendsTests(IbmPrimitiveBaseTest):
     def get_backend_id(self) -> str:
         return self._backend_id
 
+    def get_provider_id(self):
+        return PROVIDER.IBM_CLOUD
+
     def get_provider_backend_name(self) -> str:
         return self._provider_backend_name
 
@@ -66,9 +70,11 @@ class IbmPrimitiveEagleBackendsTests(IbmPrimitiveBaseTest):
     def test_should_transpile_circuit(self):
         self.should_transpile_circuit()
 
+    def test_should_not_run_job_with_classic_provider(self):
+        self.should_not_run_job_with_classic_provider()
+
     def test_should_run_job(self):
-        # self.should_run_job()
-        pass
+        self.should_run_job()
 
     def test_should_run_multiple_jobs_in_session(self):
         # self.should_run_multiple_jobs_in_session()

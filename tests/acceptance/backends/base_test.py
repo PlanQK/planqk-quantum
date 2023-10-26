@@ -150,7 +150,7 @@ class BaseTest(ABC, unittest.TestCase):
             exp_instruction = exp_instructions[i][0]
             actual_instruction = act_instructions[i][0]
             self.assertEqual(exp_instruction.__class__, actual_instruction.__class__,
-                             f'Instruction {actual_instruction.name} has different type')
+                             f'Instruction {i} {actual_instruction.name} in iteration has different type')
             self.assertEqual(exp_instruction.condition, actual_instruction.condition,
                              f'Instruction {actual_instruction.name} has different condition')
             self.assertEqual(exp_instruction.condition_bits, actual_instruction.condition_bits,

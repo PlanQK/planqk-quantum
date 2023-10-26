@@ -28,14 +28,24 @@ class IbmPrimitiveNairobiBackendTests(IbmPrimitiveBaseTest):
     def test_should_transpile_circuit(self):
         self.should_transpile_circuit()
 
+    def test_should_not_run_job_with_classic_provider(self):
+        self.should_not_run_job_with_classic_provider()
+
     def test_should_run_job(self):
         self.should_run_job()
+
+    def test_should_run_multiple_jobs_in_session(self):
+        # self.should_run_multiple_jobs_in_session()
+        pass
 
     def test_should_retrieve_job(self):
         self.should_retrieve_job()
 
     def test_should_retrieve_job_result(self):
         self.should_retrieve_job_result()
+
+    def test_should_retrieve_estimator_job_result(self):
+        pass
 
     def test_should_cancel_job(self):
         self.should_cancel_job()

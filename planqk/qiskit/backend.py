@@ -8,7 +8,7 @@ from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
 from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
-from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER
+from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
 from .providers.adapter import ProviderAdapterFactory
@@ -163,20 +163,22 @@ class PlanqkBackend(BackendV2, ABC):
             Returns:
                 PlanqkJob: The job instance for the circuit that was run.
         """
+        self._validate_provider_for_backend()
+
         if isinstance(circuit, (list, tuple)):
             if len(circuit) > 1:
-                raise RuntimeError("Multi-experiment jobs are not supported")
+                raise ValueError("Multi-experiment jobs are not supported")
             circuit = circuit[0]
 
         shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
-        # TODO input params
+        # TODO add support for input params
 
         input_circ = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
 
-        # TODO this is braket actual specific -> move
+        # TODO this is braket specific
         input_params = {'disable_qubit_rewiring': False,
-                        'qubit_count': circuit.num_qubits}  # TODO determine QuBit count in actual
+                        'qubit_count': circuit.num_qubits}
 
         job_request = JobDto(self._backend_info.id,
                              provider=self._backend_info.provider.name,
@@ -186,6 +188,13 @@ class PlanqkBackend(BackendV2, ABC):
                              input_params=input_params)
 
         return PlanqkJob(backend=self, job_details=job_request)
+
+    def _validate_provider_for_backend(self) -> bool:
+        from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
+        if (self._backend_info.hardware_provider == HARDWARE_PROVIDER.IBM
+                and not isinstance(self.provider, PlanqkQiskitRuntimeService)):
+            raise ValueError(f"Jobs for IBM backends must not be created with {self.provider.__class__.__name__}. "
+                             f"Use {PlanqkQiskitRuntimeService.__name__} instead.")
 
     def retrieve_job(self, job_id: str) -> PlanqkJob:
         """Return a single job.

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Union, Callable, Type, Sequence, Dict, List, Any
 
+from qiskit.providers import QiskitBackendNotFoundError
 from qiskit_ibm_runtime import RuntimeOptions, ParameterNamespace, RuntimeProgram, ibm_backend
 from qiskit_ibm_runtime.accounts import ChannelType
 from qiskit_ibm_runtime.program import ResultDecoder
@@ -46,7 +47,10 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             QiskitBackendNotFoundError: if no backend could be found.
         """
         # Backend returned must be from IBM
-        backend = self.get_backend(name=name, provider=PROVIDER.IBM)
+        backend = self.get_backend(name=name)
+        if backend.backend_provider not in {PROVIDER.IBM, PROVIDER.IBM_CLOUD}:
+            raise QiskitBackendNotFoundError(
+                f"Backend '{name}' is not from IBM. Qiskit Runtime only supports IBM backends.")
 
         return backend
 
