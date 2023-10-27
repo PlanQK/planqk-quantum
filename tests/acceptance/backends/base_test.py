@@ -22,12 +22,7 @@ from planqk.qiskit.provider import PlanqkQuantumProvider
 from tests.utils import get_sample_circuit
 
 
-def hasAttr(backend, param):
-    pass
-
-
 class BaseTest(ABC, unittest.TestCase):
-    planqk_access_token = None
 
     def load_env_vars(self):
         load_dotenv()
@@ -76,10 +71,6 @@ class BaseTest(ABC, unittest.TestCase):
         return False
 
     @abstractmethod
-    def get_provider_job_id(self, job_id: str) -> str:
-        pass
-
-    @abstractmethod
     def is_valid_job_id(self, job_id: str) -> bool:
         pass
 
@@ -100,8 +91,9 @@ class BaseTest(ABC, unittest.TestCase):
 
     def _run_job(self) -> PlanqkJob:
         planqk_backend = self.planqk_provider.get_backend(self.get_backend_id())
-        if planqk_backend._backend_info.status == STATUS.OFFLINE:
-            self.skipTest("Backend {0} is offline. Cannot run job".format(self.get_backend_id()))
+        status = planqk_backend._backend_info.status
+        if status in {STATUS.OFFLINE, STATUS.UNKNOWN, STATUS.RETIRED}:
+            self.skipTest(f'Backend {self.get_backend_id()} is in status {status} and cannot execute jobs.')
 
         self._planqk_job = planqk_backend.run(self.get_input_circuit(), shots=self.get_test_shots())
         return self._planqk_job
@@ -138,7 +130,8 @@ class BaseTest(ABC, unittest.TestCase):
         # self.assertEqual(expected.options, actual.options) # TODO add default options in backend
         self.assert_target(expected.target, actual.target)
 
-    def assert_instructions(self, exp_instructions: List[Instruction], act_instructions: List[Instruction]):
+    def assert_instructions(self, exp_instructions: List[tuple[Instruction, tuple[int]]],
+                            act_instructions: List[tuple[Instruction, tuple[int]]]):
         # Delete delay instructions as we ignore them
         # exp_instructions = [instruction for instruction in exp_instructions if instruction[0].__class__ != Delay]
 
@@ -197,11 +190,6 @@ class BaseTest(ABC, unittest.TestCase):
             self.assertEqual(backend.coupling_map, config.coupling_map)
         self.assertTrue(config.max_experiments > 0)
         self.assertIsNotNone(config.description)
-
-    def assert_operation_names(self, expected: List[str], actual: List[str]):
-        exp_operation_names = [op_name for op_name in expected.operation_names if
-                               op_name != 'delay']  # TODO override in IBM
-        self.assertEqual(sorted(exp_operation_names), sorted(actual.operation_names))
 
     def assert_operations(self, expected: List[Instruction], actual: List[Instruction]):
         # Operation properties are not asserted since this was already done in assert_instructions

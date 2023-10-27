@@ -13,6 +13,7 @@ def is_valid_aws_arn(arn_string):
     )
     return bool(arn_pattern.match(arn_string))
 
+
 def transform_job_id_to_arn(job_id: str):
     """
     Transform the given job ID to an AWS ARN.
@@ -26,6 +27,7 @@ def transform_job_id_to_arn(job_id: str):
 BRAKET_NAME_SV1 = "SV1"
 BRAKET_NAME_DM1 = "dm1"
 BRAKET_NAME_IONQ_ARIA = "Aria 1"
+BRAKET_NAME_IONQ_ARIA_2 = "Aria 2"
 BRAKET_NAME_IONQ_HARMONY = "Harmony"
 BRAKET_NAME_RIGETTI_ASPEN = "Aspen-M-3"
 BRAKET_NAME_OQC_LUCY = "Lucy"
