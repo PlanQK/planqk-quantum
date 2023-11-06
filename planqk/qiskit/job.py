@@ -40,7 +40,7 @@ class PlanqkJob(JobV1):
             self._job_id = job_id
             self._job_details = job_details
 
-        job_details_dict = self._job_details.to_dict()
+        job_details_dict = self._job_details.dict()
         super().__init__(backend=backend, job_id=self._job_id, **job_details_dict)
 
     def submit(self):

@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 from qiskit.providers import ProviderV1 as Provider, QiskitBackendNotFoundError
 
@@ -73,7 +72,7 @@ class PlanqkQuantumProvider(Provider):
             if e.response.status_code == 404:
                 error_detail = json.loads(e.response.text)
                 raise QiskitBackendNotFoundError(
-                    "No backend matches the criteria. Reason: " + error_detail['error_message'])
+                    "No backend matches the criteria. Reason: " + error_detail['error'])
             raise e
 
         backend_state_dto = _PlanqkClient.get_backend_state(backend_id=name)
@@ -85,7 +84,7 @@ class PlanqkQuantumProvider(Provider):
             provider=self,
             name=backend_dto.id,
             description=f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.id}.",
-            online_date=datetime.strptime(backend_dto.updated_at, "%Y-%m-%d"),
+            online_date=backend_dto.updated_at,
             backend_version="2",
         )
 

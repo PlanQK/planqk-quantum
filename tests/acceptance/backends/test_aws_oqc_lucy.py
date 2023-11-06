@@ -1,12 +1,14 @@
+import pytest
 from qiskit.result.models import ExperimentResultData
 from qiskit_braket_provider import AWSBraketProvider
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
+from tests.acceptance.backends.backends_list import BACKEND_ID_AWS_OQC_LUCY
 from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, BRAKET_NAME_OQC_LUCY
-from tests.acceptance.backends.backends_list import BACKEND_ID_AWS_OQC_LUCY
 
 
+@pytest.mark.aws
 class AwsOqcLucyTests(BaseTest):
 
     def setUp(self):
@@ -40,7 +42,6 @@ class AwsOqcLucyTests(BaseTest):
     def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
         # Lucy returns probabilities, hence, the Braket SDK generates random memory values -> memory not asserted
         self.assertEqual(result.counts, exp_result.counts)
-
 
     # Tests
 

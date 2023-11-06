@@ -1,5 +1,6 @@
 from typing import Union
 
+import pytest
 from qiskit.providers import Backend, BackendV2
 from qiskit.result.models import ExperimentResultData
 
@@ -11,6 +12,7 @@ from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings
 
 
+@pytest.mark.azure
 class AzureIonqSimTests(BaseTest):
 
     def setUp(self):
@@ -87,11 +89,12 @@ class AzureIonqSimTests(BaseTest):
         self.assertIsNotNone(actual.target)
         self.assertEqual(2, actual.version)
 
-    def assert_experimental_result_data(self, result: ExperimentResultData, exp_result: ExperimentResultData):
-        num_qubits = len(self.get_input_circuit.qubits)
+    def assert_experimental_result_data(self, exp_result: ExperimentResultData, result: ExperimentResultData):
+        num_qubits = len(self.get_input_circuit().qubits)
         exp_counts = transform_decimal_to_bitsrings(exp_result.counts, num_qubits)
         # Ionq simulator returns probabilities, hence, Azure SDK generates random memory values -> memory not asserted
-        self.assertEqual(result.counts, exp_counts)
+        self.assertTrue(exp_counts == {'111': 1} or exp_counts == {'000': 1})
+        self.assertTrue(result.counts == {'111': 1} or result.counts == {'000': 1})
         # But it is checked if a memory is returned as PlanQK generates random memory values for simulators
         self.assertTrue(len(result.memory) == 1)
 

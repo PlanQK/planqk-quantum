@@ -1,3 +1,4 @@
+import pytest
 from qiskit.result.models import ExperimentResultData
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
@@ -8,6 +9,7 @@ from tests.utils import is_valid_uuid
 from tests.utils import transform_decimal_to_bitsrings
 
 
+@pytest.mark.azure
 class AzureIonqHarmonyTests(AzureIonqSimTests):
 
     def setUp(self):

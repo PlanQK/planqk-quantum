@@ -19,10 +19,11 @@ logger = logging.getLogger(__name__)
 
 class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
 
-    def __init__(self, access_token=None, channel: Optional[ChannelType] = None):
+    def __init__(self, access_token=None, channel: Optional[ChannelType] = None, channel_strategy=None):
         super().__init__(access_token)
 
         self._channel = channel
+        self._channel_strategy = channel_strategy
         # Mock close_session method of API client as it is called by the session object after a program has run
         self._api_client = type('Mock_API_Client', (), {'close_session': lambda self: None})
 
@@ -109,9 +110,9 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
         else:
             shots = run_options.get('shots', backend.min_shots)
 
-        input_params = runtime_job_params.to_dict()
+        input_params = runtime_job_params.dict()
 
-        job_request = JobDto(backend_id,
+        job_request = JobDto(backend_id=backend_id,
                              provider=PROVIDER.IBM.name,
                              input_format=input_data[0],
                              input=input_data[1],

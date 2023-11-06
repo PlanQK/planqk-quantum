@@ -1,5 +1,6 @@
 import os
 
+import pytest
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -12,6 +13,7 @@ from tests.acceptance.backends.ibm_test_utils import IBM_BRISBANE_NAME, IBM_CUSC
 from tests.utils import get_width_sample_circuit
 
 
+@pytest.mark.ibm_cloud
 class IbmPrimitiveEagleBackendsTests(IbmPrimitiveBaseTest):
 
     def __init__(self, name):

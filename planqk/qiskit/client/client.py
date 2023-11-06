@@ -65,30 +65,21 @@ class _PlanqkClient(object):
 
         response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params, headers=headers)
 
-        return [BackendDto.from_dict(backend_info) for backend_info in response]
-
-    @classmethod
-    def get_backend_summaries(cls) -> List[BackendDto]:
-        headers = {}
-        params = {"baseInfo": "true"}
-
-        response = cls.perform_request(requests.get, f"{base_url()}/backends", params=params, headers=headers)
-
-        return [BackendDto.from_dict(backend_info) for backend_info in response]
+        return [BackendDto(**backend_info) for backend_info in response]
 
     @classmethod
     def get_backend(cls, backend_id: str) -> BackendDto:
         headers = {}
 
         response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}", headers=headers)
-        return BackendDto.from_dict(response)
+        return BackendDto(**response)
 
     @classmethod
     def get_backend_state(cls, backend_id: str) -> BackendStateInfosDto:
         headers = {}
 
         response = cls.perform_request(requests.get, f"{base_url()}/backends/{backend_id}/status", headers=headers)
-        return BackendStateInfosDto.from_dict(response)
+        return BackendStateInfosDto(**response)
 
     @classmethod
     def submit_job(cls, job: JobDto) -> JobDto:
@@ -98,7 +89,7 @@ class _PlanqkClient(object):
         job_dict = cls.remove_none_values(job.__dict__)
 
         response = cls.perform_request(requests.post, f"{base_url()}/jobs", data=job_dict, headers=headers)
-        return JobDto.from_dict(response)
+        return JobDto(**response)
 
     @classmethod
     def get_job(cls, job_id: str, provider: Optional[PROVIDER] = None) -> JobDto:
@@ -107,7 +98,7 @@ class _PlanqkClient(object):
             params["provider"] = provider.name
 
         response = cls.perform_request(requests.get, f"{base_url()}/jobs/{job_id}", params=params)
-        return JobDto.from_dict(response)
+        return JobDto(**response)
 
     @classmethod
     def get_job_result(cls, job_id: str, provider: Optional[PROVIDER] = None) -> Dict[str, Any]:

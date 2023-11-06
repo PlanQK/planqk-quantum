@@ -11,9 +11,10 @@ rigetti_mock = {
     },
     "configuration": {
         "gates": [
-            {"name": "gate1", "native": True},
-            {"name": "gate2", "native": False}
+            {"name": "gate1", "native_gate": True},
+            {"name": "gate2", "native_gate": False}
         ],
+        "instructions": ["gate1", "gate2"],
         "qubits": [
             {"id": "qubit1"},
             {"id": "qubit2"}
@@ -28,7 +29,7 @@ rigetti_mock = {
             "min": 1,
             "max": 10
         },
-        "memory_result_returned": True
+        "memory_result_supported": True
     },
     "type": "QPU",
     "status": "ONLINE",
@@ -57,9 +58,10 @@ oqc_lucy_mock = {
     },
     "configuration": {
         "gates": [
-            {"name": "gate3", "native": True},
-            {"name": "gate4", "native": False}
+            {"name": "gate3", "native_gate": True},
+            {"name": "gate4", "native_gate": False}
         ],
+        "instructions": ["gate3", "gate4"],
         "qubits": [
             {"id": "qubit3"},
             {"id": "qubit4"}
@@ -74,7 +76,7 @@ oqc_lucy_mock = {
             "min": 2,
             "max": 20
         },
-        "memory_result_returned": False
+        "memory_result_supported": False
     },
     "type": "SIMULATOR",
     "status": "OFFLINE",
@@ -104,7 +106,7 @@ job_mock = {
     "error_data": {"error_type": "mock_error_type", "error_message": "mock_error_message"},
     "metadata": {"metadata1": "value1", "metadata2": "value2"},
     "name": "mock_job_1",
-    "status": "QUEUED",
+    "status": "COMPLETED",
     "unknown_attr": "yes",
     "tags": {"tag1", "tag2"}
 }

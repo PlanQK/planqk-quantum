@@ -1,3 +1,4 @@
+import pytest
 from qiskit_braket_provider import AWSBraketProvider
 
 from planqk.qiskit.client.backend_dtos import PROVIDER
@@ -6,6 +7,7 @@ from tests.acceptance.backends.base_test import BaseTest
 from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transform_job_id_to_arn, BRAKET_NAME_DM1
 
 
+@pytest.mark.aws
 class AwsDm1Tests(BaseTest):
 
     def setUp(self):

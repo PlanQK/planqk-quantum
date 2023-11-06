@@ -49,10 +49,11 @@ class TestPlanqkClient(unittest.TestCase):
     def test_submit_job(self, mock_post):
         # Give
         mock_post.return_value.status_code = 201
-        mock_post.return_value.json.return_value = {"id": "123"}
+        mock_post.return_value.json.return_value = {"id": "123", "backend_id": rigetti_mock["id"],
+                                                    "provider": PROVIDER.AWS.name}
 
         # When
-        job = JobDto(rigetti_mock["id"], PROVIDER.AWS.name)
+        job = JobDto(**{"backend_id": rigetti_mock["id"], "provider": PROVIDER.AWS.name})
         job_details = _PlanqkClient.submit_job(job)
 
         # Then
@@ -95,10 +96,10 @@ class TestPlanqkClient(unittest.TestCase):
         result = _PlanqkClient.get_job_result("123")
 
         # Then
-        for key, value in result.counts.items():
+        for key, value in result["counts"].items():
             self.assertEqual(job_result_mock["counts"][key], value)
 
-        for i, value in enumerate(result.memory):
+        for i, value in enumerate(result["memory"]):
             self.assertEqual(job_result_mock["memory"][i], value)
 
     @patch("requests.delete")
@@ -172,12 +173,12 @@ class TestPlanqkClient(unittest.TestCase):
         self.assertEqual(config["supported_input_formats"][0], actual.configuration.supported_input_formats[0].value)
         self.assertEqual(config["shots_range"]["min"], actual.configuration.shots_range.min)
         self.assertEqual(config["shots_range"]["max"], actual.configuration.shots_range.max)
-        self.assertEqual(config["memory_result_returned"], actual.configuration.memory_result_returned)
+        self.assertEqual(config["memory_result_supported"], actual.configuration.memory_result_supported)
 
         # gates
         for gate_mock, gate in zip(config["gates"], actual.configuration.gates):
             self.assertEqual(gate_mock["name"], gate.name)
-            self.assertEqual(gate_mock["native"], gate.native)
+            self.assertEqual(gate_mock["native_gate"], gate.native_gate)
 
         # qubits
         for qubit_mock, qubit in zip(config["qubits"], actual.configuration.qubits):

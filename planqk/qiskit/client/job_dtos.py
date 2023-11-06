@@ -1,9 +1,8 @@
 import json
-from dataclasses import dataclass, asdict
 from enum import Enum
-from typing import Optional, Dict, Set, Union, List
+from typing import Optional, Dict, Set, Union
 
-from planqk.qiskit.client.dto_utils import init_with_defined_params
+from pydantic import BaseModel
 
 
 class INPUT_FORMAT(str, Enum):
@@ -21,8 +20,7 @@ class JOB_STATUS(str, Enum):
     CANCELLED = "CANCELLED"
 
 
-@dataclass
-class JobDto:
+class JobDto(BaseModel):
     backend_id: str
     provider: str
     shots: int = 1
@@ -41,24 +39,14 @@ class JobDto:
     status: Optional[JOB_STATUS] = None
     tags: Optional[Set[str]] = None
 
-    # TODO make me extensible
-
     def __post_init__(self):
         if self.error_data is not None and isinstance(self.error_data, str):
             self.error_data = json.loads(self.error_data)
         if self.input_params is not None and isinstance(self.input_params, str):
             self.input_params = json.loads(self.input_params)
 
-    @classmethod
-    def from_dict(cls, data: Dict):
-        return init_with_defined_params(cls, data)
 
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass
-class RuntimeJobParamsDto():
+class RuntimeJobParamsDto(BaseModel):
     program_id: str
     image: Optional[str]
     hgp: Optional[str]
@@ -67,31 +55,3 @@ class RuntimeJobParamsDto():
     max_execution_time: Optional[int] = None
     start_session: Optional[bool] = False
     session_time: Optional[int] = None
-
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass
-class JobResultDto:
-    counts: Dict[str, int]
-    memory: List[str]
-
-    @classmethod
-    def from_dict(cls, data: Dict):
-        # Validate that just bitrings were provided
-        counts = data.get("counts", {})
-        for key in counts.keys():
-            if not cls.is_bitstring(key):
-                raise ValueError(f"{key} is not a valid bitstring")
-
-        memory = data.get("memory", [])
-        for mem in memory:
-            if not cls.is_bitstring(mem):
-                raise ValueError(f"{mem} is not a valid bitstring")
-
-        return init_with_defined_params(cls, data)
-
-    @staticmethod
-    def is_bitstring(s: str) -> bool:
-        return set(s).issubset('01')

@@ -1,8 +1,11 @@
+import pytest
+
 from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_NAIROBI
 from tests.acceptance.backends.ibm_primitive_base_test import IbmPrimitiveBaseTest
 from tests.acceptance.backends.ibm_test_utils import IBM_NAIROBI_NAME
 
 
+@pytest.mark.ibm_quantum
 class IbmPrimitiveNairobiBackendTests(IbmPrimitiveBaseTest):
 
     def get_backend_id(self) -> str:

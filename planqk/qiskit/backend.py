@@ -180,7 +180,7 @@ class PlanqkBackend(BackendV2, ABC):
         input_params = {'disable_qubit_rewiring': False,
                         'qubit_count': circuit.num_qubits}
 
-        job_request = JobDto(self._backend_info.id,
+        job_request = JobDto(backend_id=self._backend_info.id,
                              provider=self._backend_info.provider.name,
                              input_format=input_circ[0],
                              input=input_circ[1],

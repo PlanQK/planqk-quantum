@@ -1,3 +1,4 @@
+import pytest
 from qiskit.result.models import ExperimentResultData
 from qiskit_braket_provider import AWSBraketProvider
 
@@ -8,6 +9,7 @@ from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transf
     BRAKET_NAME_IONQ_ARIA_2
 
 
+@pytest.mark.aws
 class AwsIonqAria2Tests(BaseTest):
 
     def setUp(self):

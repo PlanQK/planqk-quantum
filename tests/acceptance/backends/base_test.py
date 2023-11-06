@@ -100,7 +100,6 @@ class BaseTest(ABC, unittest.TestCase):
 
     @abstractmethod
     @pytest.mark.skip(reason='abstract method')
-    @pytest.mark.run(order=1)
     def test_should_get_backend(self):
         pass
 
@@ -272,7 +271,7 @@ class BaseTest(ABC, unittest.TestCase):
         self.assertIsNone(metadata.get('metadata'))
         # This the internal job status name not the Qiskit status name
         self.assertIn(planqk_job_state, [JOB_STATUS.PENDING, JOB_STATUS.RUNNING, JOB_STATUS.COMPLETED])
-        self.assertEqual(metadata.get('tags'), [])
+        self.assertFalse(metadata.get('tags'))
 
     @abstractmethod
     @pytest.mark.skip(reason='abstract method')

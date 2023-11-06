@@ -1,3 +1,4 @@
+import pytest
 from qiskit import QuantumCircuit
 from qiskit_braket_provider import AWSBraketProvider
 
@@ -9,6 +10,7 @@ from tests.acceptance.backends.braket_test_utils import is_valid_aws_arn, transf
 from tests.utils import get_width_sample_circuit
 
 
+@pytest.mark.aws
 class AwsRigettiAspenTests(BaseTest):
 
     def setUp(self):

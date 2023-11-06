@@ -1,9 +1,10 @@
-from dataclasses import dataclass
-from datetime import time, datetime
+from datetime import time, date
 from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
+
+from pydantic import BaseModel
 
 from planqk.qiskit.client.dto_utils import init_with_defined_params
 from planqk.qiskit.client.job_dtos import INPUT_FORMAT
@@ -72,8 +73,7 @@ class STATUS(Enum):
             return cls.UNKNOWN
 
 
-@dataclass
-class DocumentationDto:
+class DocumentationDto(BaseModel):
     description: Optional[str] = None
     url: Optional[str] = None
     # status_url: Optional[str] = None
@@ -84,8 +84,7 @@ class DocumentationDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class QubitDto:
+class QubitDto(BaseModel):
     id: str
 
     @classmethod
@@ -93,8 +92,7 @@ class QubitDto:
         return cls(**data)
 
 
-@dataclass
-class GateDto:
+class GateDto(BaseModel):
     name: str
     native_gate: bool
 
@@ -103,8 +101,7 @@ class GateDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class ConnectivityDto:
+class ConnectivityDto(BaseModel):
     fully_connected: bool
     graph: Optional[Dict[str, List[str]]] = None
 
@@ -113,8 +110,7 @@ class ConnectivityDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class ShotsRangeDto:
+class ShotsRangeDto(BaseModel):
     min: int
     max: int
 
@@ -123,8 +119,7 @@ class ShotsRangeDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class ConfigurationDto:
+class ConfigurationDto(BaseModel):
     gates: List[GateDto]
     instructions: List[str]
     qubits: List[QubitDto]
@@ -146,8 +141,7 @@ class ConfigurationDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class AvailabilityTimesDto:
+class AvailabilityTimesDto(BaseModel):
     granularity: str
     start: time
     end: time
@@ -157,8 +151,7 @@ class AvailabilityTimesDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class CostDto:
+class CostDto(BaseModel):
     granularity: str
     currency: str
     value: float
@@ -168,8 +161,7 @@ class CostDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class BackendStateInfosDto:
+class BackendStateInfosDto(BaseModel):
     status: STATUS
     queue_avg_time: Optional[int] = None
     queue_size: Optional[int] = None
@@ -183,8 +175,7 @@ class BackendStateInfosDto:
         return init_with_defined_params(cls, data)
 
 
-@dataclass
-class BackendDto:
+class BackendDto(BaseModel):
     id: str
     provider: PROVIDER
     internal_id: Optional[str] = None
@@ -196,20 +187,5 @@ class BackendDto:
     status: Optional[STATUS] = None
     availability: Optional[List[AvailabilityTimesDto]] = None
     costs: Optional[List[CostDto]] = None
-    updated_at: Optional[datetime] = None
+    updated_at: Optional[date] = None
     avg_queue_time: Optional[int] = None
-
-    def __post_init__(self):
-        self.provider = PROVIDER(self.provider)
-        self.hardware_provider = HARDWARE_PROVIDER.from_str(self.hardware_provider) if self.hardware_provider else None
-        self.type = TYPE(self.type) if self.type else None
-        self.status = STATUS(self.status) if self.status else None
-        self.documentation = DocumentationDto.from_dict(self.documentation) if self.documentation else None
-        self.configuration = ConfigurationDto.from_dict(self.configuration) if self.configuration else None
-        self.availability = [AvailabilityTimesDto.from_dict(avail_entry) for avail_entry in
-                             self.availability] if self.availability else None
-        self.costs = [CostDto.from_dict(cost_entry) for cost_entry in self.costs] if self.costs else None
-
-    @classmethod
-    def from_dict(cls, data: Dict):
-        return init_with_defined_params(cls, data)

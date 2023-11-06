@@ -1,3 +1,4 @@
+import pytest
 from qiskit import QuantumCircuit
 
 from tests.acceptance.backends.backends_list import BACKEND_ID_IBM_QASM_SIM
@@ -6,6 +7,7 @@ from tests.acceptance.backends.ibm_test_utils import IBM_QASM_SIMULATOR_NAME
 from tests.utils import get_width_sample_circuit
 
 
+@pytest.mark.ibm_quantum
 class IbmPrimitiveQasmSimulatorTests(IbmPrimitiveBaseTest):
 
     def get_backend_id(self) -> str:
