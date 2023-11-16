@@ -1,7 +1,0 @@
-IBM_QASM_SIMULATOR_NAME = "ibmq_qasm_simulator"
-IBM_NAIROBI_NAME = "ibm_nairobi"
-IBM_BRISBANE_NAME = "ibm_brisbane"
-IBM_CUSCO_NAME = "ibm_cusco"
-IBM_KYIV_NAME = "ibm_kyiv"
-IBM_NAZCA = "ibm_nazca"
-IBM_SHERBROOKE = "ibm_sherbrooke"
