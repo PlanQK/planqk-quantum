@@ -45,6 +45,7 @@ rigetti_mock = {
     "avg_queue_time": 10,
     "unknown_attr": "yes",
 }
+
 oqc_lucy_mock = {
     "id": "aws.oqc.lucy",
     "internal_id": "mock_internal_id_2",
@@ -91,6 +92,7 @@ oqc_lucy_mock = {
     "updated_at": "2023-07-12T12:00:00",
     "avg_queue_time": 20
 }
+
 job_mock = {
     "backend_id": "aws.rigetti.aspen",
     "provider": "AWS",
@@ -110,6 +112,7 @@ job_mock = {
     "unknown_attr": "yes",
     "tags": {"tag1", "tag2"}
 }
+
 job_result_mock = {
     "counts": {
         "100": 2,

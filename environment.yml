@@ -7,7 +7,7 @@ dependencies:
   - pip>=21.1.3
   - pydantic=1.9.0
   - pip:
-      # dev dependencies
+      ## dev dependencies
       - qiskit==0.44.1
       - qiskit-ibm-runtime==0.14.0
       - setuptools
@@ -17,13 +17,13 @@ dependencies:
       - busypie
       - retrying
       - python-dotenv
-      # prod dependencies
+      ## prod dependencies
       - requests
-      ## aws braket
-      #we need the latest dev version as this fixes the issue with the Rigetti's qubit ids
+      # aws braket
+      # we need the latest dev version as this fixes the issue with the Rigetti's qubit ids
       - git+https://github.com/qiskit-community/qiskit-braket-provider.git@main
-      ## azure quantum
+      # azure quantum
       - azure-quantum[qiskit]==0.28.*
       - qiskit-ionq==0.4.4
-      ## dwave
+      # dwave
       - dwave-ocean-sdk==6.4.1

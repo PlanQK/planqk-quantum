@@ -1,4 +1,4 @@
-### This file is used to configure pytest
+# This file is used to configure pytest
 
 def pytest_collection_modifyitems(config, items):
     """
