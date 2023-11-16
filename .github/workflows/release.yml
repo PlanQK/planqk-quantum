@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -24,3 +24,12 @@ jobs:
         run: |
           python setup.py sdist bdist_wheel
           twine upload dist/*
+
+  trigger-acceptance-tests:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: distributhor/workflow-webhook@v3
+        with:
+          webhook_url: ${{ secrets.ACCEPTANCE_TESTS_WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.ACCEPTANCE_TESTS_WEBHOOK_SECRET }}
