@@ -61,7 +61,7 @@ Use `chore:` or omit the prefix if you do not want a new release to be created.
 
 **Warning:** This release will be public and affects all services using the SDK in production.
 
-### Release for Test Environment
+### Staging / Testing Release
 
 If you want to create a release only for the testing environment (pre-release), perform the following steps:
 
