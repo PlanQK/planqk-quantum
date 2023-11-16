@@ -41,7 +41,7 @@ rigetti_mock = {
         {"granularity": "shot", "currency": "USD", "value": 0.01},
         {"granularity": "job", "currency": "USD", "value": 1.00}
     ],
-    "updated_at": "2023-07-11T10:00:00",
+    "updated_at": "2023-07-11",
     "avg_queue_time": 10,
     "unknown_attr": "yes",
 }
@@ -89,7 +89,7 @@ oqc_lucy_mock = {
         {"granularity": "job", "currency": "EUR", "value": 0.02},
         {"granularity": "shot", "currency": "EUR", "value": 2.00}
     ],
-    "updated_at": "2023-07-12T12:00:00",
+    "updated_at": "2023-07-12",
     "avg_queue_time": 20
 }
 

@@ -10,7 +10,7 @@ from planqk.qiskit.client.job_dtos import JobDto
 from tests.unit.planqk.client_mocks import rigetti_mock, oqc_lucy_mock, job_mock, job_result_mock
 
 
-class TestPlanqkClient(unittest.TestCase):
+class PlanqkClientTestSuite(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
