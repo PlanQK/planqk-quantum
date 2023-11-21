@@ -12,8 +12,8 @@ familiarity of a framework you are already accustomed to.
 
 Check out the following guides on how to get started with PlanQK:
 
-- [PlanQK Quickstart Guide](https://docs.platform.planqk.de/getting-started/quickstart.html)
-- [Using the PlanQK Quantum SDK](https://docs.platform.planqk.de/getting-started/using-sdk.html)
+- [PlanQK Quickstart Guide](https://docs.platform.planqk.de/quickstart.html)
+- [Using the PlanQK Quantum SDK](https://docs.platform.planqk.de/using-sdk.html)
 
 ## Installation
 
