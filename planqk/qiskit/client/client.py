@@ -46,9 +46,10 @@ class _PlanqkClient(object):
     @classmethod
     def perform_request(cls, request_func: Callable[..., Response], url: str, params=None, data=None, headers=None):
         headers = {**cls._get_default_headers(), **(headers or {})}
+        debug = os.environ.get("PLANQK_QUANTUM_DEBUG", "false").lower() == "true"
 
         try:
-            response = request_func(url, json=data, params=params, headers=headers)
+            response = request_func(url, json=data, params=params, headers=headers, verify=not debug)
             response.raise_for_status()
             return response.json() if response.status_code != 204 else None
         except requests.exceptions.ConnectionError as e:
