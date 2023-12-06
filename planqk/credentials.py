@@ -10,6 +10,7 @@ from planqk.exceptions import CredentialUnavailableError
 _PERSONAL_ACCESS_TOKEN_NAME = 'PLANQK_PERSONAL_ACCESS_TOKEN'
 _SERVICE_EXECUTION_TOKEN_NAME = 'PLANQK_SERVICE_EXECUTION_TOKEN'
 _SERVICE_EXECUTION_TOKEN_NAME_DEPRECATED = 'SERVICE_EXECUTION_TOKEN'
+_CONFIG_FILE_PATH = 'PLANQK_CONFIG_FILE_PATH'
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +35,20 @@ class EnvironmentCredential(CredentialProvider):
         return access_token
 
 
-class ConfigFileCredential(CredentialProvider):
-    def __init__(self):
+def get_config_file_path():
+    config_file_path = os.environ.get(_CONFIG_FILE_PATH, None)
+    if not config_file_path:
         if platform.system() == 'Windows':
             config_dir = os.path.join(os.getenv('LOCALAPPDATA'), 'planqk')
         else:
             config_dir = os.path.join(os.path.expanduser('~'), '.config', 'planqk')
-        self.config_file = os.path.join(config_dir, 'config.json')
+        config_file_path = os.path.join(config_dir, 'config.json')
+    return config_file_path
+
+
+class ConfigFileCredential(CredentialProvider):
+    def __init__(self):
+        self.config_file = get_config_file_path()
 
     def get_access_token(self) -> str:
         if not self.config_file:
