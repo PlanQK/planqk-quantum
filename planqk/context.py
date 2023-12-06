@@ -5,11 +5,22 @@ from pydantic import BaseModel, Field
 
 from planqk.credentials import get_config_file_path
 
+_ORGANIZATION_ID = "PLANQK_ORGANIZATION_ID"
+
 
 class Context(BaseModel):
-    id: str = Field(description="Id of the user or organization")
-    displayName: str = Field(description="Name of the user or organization")
-    isOrganization: bool = Field(description="True if the context is an organization")
+    id: str = Field(..., description="Id of the user or organization")
+    display_name: str = Field(..., alias="displayName", description="Name of the user or organization")
+    is_organization: bool = Field(..., alias="isOrganization", description="True if the context is an organization")
+
+    def get_organization_id(self) -> Union[str, None]:
+        organization_id = os.environ.get(_ORGANIZATION_ID, None)
+        if organization_id:
+            return organization_id
+
+        if self.is_organization:
+            return self.id
+        return None
 
 
 class Config(BaseModel):
