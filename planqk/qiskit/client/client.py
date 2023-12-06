@@ -6,6 +6,7 @@ from typing import List, Optional, Callable, Any, Dict
 import requests
 from requests import Response, HTTPError
 
+from planqk.context import ContextResolver
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER, BackendStateInfosDto
@@ -32,6 +33,7 @@ def _dict_values_to_string(obj_values_dict: dict):
 
 class _PlanqkClient(object):
     _credentials = None
+    _context_resolver: ContextResolver = None
 
     @classmethod
     def set_credentials(cls, credentials: DefaultCredentialsProvider):
@@ -39,7 +41,7 @@ class _PlanqkClient(object):
 
     @classmethod
     def get_credentials(cls):
-        return cls._credentials;
+        return cls._credentials
 
     @classmethod
     def perform_request(cls, request_func: Callable[..., Response], url: str, params=None, data=None, headers=None):
@@ -124,6 +126,13 @@ class _PlanqkClient(object):
         # inject service execution if present
         if service_execution_id() is not None:
             headers["x-planqk-service-execution-id"] = service_execution_id()
+
+        if cls._context_resolver is None:
+            cls._context_resolver = ContextResolver()
+
+        context = cls._context_resolver.get_context()
+        if context is not None and context.is_organization:
+            headers["x-organizationid"] = context.get_organization_id()
 
         return headers
 
