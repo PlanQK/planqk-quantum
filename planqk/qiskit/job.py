@@ -1,6 +1,7 @@
 from typing import Optional
 
 from qiskit.providers import JobV1, JobStatus, Backend
+from qiskit.qobj import QobjExperimentHeader
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 
@@ -81,7 +82,9 @@ class PlanqkJob(JobV1):
             data=ExperimentResultData(
                 counts=result_data["counts"] if result_data["counts"] is not None else {},
                 memory=result_data["memory"] if result_data["memory"] is not None else []
-            )
+            ),
+            # Header required for PennyLane-Qiskit Plugin as it identifies the result based on the circuit name which is always "circ0"
+            header=QobjExperimentHeader(name="circ0")
         )
 
         self._result = Result(

@@ -170,6 +170,8 @@ class PlanqkBackend(BackendV2, ABC):
                 raise ValueError("Multi-experiment jobs are not supported")
             circuit = circuit[0]
 
+        # PennyLane-Qiskit Plugin identifies the result based on the circuit name which must be "circ0"
+        circuit.name = "circ0"
         shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
         # TODO add support for input params
