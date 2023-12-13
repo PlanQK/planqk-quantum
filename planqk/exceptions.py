@@ -30,7 +30,9 @@ class CredentialUnavailableError(PlanqkError):
 
 
 class InvalidAccessTokenError(PlanqkError):
-    def __init__(self, value="Invalid personal access token provided."):
+    def __init__(self,
+                 value="Invalid personal access token provided. Make sure that you generated a valid token with scope "
+                       "'api' and 'quantum_tokens' in your user settings."):
         self.value = value
         super().__init__(self.value)
 
