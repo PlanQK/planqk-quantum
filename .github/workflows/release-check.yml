@@ -1,8 +1,8 @@
-name: Release Check
+#name: Release Check
 
-on: push
+#on: push
 
-jobs:
+#jobs:
 #  test:
 #    runs-on: ubuntu-latest
 #    steps:
