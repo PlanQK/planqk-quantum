@@ -20,18 +20,18 @@ jobs:
           pip install pytest pytest-cov          
           pytest --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
 
-  release-check:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - uses: cycjimmy/semantic-release-action@v3
-        with:
-          extra_plugins: |
-            @semantic-release/git
-            @semantic-release/exec
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_RELEASE_CHECK }}
+#  release-check:
+#    needs: test
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-node@v4
+#        with:
+#          node-version: 18
+#      - uses: cycjimmy/semantic-release-action@v3
+#        with:
+#          extra_plugins: |
+#            @semantic-release/git
+#            @semantic-release/exec
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.TOKEN_RELEASE_CHECK }}

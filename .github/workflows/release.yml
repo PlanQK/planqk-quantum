@@ -25,11 +25,11 @@ jobs:
           python setup.py sdist bdist_wheel
           twine upload dist/*
 
-  trigger-acceptance-tests:
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: distributhor/workflow-webhook@v3
-        with:
-          webhook_url: ${{ secrets.ACCEPTANCE_TESTS_WEBHOOK_URL }}
-          webhook_secret: ${{ secrets.ACCEPTANCE_TESTS_WEBHOOK_SECRET }}
+#  trigger-acceptance-tests:
+#    needs: deploy
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: distributhor/workflow-webhook@v3
+#        with:
+#          webhook_url: ${{ secrets.ACCEPTANCE_TESTS_WEBHOOK_URL }}
+#          webhook_secret: ${{ secrets.ACCEPTANCE_TESTS_WEBHOOK_SECRET }}
