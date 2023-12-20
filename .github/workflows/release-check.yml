@@ -1,6 +1,11 @@
 name: Release Check
 
-#on: push
+on: push
+
+jobs:
+  noop: # "noop" stands for "no operation"
+    runs-on: ubuntu-latest
+    steps: [ ]
 
 #jobs:
 #  test:
