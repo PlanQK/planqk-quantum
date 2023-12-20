@@ -1,6 +1,6 @@
 name: Release Check
 
-on: push
+#on: push
 
 #jobs:
 #  test:
