@@ -307,3 +307,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/pydev,linux,macos,python,windows,intellij+all
+/tests/acceptance/backends/
+/tests/acceptance/.env
+/tests/acceptance/__init__.py
+/tests/acceptance/backends alias

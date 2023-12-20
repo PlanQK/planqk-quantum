@@ -4,10 +4,9 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
-
 from planqk.qiskit.client.dto_utils import init_with_defined_params
 from planqk.qiskit.client.job_dtos import INPUT_FORMAT
+from pydantic import BaseModel
 
 
 class PROVIDER(Enum):
@@ -16,6 +15,7 @@ class PROVIDER(Enum):
     DWAVE = "DWAVE"
     IBM = "IBM"
     IBM_CLOUD = "IBM_CLOUD"
+    TSYSTEMS = "TSYSTEMS"
 
 
 class TYPE(Enum):

@@ -1,8 +1,7 @@
 from typing import Optional, List
 
-from qiskit.circuit import Instruction as QiskitInstruction
-
 from planqk.qiskit.client.backend_dtos import PROVIDER, QubitDto, ConnectivityDto
+from qiskit.circuit import Instruction as QiskitInstruction
 
 
 class ProviderAdapter:
@@ -28,7 +27,7 @@ class ProviderAdapterFactory:
             return AwsAdapter()
         elif provider == PROVIDER.AZURE:
             return AzureAdapter()
-        elif provider == PROVIDER.IBM or provider == PROVIDER.IBM_CLOUD:
+        elif provider in {PROVIDER.IBM, PROVIDER.IBM_CLOUD, PROVIDER.TSYSTEMS}:
             return IbmAdapter()
         else:
             raise ValueError(f"Provider {provider} not supported")
