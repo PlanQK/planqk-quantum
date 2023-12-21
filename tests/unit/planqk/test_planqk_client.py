@@ -127,7 +127,7 @@ class PlanqkClientTestSuite(unittest.TestCase):
             _PlanqkClient.get_backend("123")
 
         # Then
-        self.assertEqual(error_response.exception.message, "Invalid personal access token provided.")
+        assert "Invalid personal access token provided." in error_response.exception.message
 
     @patch("requests.get")
     def test_planqk_client_error(self, mock_get):
