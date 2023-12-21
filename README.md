@@ -48,7 +48,7 @@ pip install -e .
 ## Release Process
 
 The SDK is released to [PyPi](https://pypi.org/project/planqk-quantum).
-The release numbers follow the [Semantic Versioning](https://semver.org/) approach resulting in a version number
+The release numbers follow the [Semantic Versioning](https://semver.org) approach resulting in a version number
 in the format `major.minor.patch`.
 The version number is automatically increased by the CI/CD pipeline based on your
 [commit message format](https://github.com/semantic-release/semantic-release#commit-message-format).
