@@ -5,7 +5,7 @@ from typing import Optional, Type, Any, Callable, Dict, Union, Sequence
 from qiskit.providers import Backend, JobStatus
 from qiskit_ibm_runtime import RuntimeJobMaxTimeoutError, RuntimeJobFailureError, RuntimeInvalidStateError
 from qiskit_ibm_runtime.constants import DEFAULT_DECODERS
-from qiskit_ibm_runtime.program import ResultDecoder
+from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
 
 from planqk.qiskit import PlanqkJob
 from planqk.qiskit.client.client import _PlanqkClient
