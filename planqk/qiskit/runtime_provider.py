@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional, Union, Callable, Type, Sequence, Dict, List, Any
 
 from qiskit.providers import QiskitBackendNotFoundError
-from qiskit.providers.ibmq.runtime import ParameterNamespace, RuntimeProgram
 from qiskit_ibm_runtime import RuntimeOptions, ibm_backend
 from qiskit_ibm_runtime.accounts import ChannelType
 from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
@@ -58,7 +57,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
 
     def run(self,
             program_id: str,
-            inputs: Union[Dict, ParameterNamespace],
+            inputs: Dict,
             options: Optional[Union[RuntimeOptions, Dict]] = None,
             callback: Optional[Callable] = None,
             result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -70,11 +69,6 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-
-        # If using params object, extract as dictionary.
-        if isinstance(inputs, ParameterNamespace):
-            inputs.validate()
-            inputs = vars(inputs)
 
         qrt_options.validate(channel=self.channel)
 
@@ -152,44 +146,6 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             name: Optional[str] = None,
     ) -> dict:
         raise NotImplementedError("Listing saved accounts is not supported.")
-
-    def pprint_programs(
-            self,
-            refresh: bool = False,
-            detailed: bool = False,
-            limit: int = 20,
-            skip: int = 0,
-    ) -> None:
-        raise NotImplementedError("Pretty print information about available runtime programs is not supported.")
-
-    def programs(
-            self, refresh: bool = False, limit: int = 20, skip: int = 0
-    ) -> List[RuntimeProgram]:
-        raise NotImplementedError("Listing available runtime programs is not supported.")
-
-    def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
-        raise NotImplementedError("Retrieving a runtime program is not supported.")
-
-    def upload_program(self, data: str, metadata: Optional[Union[Dict, str]] = None) -> str:
-        raise NotImplementedError("Uploading a runtime program is not supported.")
-
-    def update_program(
-            self,
-            program_id: str,
-            data: str = None,
-            metadata: Optional[Union[Dict, str]] = None,
-            name: str = None,
-            description: str = None,
-            max_execution_time: int = None,
-            spec: Optional[Dict] = None,
-    ) -> None:
-        raise NotImplementedError("Updating a runtime program is not supported.")
-
-    def delete_program(self, program_id: str) -> None:
-        raise NotImplementedError("Deleting a runtime program is not supported.")
-
-    def set_program_visibility(self, program_id: str, public: bool) -> None:
-        raise NotImplementedError("Setting the visibility of a runtime program is not supported.")
 
     def job(self, job_id: str) -> PlanqkRuntimeJob:
         """Retrieve a runtime job.
