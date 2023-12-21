@@ -9,7 +9,7 @@ dependencies:
   - pip:
       ## dev dependencies
       - qiskit==0.44.1
-      - qiskit-ibm-runtime==0.14.0
+      - qiskit-ibm-runtime==0.17.0
       - setuptools
       - pytest
       - pytest-cov
