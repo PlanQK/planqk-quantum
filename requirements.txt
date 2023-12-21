@@ -6,3 +6,4 @@ dwave-ocean-sdk==6.4.1
 qiskit-braket-provider==0.0.5
 boto3==1.33.13
 botocore==1.33.13
+qiskit==0.44.1
