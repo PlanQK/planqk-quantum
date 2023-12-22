@@ -4,13 +4,12 @@ import os
 from typing import List, Optional, Callable, Any, Dict
 
 import requests
-from requests import Response, HTTPError
-
 from planqk.context import ContextResolver
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER, BackendStateInfosDto
 from planqk.qiskit.client.job_dtos import JobDto
+from requests import Response, HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +133,11 @@ class _PlanqkClient(object):
         context = cls._context_resolver.get_context()
         if context is not None and context.is_organization:
             headers["x-organizationid"] = context.get_organization_id()
+
+        # enable telepresence interception if environment variable is set
+        telepresence_intercept_id = os.environ.get("x-telepresence-intercept-id")
+        if telepresence_intercept_id is not None:
+            headers["x-telepresence-intercept-id"] = telepresence_intercept_id
 
         return headers
 
