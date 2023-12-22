@@ -8,7 +8,7 @@ with open('./requirements.txt', 'r') as fh:
 
 setup(
     name='planqk-quantum',
-    version="1.28.7",
+    version="1.28.8",
     author='Anaqor AG',
     author_email='info@anaqor.io',
     url='https://github.com/planqk/planqk-quantum',
