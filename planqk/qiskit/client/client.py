@@ -134,11 +134,6 @@ class _PlanqkClient(object):
         if context is not None and context.is_organization:
             headers["x-organizationid"] = context.get_organization_id()
 
-        # enable telepresence interception if environment variable is set
-        telepresence_intercept_id = os.environ.get("TELEPRESENCE_INTERCEPT_ID")
-        if telepresence_intercept_id is not None:
-            headers["x-telepresence-intercept-id"] = telepresence_intercept_id
-
         return headers
 
     @classmethod
