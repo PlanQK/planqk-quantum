@@ -1,7 +1,8 @@
 from typing import Optional, List
 
-from planqk.qiskit.client.backend_dtos import PROVIDER, QubitDto, ConnectivityDto
 from qiskit.circuit import Instruction as QiskitInstruction
+
+from planqk.qiskit.client.backend_dtos import PROVIDER, QubitDto, ConnectivityDto
 
 
 class ProviderAdapter:
@@ -22,6 +23,7 @@ class ProviderAdapterFactory:
         from planqk.qiskit.providers.aws_adapter import AwsAdapter
         from planqk.qiskit.providers.azure_adapter import AzureAdapter
         from planqk.qiskit.providers.ibm_adapter import IbmAdapter
+        from planqk.qiskit.providers.qryd_adapter import QrydAdapter
 
         if provider == PROVIDER.AWS:
             return AwsAdapter()
@@ -29,5 +31,7 @@ class ProviderAdapterFactory:
             return AzureAdapter()
         elif provider in {PROVIDER.IBM, PROVIDER.IBM_CLOUD, PROVIDER.TSYSTEMS}:
             return IbmAdapter()
+        elif provider == PROVIDER.QRYD:
+            return QrydAdapter()
         else:
             raise ValueError(f"Provider {provider} not supported")

@@ -16,6 +16,7 @@ class PROVIDER(Enum):
     IBM = "IBM"
     IBM_CLOUD = "IBM_CLOUD"
     TSYSTEMS = "TSYSTEMS"
+    QRYD = "QRYD"
 
 
 class TYPE(Enum):
@@ -38,6 +39,7 @@ class HARDWARE_PROVIDER(Enum):
     AWS = "AWS"
     AZURE = "AZURE"
     IBM = "IBM"
+    QRYD = "QRYD"
     DWAVE = "DWAVE"
     UNKNOWN = "UNKNOWN"
 
