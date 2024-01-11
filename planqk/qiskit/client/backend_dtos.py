@@ -4,9 +4,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from pydantic import BaseModel
+
 from planqk.qiskit.client.dto_utils import init_with_defined_params
 from planqk.qiskit.client.job_dtos import INPUT_FORMAT
-from pydantic import BaseModel
 
 
 class PROVIDER(Enum):
@@ -130,6 +131,7 @@ class ConfigurationDto(BaseModel):
     supported_input_formats: List[INPUT_FORMAT]
     shots_range: ShotsRangeDto
     memory_result_supported: Optional[bool] = False
+    options: Optional[Dict] = None
 
     def __post_init__(self):
         self.gates = [GateDto.from_dict(gate) for gate in self.gates]

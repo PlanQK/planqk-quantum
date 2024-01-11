@@ -79,14 +79,20 @@ class PlanqkQuantumProvider(Provider):
         if backend_state_dto:
             backend_dto.status = backend_state_dto.status
 
-        return PlanqkBackend(
-            backend_info=backend_dto,
-            provider=self,
-            name=backend_dto.id,
-            description=f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.id}.",
-            online_date=backend_dto.updated_at,
-            backend_version="2",
-        )
+        backend_init_params = {
+            'backend_info': backend_dto,
+            'provider': self,
+            'name': backend_dto.id,
+            'description': f"PlanQK Backend: {backend_dto.hardware_provider.name} {backend_dto.id}.",
+            'online_date': backend_dto.updated_at,
+            'backend_version': "2",
+        }
+
+        if backend_dto.provider == PROVIDER.QRYD:
+            from planqk.qiskit.providers.qryd.qryd_backend import QrydBackend
+            return QrydBackend(**backend_init_params)
+        else:
+            return PlanqkBackend(**backend_init_params)
 
     @staticmethod
     def get_access_token():

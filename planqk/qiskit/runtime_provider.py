@@ -2,16 +2,17 @@ import logging
 from datetime import datetime
 from typing import Optional, Union, Callable, Type, Sequence, Dict, List, Any
 
+from qiskit.providers import QiskitBackendNotFoundError
+from qiskit_ibm_runtime import RuntimeOptions, ibm_backend
+from qiskit_ibm_runtime.accounts import ChannelType
+from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
+
 from planqk.qiskit import PlanqkQuantumProvider
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.client.client import _PlanqkClient
 from planqk.qiskit.client.job_dtos import RuntimeJobParamsDto, JobDto, INPUT_FORMAT
 from planqk.qiskit.planqk_runtime_job import PlanqkRuntimeJob
-from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
-from qiskit.providers import QiskitBackendNotFoundError
-from qiskit_ibm_runtime import RuntimeOptions, ibm_backend
-from qiskit_ibm_runtime.accounts import ChannelType
-from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
+from planqk.qiskit.providers.job_input_converter import convert_to_backend_input
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             session_time=qrt_options.session_time,
         )
 
-        input_data = convert_circuit_to_backend_input([INPUT_FORMAT.QISKIT_PRIMITIVE], inputs)
+        input_data = convert_to_backend_input([INPUT_FORMAT.QISKIT_PRIMITIVE], inputs)
 
         backend_id = options.get('backend')
         backend = self.backend(backend_id)

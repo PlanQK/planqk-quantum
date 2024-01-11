@@ -22,9 +22,9 @@ class JOB_STATUS(str, Enum):
 
 
 class JobDto(BaseModel):
-    backend_id: str
     provider: str
     shots: int = 1
+    backend_id: str = None
     id: Optional[str] = None
     session_id: Optional[str] = None
     input: Optional[Union[str, Dict]] = None

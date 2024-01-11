@@ -7,7 +7,7 @@ from qiskit.providers import BackendV2, Provider, Options
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
-from planqk.qiskit.providers.job_input_converter import convert_circuit_to_backend_input
+from planqk.qiskit.providers.job_input_converter import convert_to_backend_input
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
@@ -44,6 +44,7 @@ class PlanqkBackend(BackendV2, ABC):
             backend_version: actual version
             **fields: other arguments
         """
+
         super().__init__(
             provider=provider,
             name=name,
@@ -174,20 +175,24 @@ class PlanqkBackend(BackendV2, ABC):
         circuit.name = "circ0"
         shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
-        # TODO add support for input params
+        # Set job options
+        options = self.options
+        for key, value in kwargs.items():
+            option = options.get(key, None)
+            if option is not None:
+                options.update_options(key=value)
 
-        input_circ = convert_circuit_to_backend_input(self._backend_info.configuration.supported_input_formats, circuit)
-
-        # TODO this is braket specific
-        input_params = {'disable_qubit_rewiring': False,
-                        'qubit_count': circuit.num_qubits}
+        input = convert_to_backend_input(
+            self._backend_info.configuration.supported_input_formats,
+            circuit,
+            options)
 
         job_request = JobDto(backend_id=self._backend_info.id,
                              provider=self._backend_info.provider.name,
-                             input_format=input_circ[0],
-                             input=input_circ[1],
+                             input_format=input[0],
+                             input=input[1],
                              shots=shots,
-                             input_params=input_params)
+                             input_params=input[2])
 
         return PlanqkJob(backend=self, job_details=job_request)
 
