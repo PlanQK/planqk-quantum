@@ -80,8 +80,8 @@ class PlanqkJob(JobV1):
             success=True,
             status=status,
             data=ExperimentResultData(
-                counts=result_data["counts"] if result_data["counts"] is not None else {},
-                memory=result_data["memory"] if result_data["memory"] is not None else []
+                counts=result_data.get("counts") or {},
+                memory=result_data.get("memory") or []
             ),
             # Header required for PennyLane-Qiskit Plugin as it identifies the result based on the circuit name which is always "circ0"
             header=QobjExperimentHeader(name="circ0")
