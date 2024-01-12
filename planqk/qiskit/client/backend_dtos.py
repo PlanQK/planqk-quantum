@@ -18,6 +18,14 @@ class PROVIDER(Enum):
     IBM_CLOUD = "IBM_CLOUD"
     TSYSTEMS = "TSYSTEMS"
     QRYD = "QRYD"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def from_str(cls, provider_str):
+        try:
+            return PROVIDER(provider_str)
+        except KeyError:
+            return cls.UNKNOWN
 
 
 class TYPE(Enum):
