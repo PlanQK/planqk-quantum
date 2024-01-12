@@ -27,7 +27,7 @@ def _convert_to_open_qasm_3(circuit: Circuit, **kwargs):
     return qasm_circuit
 
 
-def _convert_to_ionq(circuit: Circuit):
+def _convert_to_ionq(circuit: Circuit, options: Options):
     ionq_circ, _, _ = qiskit_circ_to_ionq_circ(circuit)
     # TODO transpiled input?
     input_data = {
@@ -39,7 +39,7 @@ def _convert_to_ionq(circuit: Circuit):
     return input_data
 
 
-def _convert_to_qiskit_primitive(circuit: Circuit):
+def _convert_to_qiskit_primitive(circuit: Circuit, options: Options):
     # Transforms circuit to base64 encoded byte stream
     input_json_str = json.dumps(circuit, cls=RuntimeEncoder)
     # Transform back to json but with the base64 encoded byte stream

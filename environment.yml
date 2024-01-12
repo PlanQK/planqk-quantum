@@ -10,6 +10,7 @@ dependencies:
       ## dev dependencies
       - qiskit==0.44.1
       - qiskit-ibm-runtime==0.17.0
+      - qiskit-ibm-provider==0.7.2
       - setuptools
       - pytest
       - pytest-cov
