@@ -1,11 +1,12 @@
-from math import pi
 from typing import Any
 from typing import Dict
 
+from math import pi
 from qiskit import QuantumCircuit
 from qiskit.providers import Options
-from qiskit_qryd_provider.pcp_gate import PCPGate
-from qiskit_qryd_provider.pcz_gate import PCZGate
+
+from planqk.qiskit.providers.qryd.pcp_gate import PCPGate
+from planqk.qiskit.providers.qryd.pcz_gate import PCZGate
 
 
 def convert_to_wire_format(circuit: QuantumCircuit, options: Options) -> dict:
