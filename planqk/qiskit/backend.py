@@ -154,7 +154,7 @@ class PlanqkBackend(BackendV2, ABC):
 
     @classmethod
     def _default_options(cls):
-        return Options(shots=10)
+        return Options()
 
     def run(self, circuit, **kwargs) -> PlanqkJob:
         """Run a circuit on the backend as job.
