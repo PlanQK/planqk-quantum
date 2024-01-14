@@ -1,15 +1,17 @@
 import json
 import logging
 import os
+import random
 from typing import List, Optional, Callable, Any, Dict
 
 import requests
+from requests import Response, HTTPError
+
 from planqk.context import ContextResolver
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER, BackendStateInfosDto
 from planqk.qiskit.client.job_dtos import JobDto
-from requests import Response, HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +136,9 @@ class _PlanqkClient(object):
         if context is not None and context.is_organization:
             headers["x-organizationid"] = context.get_organization_id()
 
+        headers["x-cloud-trace-context"] = cls._generate_trace_id()
+        logger.debug("PlanQK client request trace id: %s", headers["x-cloud-trace-context"])
+
         return headers
 
     @classmethod
@@ -141,3 +146,7 @@ class _PlanqkClient(object):
         if not isinstance(d, dict):
             return d
         return {k: cls.remove_none_values(v) for k, v in d.items() if v is not None}
+
+    @classmethod
+    def _generate_trace_id(cls):
+        return '{:032x}'.format(random.getrandbits(128))
