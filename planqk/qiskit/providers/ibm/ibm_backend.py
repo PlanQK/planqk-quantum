@@ -1,12 +1,13 @@
 import datetime
 
 from qiskit.providers import Options
+from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from planqk.qiskit import PlanqkBackend, PlanqkQuantumProvider
 from planqk.qiskit.client.backend_dtos import BackendDto
 
 
-class PlanqkQrydBackend(PlanqkBackend):
+class PlanqkIbmBackend(PlanqkBackend):
     """Backend class interfacing with Qryd."""
 
     def __init__(self, backend_info: BackendDto,
@@ -16,7 +17,7 @@ class PlanqkQrydBackend(PlanqkBackend):
                  online_date: datetime.datetime = None,
                  backend_version: str = None,
                  **fields, ):
-        """Initialize the Qryd backend.
+        """Initialize the IBM backend.
 
         Args:
             backend_info: PlanQK backend info
@@ -43,15 +44,17 @@ class PlanqkQrydBackend(PlanqkBackend):
 
                 """
         return Options(
-            shots=1024,
+            shots=4000,
             memory=False,
+            meas_level=MeasLevel.CLASSIFIED,
+            meas_return=MeasReturnType.AVERAGE,
+            memory_slots=None,
+            memory_slot_size=100,
+            rep_time=None,
+            rep_delay=None,
+            init_qubits=True,
+            use_measure_esp=None,
+            # Simulator only
+            noise_model=None,
             seed_simulator=None,
-            seed_compiler=None,
-            allow_compilation=True,
-            fusion_max_qubits=4,
-            use_extended_set=True,
-            use_reverse_traversal=True,
-            extended_set_size=5,
-            extended_set_weight=0.5,
-            reverse_traversal_iterations=3,
         )

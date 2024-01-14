@@ -89,8 +89,11 @@ class PlanqkQuantumProvider(Provider):
         }
 
         if backend_dto.provider == PROVIDER.QRYD:
-            from planqk.qiskit.providers.qryd.qryd_backend import QrydBackend
-            return QrydBackend(**backend_init_params)
+            from planqk.qiskit.providers.qryd.qryd_backend import PlanqkQrydBackend
+            return PlanqkQrydBackend(**backend_init_params)
+        elif backend_dto.provider in {PROVIDER.IBM, PROVIDER.IBM_CLOUD}:
+            from planqk.qiskit.providers.ibm.ibm_backend import PlanqkIbmBackend
+            return PlanqkIbmBackend(**backend_init_params)
         else:
             return PlanqkBackend(**backend_init_params)
 

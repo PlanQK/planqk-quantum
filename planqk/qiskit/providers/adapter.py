@@ -22,8 +22,8 @@ class ProviderAdapterFactory:
     def get_adapter(provider: PROVIDER) -> ProviderAdapter:
         from planqk.qiskit.providers.aws_adapter import AwsAdapter
         from planqk.qiskit.providers.azure_adapter import AzureAdapter
-        from planqk.qiskit.providers.ibm_adapter import IbmAdapter
-        from planqk.qiskit.providers.qryd_adapter import QrydAdapter
+        from planqk.qiskit.providers.ibm.ibm_adapter import IbmAdapter
+        from planqk.qiskit.providers.qryd.qryd_adapter import QrydAdapter
 
         if provider == PROVIDER.AWS:
             return AwsAdapter()

@@ -1,13 +1,13 @@
 import datetime
 from abc import ABC
 
-from planqk.qiskit.providers.job_input_converter import convert_to_backend_input
 from qiskit.circuit import Delay, Parameter
 from qiskit.circuit import Measure
 from qiskit.providers import BackendV2, Provider, Options
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
+from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
@@ -186,13 +186,17 @@ class PlanqkBackend(BackendV2, ABC):
             self._backend_info.configuration.supported_input_formats,
             circuit,
             options)
+        input_params = convert_to_backend_params(
+            self._backend_info.provider,
+            circuit,
+            options)
 
         job_request = JobDto(backend_id=self._backend_info.id,
                              provider=self._backend_info.provider.name,
                              input_format=input[0],
                              input=input[1],
                              shots=shots,
-                             input_params=input[2])
+                             input_params=input_params)
 
         return PlanqkJob(backend=self, job_details=job_request)
 
