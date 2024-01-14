@@ -13,6 +13,8 @@ from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER, BackendStateInfosDto
 from planqk.qiskit.client.job_dtos import JobDto
 
+HEADER_CLOUD_TRACE_CTX = "x-cloud-trace-context"
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,9 +56,11 @@ class _PlanqkClient(object):
             response.raise_for_status()
             return response.json() if response.status_code != 204 else None
         except requests.exceptions.ConnectionError as e:
-            logger.error(f"Cannot connect to middleware under {url}: {e}")
+            logger.error(f"Cannot connect to middleware under {url} (Trace {headers[HEADER_CLOUD_TRACE_CTX]}): {e}")
             raise e
         except HTTPError as e:
+            logger.error(
+                f"Request {request_func.__name__} {url} failed (Trace {headers[HEADER_CLOUD_TRACE_CTX]}): {e}")
             if e.response.status_code == 401:
                 raise InvalidAccessTokenError
             else:
@@ -136,8 +140,8 @@ class _PlanqkClient(object):
         if context is not None and context.is_organization:
             headers["x-organizationid"] = context.get_organization_id()
 
-        headers["x-cloud-trace-context"] = cls._generate_trace_id()
-        logger.debug("PlanQK client request trace id: %s", headers["x-cloud-trace-context"])
+        headers[HEADER_CLOUD_TRACE_CTX] = cls._generate_trace_id()
+        logger.debug("PlanQK client request trace id: %s", headers[HEADER_CLOUD_TRACE_CTX])
 
         return headers
 
