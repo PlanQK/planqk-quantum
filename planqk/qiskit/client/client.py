@@ -65,6 +65,9 @@ class _PlanqkClient(object):
                 raise InvalidAccessTokenError
             else:
                 raise PlanqkClientError(e.response)
+        except Exception as e:
+            logger.error(f"Request {request_func.__name__} {url} failed (Trace {headers[HEADER_CLOUD_TRACE_CTX]}): {e}")
+            raise PlanqkClientError("Error while performing request") from e
 
     @classmethod
     def get_backends(cls) -> List[BackendDto]:
