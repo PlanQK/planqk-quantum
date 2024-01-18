@@ -51,22 +51,25 @@ class _PlanqkClient(object):
         headers = {**cls._get_default_headers(), **(headers or {})}
         debug = os.environ.get("PLANQK_QUANTUM_DEBUG", "false").lower() == "true"
 
+        trace_id = headers.get(HEADER_CLOUD_TRACE_CTX, 'unknown')
         try:
             response = request_func(url, json=data, params=params, headers=headers, verify=not debug)
             response.raise_for_status()
             return response.json() if response.status_code != 204 else None
         except requests.exceptions.ConnectionError as e:
-            logger.error(f"Cannot connect to middleware under {url} (Trace {headers[HEADER_CLOUD_TRACE_CTX]}): {e}")
+            logger.error(
+                f"Cannot connect to middleware under {url} (Trace {trace_id}): {e}")
             raise e
         except HTTPError as e:
             logger.error(
-                f"Request {request_func.__name__} {url} failed (Trace {headers[HEADER_CLOUD_TRACE_CTX]}): {e}")
+                f"Request {request_func.__name__} {url} failed (Trace {trace_id}): {e}")
             if e.response.status_code == 401:
                 raise InvalidAccessTokenError
             else:
                 raise PlanqkClientError(e.response)
         except Exception as e:
-            logger.error(f"Request {request_func.__name__} {url} failed (Trace {headers[HEADER_CLOUD_TRACE_CTX]}): {e}")
+            logger.error(
+                f"Request {request_func.__name__} {url} failed (Trace {trace_id}): {e}")
             raise PlanqkClientError("Error while performing request") from e
 
     @classmethod

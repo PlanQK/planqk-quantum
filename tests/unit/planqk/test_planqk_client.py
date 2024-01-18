@@ -5,7 +5,7 @@ from requests import HTTPError
 
 from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER
-from planqk.qiskit.client.client import _PlanqkClient
+from planqk.qiskit.client.client import _PlanqkClient, HEADER_CLOUD_TRACE_CTX
 from planqk.qiskit.client.job_dtos import JobDto
 from tests.unit.planqk.client_mocks import rigetti_mock, oqc_lucy_mock, job_mock, job_result_mock
 
@@ -17,7 +17,8 @@ class PlanqkClientTestSuite(unittest.TestCase):
         cls._original_get_default_headers = _PlanqkClient._get_default_headers
 
         # Override _get_default_headers to always return a specific token
-        _PlanqkClient._get_default_headers = MagicMock(return_value={"x-auth-token": "test_token"})
+        _PlanqkClient._get_default_headers = MagicMock(
+            return_value={"x-auth-token": "test_token", HEADER_CLOUD_TRACE_CTX: "test_trace"})
 
     @patch("requests.get")
     def test_get_backends(self, mock_get):
@@ -121,6 +122,7 @@ class PlanqkClientTestSuite(unittest.TestCase):
         mock_response.raise_for_status.side_effect = HTTPError("Error", response=mock_response)
 
         mock_get.return_value = mock_response
+        mock_get.__name__ = "get"
 
         # When
         with self.assertRaises(InvalidAccessTokenError) as error_response:
@@ -138,6 +140,7 @@ class PlanqkClientTestSuite(unittest.TestCase):
         mock_response.raise_for_status.side_effect = HTTPError("Error", response=mock_response)
 
         mock_get.return_value = mock_response
+        mock_get.__name__ = "get"
 
         # When
         with self.assertRaises(PlanqkClientError) as error_response:
