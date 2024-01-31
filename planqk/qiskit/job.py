@@ -133,3 +133,9 @@ class PlanqkJob(JobV1):
         Return a dictionary representation of the job.
         """
         return {key: value for key, value in vars(self).items() if not key.startswith('_')}
+
+    def queue_position(self):
+        """
+        Return the position of the job in the server queue.
+        """
+        return None
