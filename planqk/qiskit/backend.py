@@ -175,14 +175,10 @@ class PlanqkBackend(BackendV2, ABC):
         circuit.name = "circ0"
         shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
-        # Set job options
         options = self.options
-        for key, value in kwargs.items():
-            option = options.get(key, None)
-            if option is not None:
-                options.update_options(key=value)
+        options.update_options(**kwargs)
 
-        input = convert_to_backend_input(
+        backend_input = convert_to_backend_input(
             self._backend_info.configuration.supported_input_formats,
             circuit,
             options)
@@ -193,8 +189,8 @@ class PlanqkBackend(BackendV2, ABC):
 
         job_request = JobDto(backend_id=self._backend_info.id,
                              provider=self._backend_info.provider.name,
-                             input_format=input[0],
-                             input=input[1],
+                             input_format=backend_input[0],
+                             input=backend_input[1],
                              shots=shots,
                              input_params=input_params)
 
