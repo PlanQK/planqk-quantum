@@ -9,7 +9,7 @@ from requests import Response, HTTPError
 
 from planqk.context import ContextResolver
 from planqk.credentials import DefaultCredentialsProvider
-from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError
+from planqk.exceptions import InvalidAccessTokenError, PlanqkClientError, PlanqkError
 from planqk.qiskit.client.backend_dtos import BackendDto, PROVIDER, BackendStateInfosDto
 from planqk.qiskit.client.job_dtos import JobDto
 
@@ -57,20 +57,17 @@ class _PlanqkClient(object):
             response.raise_for_status()
             return response.json() if response.status_code != 204 else None
         except requests.exceptions.ConnectionError as e:
-            logger.error(
-                f"Cannot connect to middleware under {url} (Trace {trace_id}): {e}")
+            logger.error(f"Cannot connect to middleware under {url} (Trace {trace_id}): {e}")
             raise e
         except HTTPError as e:
-            logger.error(
-                f"Request {request_func.__name__} {url} failed (Trace {trace_id}): {e}")
+            logger.error(f"Request {request_func.__name__} {url} failed (Trace {trace_id}): {e}")
             if e.response.status_code == 401:
                 raise InvalidAccessTokenError
             else:
                 raise PlanqkClientError(e.response)
         except Exception as e:
-            logger.error(
-                f"Request {request_func.__name__} {url} failed (Trace {trace_id}): {e}")
-            raise PlanqkClientError("Error while performing request") from e
+            logger.error(f"Request {request_func.__name__} {url} failed (Trace {trace_id}): {e}")
+            raise PlanqkError("Error while performing request") from e
 
     @classmethod
     def get_backends(cls) -> List[BackendDto]:
