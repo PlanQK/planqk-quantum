@@ -38,10 +38,10 @@ class PlanqkQrydBackend(PlanqkBackend):
     def _default_options(cls):
         """Get default options.
 
-                Returns:
-                    An Options object.
+        Returns:
+            An Options object.
 
-                """
+        """
         return Options(
             shots=1024,
             memory=False,

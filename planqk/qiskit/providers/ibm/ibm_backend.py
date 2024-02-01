@@ -39,10 +39,8 @@ class PlanqkIbmBackend(PlanqkBackend):
     def _default_options(cls):
         """Get default options.
 
-                Returns:
-                    An Options object.
-
-                """
+        Returns: An Options object.
+        """
         return Options(
             shots=4000,
             memory=False,
