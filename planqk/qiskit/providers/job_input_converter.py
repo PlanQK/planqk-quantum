@@ -28,8 +28,10 @@ def _convert_to_open_qasm_3(circuit: QuantumCircuit, **kwargs):
 
 
 def _convert_to_ionq(circuit: QuantumCircuit, options: Options):
-    ionq_circ, _, _ = qiskit_circ_to_ionq_circ(circuit, gateset=options.get("gateset", "qis"))
+    gateset = options.get("gateset", "qis")
+    ionq_circ, _, _ = qiskit_circ_to_ionq_circ(circuit, gateset=gateset)
     return {
+        "gateset": gateset,
         "qubits": circuit.num_qubits,
         "circuit": ionq_circ,
     }
