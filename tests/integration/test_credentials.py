@@ -18,14 +18,14 @@ class CredentialsTestSuite(unittest.TestCase):
 
     def test_should_use_user_provided_token(self):
         access_token = "user_access_token"
-        planqk_provider = PlanqkQuantumProvider(access_token)
+        PlanqkQuantumProvider(access_token)
         self.assertEqual(access_token, _PlanqkClient.get_credentials().get_access_token())
 
     def test_env_provided_token_priority(self):
         access_token = "service_access_token"
         os.environ["SERVICE_EXECUTION_TOKEN"] = access_token
 
-        planqk_provider = PlanqkQuantumProvider("user_access_token")
+        PlanqkQuantumProvider("user_access_token")
 
         # env set token must have priority to access token set by user
         self.assertEqual("user_access_token", _PlanqkClient.get_credentials().get_access_token())
@@ -43,7 +43,7 @@ class CredentialsTestSuite(unittest.TestCase):
             fp.write(json_value.encode("utf-8"))
             os.environ["PLANQK_CONFIG_FILE_PATH"] = os.path.abspath(fp.name)
 
-        planqk_provider = PlanqkQuantumProvider()
+        PlanqkQuantumProvider()
 
         access_token = _PlanqkClient.get_credentials().get_access_token()
         self.assertIsNotNone(access_token)
