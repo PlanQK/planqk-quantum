@@ -7,7 +7,10 @@ from planqk.qiskit import PlanqkJob
 from planqk.qiskit.client.job_dtos import JobDto
 
 
-class TestBackend(BackendV2, ABC):
+class MockBackend(BackendV2, ABC):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     @property
     def target(self):
@@ -28,7 +31,7 @@ class TestBackend(BackendV2, ABC):
 class JobTestSuite(unittest.TestCase):
 
     def test_job_should_have_queue_position_attribute(self):
-        backend = TestBackend()
+        backend = MockBackend()
         job = PlanqkJob(backend, job_id="1337", job_details=JobDto(**{"provider": "TEST"}))
 
         queue_position = job.queue_position()

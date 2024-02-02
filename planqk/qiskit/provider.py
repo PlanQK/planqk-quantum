@@ -96,12 +96,3 @@ class PlanqkQuantumProvider(Provider):
             return PlanqkIbmBackend(**backend_init_params)
         else:
             return PlanqkBackend(**backend_init_params)
-
-    @staticmethod
-    def get_access_token():
-        """Returns the access token used for authentication with PlanQK."""
-        return _PlanqkClient.get_credentials().get_access_token()
-
-    @property
-    def provider_token(self):
-        return self._provider_token
