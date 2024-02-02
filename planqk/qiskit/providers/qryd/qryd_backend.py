@@ -1,48 +1,14 @@
-import datetime
-
-from qiskit.providers import Options
-
-from planqk.qiskit import PlanqkBackend, PlanqkQuantumProvider
-from planqk.qiskit.client.backend_dtos import BackendDto
+from planqk.qiskit import PlanqkBackend
+from planqk.qiskit.options import OptionsV2
 
 
 class PlanqkQrydBackend(PlanqkBackend):
-    """Backend class interfacing with Qryd."""
 
-    def __init__(self, backend_info: BackendDto,
-                 provider: PlanqkQuantumProvider,
-                 name: str = None,
-                 description: str = None,
-                 online_date: datetime.datetime = None,
-                 backend_version: str = None,
-                 **fields, ):
-        """Initialize the Qryd backend.
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-        Args:
-            backend_info: PlanQK backend info
-            provider: Qiskit provider for this backend
-            name: name of backend
-            description: description of backend
-            online_date: online date
-            backend_version: backend version
-            **fields: other arguments
-        """
-        super().__init__(
-            backend_info=backend_info,
-            provider=provider,
-            name=backend_info.id,
-            description=f"PlanQK Backend: {backend_info.hardware_provider.name} {backend_info.id}.",
-            online_date=backend_info.updated_at,
-            backend_version="2", )
-
-    def _default_options(cls):
-        """Get default options.
-
-        Returns:
-            An Options object.
-
-        """
-        return Options(
+    def _default_options(self):
+        return OptionsV2(
             shots=1024,
             memory=False,
             seed_simulator=None,

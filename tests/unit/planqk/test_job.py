@@ -1,31 +1,8 @@
 import unittest
-from abc import ABC
-
-from qiskit.providers import BackendV2
 
 from planqk.qiskit import PlanqkJob
 from planqk.qiskit.client.job_dtos import JobDto
-
-
-class MockBackend(BackendV2, ABC):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    @property
-    def target(self):
-        return None
-
-    @property
-    def max_circuits(self):
-        return None
-
-    @classmethod
-    def _default_options(cls):
-        pass
-
-    def run(self, run_input, **options):
-        pass
+from tests.unit.planqk.backends import MockBackend
 
 
 class JobTestSuite(unittest.TestCase):

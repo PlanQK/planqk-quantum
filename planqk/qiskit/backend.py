@@ -1,9 +1,10 @@
 import datetime
 from abc import ABC
+from copy import copy
 
 from qiskit.circuit import Delay, Parameter
 from qiskit.circuit import Measure
-from qiskit.providers import BackendV2, Provider, Options
+from qiskit.providers import BackendV2, Provider
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
@@ -11,6 +12,7 @@ from planqk.qiskit.providers.job_input_converter import convert_to_backend_input
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
+from .options import OptionsV2
 from .providers.adapter import ProviderAdapterFactory
 
 
@@ -134,7 +136,8 @@ class PlanqkBackend(BackendV2, ABC):
             return GateConfig(
                 name=name,
                 parameters=operation.params,
-                qasm_def='')
+                qasm_def='',
+            )
 
     @property
     def target(self):
@@ -154,7 +157,7 @@ class PlanqkBackend(BackendV2, ABC):
 
     @classmethod
     def _default_options(cls):
-        return Options()
+        return OptionsV2()
 
     def run(self, circuit, **kwargs) -> PlanqkJob:
         """Run a circuit on the backend as job.
@@ -176,17 +179,16 @@ class PlanqkBackend(BackendV2, ABC):
         circuit.name = "circ0"
         shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
 
-        options = self.options
-        options.update_options(**kwargs)
+        # add kwargs, if defined as options, to a copy of the options
+        options = copy(self.options)
+        if kwargs:
+            for field in kwargs:
+                if field in options.data:
+                    options[field] = kwargs[field]
 
-        backend_input = convert_to_backend_input(
-            self._backend_info.configuration.supported_input_formats,
-            circuit,
-            options)
-        input_params = convert_to_backend_params(
-            self._backend_info.provider,
-            circuit,
-            options)
+        supported_input_formats = self._backend_info.configuration.supported_input_formats
+        backend_input = convert_to_backend_input(supported_input_formats, circuit, options)
+        input_params = convert_to_backend_params(self._backend_info.provider, circuit, options)
 
         job_request = JobDto(backend_id=self._backend_info.id,
                              provider=self._backend_info.provider.name,
@@ -197,7 +199,7 @@ class PlanqkBackend(BackendV2, ABC):
 
         return PlanqkJob(backend=self, job_details=job_request)
 
-    def _validate_provider_for_backend(self) -> bool:
+    def _validate_provider_for_backend(self):
         from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
         if (self._backend_info.hardware_provider == HARDWARE_PROVIDER.IBM
                 and not isinstance(self.provider, PlanqkQiskitRuntimeService)):

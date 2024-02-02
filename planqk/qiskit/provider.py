@@ -89,7 +89,13 @@ class PlanqkQuantumProvider(Provider):
             'backend_version': "2",
         }
 
-        if backend_dto.provider == PROVIDER.QRYD:
+        # add additional parameters to the backend init params
+        backend_init_params.update(**kwargs)
+
+        if backend_dto.provider == PROVIDER.AZURE:
+            from planqk.qiskit.providers.azure.ionq_backend import PlanqkAzureIonqBackend
+            return PlanqkAzureIonqBackend(**backend_init_params)
+        elif backend_dto.provider == PROVIDER.QRYD:
             from planqk.qiskit.providers.qryd.qryd_backend import PlanqkQrydBackend
             return PlanqkQrydBackend(**backend_init_params)
         elif backend_dto.provider in {PROVIDER.IBM, PROVIDER.IBM_CLOUD}:
