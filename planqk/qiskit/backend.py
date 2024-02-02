@@ -158,11 +158,12 @@ class PlanqkBackend(BackendV2, ABC):
 
     def run(self, circuit, **kwargs) -> PlanqkJob:
         """Run a circuit on the backend as job.
-            Args:
-                circuit (QuantumCircuit): circuit to run. Currently only a single circuit can be executed per job.
-                **kwargs: additional arguments for the execution (see below)
-            Returns:
-                PlanqkJob: The job instance for the circuit that was run.
+
+        Args:
+            circuit (QuantumCircuit): circuit to run. Currently only a single circuit can be executed per job.
+            **kwargs: additional arguments for the execution (see below)
+        Returns:
+            PlanqkJob: The job instance for the circuit that was run.
         """
         self._validate_provider_for_backend()
 
@@ -212,7 +213,6 @@ class PlanqkBackend(BackendV2, ABC):
         Returns:
             The job with the given id.
         """
-
         return PlanqkJob(backend=self, job_id=job_id)
 
     def configuration(self) -> QasmBackendConfiguration:
@@ -221,7 +221,6 @@ class PlanqkBackend(BackendV2, ABC):
         Returns:
             QasmBackendConfiguration: the configuration for the actual.
         """
-
         return self._configuration
 
     @property

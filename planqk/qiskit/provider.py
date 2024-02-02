@@ -4,6 +4,7 @@ from qiskit.providers import ProviderV1 as Provider, QiskitBackendNotFoundError
 
 from planqk.credentials import DefaultCredentialsProvider
 from planqk.exceptions import PlanqkClientError
+from planqk.qiskit import PlanqkJob
 from planqk.qiskit.backend import PlanqkBackend
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.client.client import _PlanqkClient
@@ -96,3 +97,16 @@ class PlanqkQuantumProvider(Provider):
             return PlanqkIbmBackend(**backend_init_params)
         else:
             return PlanqkBackend(**backend_init_params)
+
+    def retrieve_job(self, backend: PlanqkBackend, job_id: str):
+        """
+        Retrieve a job from the backend.
+
+        Args:
+            backend (PlanqkBackend): the backend that run the job.
+            job_id (str): the job id.
+
+        Returns:
+            Job: the job from the backend with the given id.
+        """
+        return PlanqkJob(backend=backend, job_id=job_id)
