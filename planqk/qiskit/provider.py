@@ -92,6 +92,9 @@ class PlanqkQuantumProvider(Provider):
         # add additional parameters to the backend init params
         backend_init_params.update(**kwargs)
 
+        if backend_dto.provider == PROVIDER.AWS:
+            from planqk.qiskit.providers.aws.aws_backend import PlanqkAwsBackend
+            return PlanqkAwsBackend(**backend_init_params)
         if backend_dto.provider == PROVIDER.AZURE:
             from planqk.qiskit.providers.azure.ionq_backend import PlanqkAzureIonqBackend
             return PlanqkAzureIonqBackend(**backend_init_params)

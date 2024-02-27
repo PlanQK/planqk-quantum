@@ -5,7 +5,7 @@ from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from qiskit import QuantumCircuit
 from qiskit.providers import Options
-from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit, wrap_circuits_in_verbatim_box
+from qiskit_braket_provider.providers.adapter import to_braket
 from qiskit_ibm_runtime import RuntimeEncoder
 from qiskit_ionq.helpers import qiskit_circ_to_ionq_circ
 
@@ -15,14 +15,13 @@ from planqk.qiskit.providers.aws_converters import transform_to_qasm_3_program
 from planqk.qiskit.providers.qryd.qryd_converters import convert_to_wire_format, create_qoqu_input_params
 
 
-def _convert_to_open_qasm_3(circuit: QuantumCircuit, **kwargs):
-    braket_circuit = convert_qiskit_to_braket_circuit(circuit)
-    shots = kwargs.get("shots", 1)
-    validate_circuit_and_shots(braket_circuit, shots)
+def _convert_to_open_qasm_3(circuit: QuantumCircuit, options: Options):
+    shots = options.get("shots", 1)
+    inputs = options.get("inputs", {})
+    verbatim = options.get("verbatim", False)
 
-    if kwargs.pop("verbatim", False):
-        braket_circuit = wrap_circuits_in_verbatim_box([braket_circuit])
-    inputs = kwargs.get("inputs", {})
+    braket_circuit = to_braket(circuit, verbatim=verbatim)
+    validate_circuit_and_shots(braket_circuit, shots)
 
     return transform_to_qasm_3_program(braket_circuit, False, inputs)
 
