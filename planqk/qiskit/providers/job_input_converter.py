@@ -3,15 +3,16 @@ from typing import List, Tuple
 
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from planqk.qiskit.client.backend_dtos import PROVIDER
-from planqk.qiskit.client.job_dtos import INPUT_FORMAT
-from planqk.qiskit.providers.aws_converters import transform_to_qasm_3_program
-from planqk.qiskit.providers.qryd.qryd_converters import convert_to_wire_format, create_qoqu_input_params
 from qiskit import QuantumCircuit
 from qiskit.providers import Options
 from qiskit_braket_provider.providers.adapter import to_braket
 from qiskit_ibm_runtime import RuntimeEncoder
 from qiskit_ionq.helpers import qiskit_circ_to_ionq_circ
+
+from planqk.qiskit.client.backend_dtos import PROVIDER
+from planqk.qiskit.client.job_dtos import INPUT_FORMAT
+from planqk.qiskit.providers.aws_converters import transform_to_qasm_3_program
+from planqk.qiskit.providers.qryd.qryd_converters import convert_to_wire_format, create_qoqu_input_params
 
 
 def _convert_to_open_qasm_3(circuit: QuantumCircuit, options: Options):
@@ -51,7 +52,7 @@ def _create_qoqo_input_params(circuit: QuantumCircuit, options: Options):
 
 
 def _create_aws_input_params(circuit: QuantumCircuit, options: Options):
-    return {'disable_qubit_rewiring': False}
+    return {'disable_qubit_rewiring': False, 'qubit_count': circuit.num_qubits}
 
 
 def _create_empty_input_params(circuit: Circuit, options: Options):
