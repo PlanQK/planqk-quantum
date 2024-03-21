@@ -7,7 +7,7 @@ from planqk.qiskit.providers.adapter import ProviderAdapter
 
 
 class AzureAdapter(ProviderAdapter):
-    def op_to_instruction(self, operation: str) -> Optional[QiskitInstruction]:
+    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
         operation = operation.lower()
         return Gate(operation, 0, [])
 

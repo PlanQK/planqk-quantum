@@ -20,7 +20,7 @@ ibm_name_mapping = {
 
 
 class IbmAdapter(ProviderAdapter):
-    def op_to_instruction(self, operation: str) -> Optional[QiskitInstruction]:
+    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
         operation = operation.lower()
         return ibm_name_mapping.get(operation, None) or Gate(operation, 0, [])
 

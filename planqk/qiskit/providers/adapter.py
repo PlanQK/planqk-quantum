@@ -6,7 +6,7 @@ from planqk.qiskit.client.backend_dtos import PROVIDER, QubitDto, ConnectivityDt
 
 
 class ProviderAdapter:
-    def op_to_instruction(self, operation: str) -> Optional[QiskitInstruction]:
+    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
         pass
 
     def single_qubit_gate_props(self, qubits: List[QubitDto], is_simulator: bool = False):

@@ -34,7 +34,7 @@ qryd_gate_name_mapping = {
 
 
 class QrydAdapter(adapter.ProviderAdapter):
-    def op_to_instruction(self, operation: str) -> Optional[QiskitInstruction]:
+    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
         operation = operation.lower()
         return qryd_gate_name_mapping.get(operation, None) or Gate(operation, 0, [])
 

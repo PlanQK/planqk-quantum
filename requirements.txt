@@ -1,10 +1,10 @@
 requests>=2.19
 pydantic==1.9.2
 qiskit-ibm-runtime==0.17.0
-qiskit-ionq==0.4.7
+qiskit-ionq==0.5.0
 qiskit-ibm-provider==0.7.2
 dwave-ocean-sdk==6.4.1
-qiskit-braket-provider==0.1.1
+qiskit-braket-provider==0.2.0
 boto3==1.33.13
 botocore==1.33.13
 qiskit==0.44.1

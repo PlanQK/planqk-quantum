@@ -8,7 +8,6 @@ from qiskit.providers import BackendV2, Provider
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
-from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
@@ -80,14 +79,14 @@ class PlanqkBackend(BackendV2, ABC):
         multi_qubit_props = adapter.multi_qubit_gate_props(qubits, connectivity, is_simulator)
         for gate in configuration.gates:
             name = gate.name
-            gate = adapter.op_to_instruction(name)
+            gate = adapter.op_to_instruction(name, is_simulator)
 
             if gate is None:
                 continue
 
             if gate.num_qubits == 1:
                 target.add_instruction(gate, single_qubit_props)
-            elif gate.num_qubits == 2:
+            elif gate.num_qubits > 1:
                 target.add_instruction(gate, multi_qubit_props)
             elif gate.num_qubits == 0 and single_qubit_props == {None: None}:
                 # For gates without qubit number qargs can not be determined
@@ -168,6 +167,8 @@ class PlanqkBackend(BackendV2, ABC):
         Returns:
             PlanqkJob: The job instance for the circuit that was run.
         """
+        from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
+
         self._validate_provider_for_backend()
 
         if isinstance(circuit, (list, tuple)):
@@ -187,7 +188,7 @@ class PlanqkBackend(BackendV2, ABC):
                     options[field] = kwargs[field]
 
         supported_input_formats = self._backend_info.configuration.supported_input_formats
-        backend_input = convert_to_backend_input(supported_input_formats, circuit, options)
+        backend_input = convert_to_backend_input(supported_input_formats, circuit, self, options)
         input_params = convert_to_backend_params(self._backend_info.provider, circuit, options)
 
         job_request = JobDto(backend_id=self._backend_info.id,
