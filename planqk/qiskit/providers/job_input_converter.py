@@ -3,17 +3,16 @@ from typing import List, Tuple
 
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from qiskit import QuantumCircuit
-from qiskit.providers import Options
-from qiskit_braket_provider.providers.adapter import to_braket
-from qiskit_ibm_runtime import RuntimeEncoder
-from qiskit_ionq.helpers import qiskit_circ_to_ionq_circ
-
 from planqk.qiskit.backend import PlanqkBackend
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.client.job_dtos import INPUT_FORMAT
 from planqk.qiskit.providers.aws_converters import transform_to_qasm_3_program
 from planqk.qiskit.providers.qryd.qryd_converters import convert_to_wire_format, create_qoqu_input_params
+from qiskit import QuantumCircuit
+from qiskit.providers import Options
+from qiskit_braket_provider.providers.adapter import to_braket
+from qiskit_ibm_runtime import RuntimeEncoder
+from qiskit_ionq.helpers import qiskit_circ_to_ionq_circ
 
 
 def _convert_to_open_qasm_3(circuit: QuantumCircuit, backend: PlanqkBackend, options: Options):
@@ -29,7 +28,7 @@ def _convert_to_open_qasm_3(circuit: QuantumCircuit, backend: PlanqkBackend, opt
     return transform_to_qasm_3_program(braket_circuit, False, inputs)
 
 
-def _convert_to_ionq(circuit: QuantumCircuit, options: Options):
+def _convert_to_ionq(circuit: QuantumCircuit, backend: PlanqkBackend, options: Options):
     gateset = options.get("gateset", "qis")
     ionq_circ, _, _ = qiskit_circ_to_ionq_circ(circuit, gateset=gateset)
     return {
