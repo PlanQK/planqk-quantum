@@ -1,13 +1,26 @@
 from typing import Optional, List
 
+from qiskit.circuit import Gate, Delay, Parameter, Measure
 from qiskit.circuit import Instruction as QiskitInstruction
 
 from planqk.qiskit.client.backend_dtos import PROVIDER, QubitDto, ConnectivityDto
 
 
 class ProviderAdapter:
-    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
+    non_gate_instr_mapping = {
+        "delay": Delay(Parameter("t")),
+        "measure": Measure(),
+    }
+
+    def to_gate(self, name: str, is_simulator: bool = False) -> Optional[Gate]:
         pass
+
+    def to_non_gate_instruction(self, name: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
+        instr = self.non_gate_instr_mapping.get(name, None)
+        if instr is not None:
+            instr.has_single_gate_props = True
+            return instr
+        return None
 
     def single_qubit_gate_props(self, qubits: List[QubitDto], is_simulator: bool = False):
         pass

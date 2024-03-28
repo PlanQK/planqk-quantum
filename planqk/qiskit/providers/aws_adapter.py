@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from qiskit.circuit import Instruction as QiskitInstruction
+from qiskit.circuit import Gate
 from qiskit_braket_provider.providers.adapter import _GATE_NAME_TO_QISKIT_GATE
 
 import planqk.qiskit.providers.adapter as adapter
@@ -10,9 +10,9 @@ from planqk.qiskit.client.backend_dtos import QubitDto, ConnectivityDto
 class AwsAdapter(adapter.ProviderAdapter):
     """Adapter for AWS Braket backend."""
 
-    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
-        operation = operation.lower()
-        gate = _GATE_NAME_TO_QISKIT_GATE.get(operation, None)
+    def to_gate(self, name: str, is_simulator: bool = False) -> Optional[Gate]:
+        name = name.lower()
+        gate = _GATE_NAME_TO_QISKIT_GATE.get(name, None)
         # Braket quantum backends only support 1 and 2 qubit gates
         return gate if (gate and gate.num_qubits < 3) or is_simulator else None
 

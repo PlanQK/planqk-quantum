@@ -78,7 +78,7 @@ class UnsupportedFormatException(Exception):
     pass
 
 
-def convert_to_backend_input(supported_input_formats: List[INPUT_FORMAT], circuit, backend, options=None) \
+def convert_to_backend_input(supported_input_formats: List[INPUT_FORMAT], circuit, backend=None, options=None) \
         -> Tuple[INPUT_FORMAT, dict]:
     for input_format in supported_input_formats:
         convert_circuit = input_format_converter_factory.get(input_format)

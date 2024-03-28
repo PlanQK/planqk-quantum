@@ -1,15 +1,14 @@
 from typing import Optional, List
 
-from qiskit.circuit import Instruction as QiskitInstruction, Gate
-
 from planqk.qiskit.client.backend_dtos import QubitDto, ConnectivityDto
 from planqk.qiskit.providers.adapter import ProviderAdapter
+from qiskit.circuit import Gate
 
 
 class AzureAdapter(ProviderAdapter):
-    def op_to_instruction(self, operation: str, is_simulator: bool = False) -> Optional[QiskitInstruction]:
-        operation = operation.lower()
-        return Gate(operation, 0, [])
+    def to_gate(self, name: str, is_simulator: bool = False) -> Optional[Gate]:
+        name = name.lower()
+        return Gate(name, 0, [])
 
     def single_qubit_gate_props(self, qubits: List[QubitDto], is_simulator: bool = False):
         return {None: None}
