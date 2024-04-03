@@ -10,13 +10,3 @@ class PlanqkAwsBackend(PlanqkBackend):
     @classmethod
     def _default_options(cls):
         return OptionsV2()
-
-
-class PlanqkAwsSv1Backend(PlanqkAwsBackend):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    @classmethod
-    def _default_options(cls):
-        return OptionsV2()
