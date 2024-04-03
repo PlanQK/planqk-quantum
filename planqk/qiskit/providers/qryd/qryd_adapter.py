@@ -1,13 +1,12 @@
 from typing import Optional, List
 
-from qiskit.circuit import Instruction as QiskitInstruction, Parameter, Gate
-from qiskit.circuit.library import PhaseGate, RGate, RXGate, RYGate, HGate, RZGate, UGate, XGate, YGate, ZGate, SXGate, \
-    SXdgGate, CXGate, CYGate, CZGate, CPhaseGate, SwapGate, iSwapGate
-
 import planqk.qiskit.providers.adapter as adapter
 from planqk.qiskit.client.backend_dtos import QubitDto, ConnectivityDto
 from planqk.qiskit.providers.qryd.pcp_gate import PCPGate
 from planqk.qiskit.providers.qryd.pcz_gate import PCZGate
+from qiskit.circuit import Parameter, Gate
+from qiskit.circuit.library import PhaseGate, RGate, RXGate, RYGate, HGate, RZGate, UGate, XGate, YGate, ZGate, SXGate, \
+    SXdgGate, CXGate, CYGate, CZGate, CPhaseGate, SwapGate, iSwapGate
 
 qryd_gate_name_mapping = {
     "p": PhaseGate(Parameter("lambda")),
@@ -34,9 +33,9 @@ qryd_gate_name_mapping = {
 
 
 class QrydAdapter(adapter.ProviderAdapter):
-    def op_to_instruction(self, operation: str) -> Optional[QiskitInstruction]:
-        operation = operation.lower()
-        return qryd_gate_name_mapping.get(operation, None) or Gate(operation, 0, [])
+    def to_gate(self, name: str, is_simulator: bool = False) -> Optional[Gate]:
+        name = name.lower()
+        return qryd_gate_name_mapping.get(name, None) or Gate(name, 0, [])
 
     def single_qubit_gate_props(self, qubits: List[QubitDto], is_simulator: bool = False):
         return {(int(qubit.id),): None for qubit in qubits}

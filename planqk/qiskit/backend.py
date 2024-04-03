@@ -2,13 +2,11 @@ import datetime
 from abc import ABC
 from copy import copy
 
-from qiskit.circuit import Delay, Parameter
 from qiskit.circuit import Measure
 from qiskit.providers import BackendV2, Provider
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
-from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
@@ -58,6 +56,7 @@ class PlanqkBackend(BackendV2, ABC):
         self._backend_info = backend_info
         self._target = self._planqk_backend_to_target()
         self._configuration = self._planqk_backend_dto_to_configuration()
+        self._instance = None
 
     def _planqk_backend_to_target(self) -> Target:
         """Converts properties of a PlanQK actual into Qiskit Target object.
@@ -78,26 +77,31 @@ class PlanqkBackend(BackendV2, ABC):
 
         single_qubit_props = adapter.single_qubit_gate_props(qubits, is_simulator)
         multi_qubit_props = adapter.multi_qubit_gate_props(qubits, connectivity, is_simulator)
-        for gate in configuration.gates:
-            name = gate.name
-            gate = adapter.op_to_instruction(name)
+        gates_names = {gate.name.lower() for gate in configuration.gates}
+        for gate in gates_names:
+            gate = adapter.to_gate(gate, is_simulator)
 
             if gate is None:
                 continue
 
             if gate.num_qubits == 1:
-                target.add_instruction(gate, single_qubit_props)
-            elif gate.num_qubits == 2:
-                target.add_instruction(gate, multi_qubit_props)
+                target.add_instruction(instruction=gate, properties=single_qubit_props)
+            elif gate.num_qubits > 1:
+                target.add_instruction(instruction=gate, properties=multi_qubit_props)
             elif gate.num_qubits == 0 and single_qubit_props == {None: None}:
                 # For gates without qubit number qargs can not be determined
-                target.add_instruction(gate, {None: None})
+                target.add_instruction(instruction=gate, properties={None: None})
 
         target.add_instruction(Measure(), single_qubit_props)
 
-        if "delay" in configuration.instructions and "delay" not in target:
-            # gate_props = {None: None} if is_simulator else single_qubit_gate_props()
-            target.add_instruction(Delay(Parameter("t")), single_qubit_props)
+        non_gate_instructions = set(configuration.instructions).difference(gates_names).difference({'measure'})
+        for non_gate_instruction_name in non_gate_instructions:
+            instruction = adapter.to_non_gate_instruction(non_gate_instruction_name, is_simulator)
+            if instruction is not None:
+                if instruction.has_single_gate_props:
+                    target.add_instruction(instruction, single_qubit_props)
+                else:
+                    target.add_instruction(instruction=instruction, name=non_gate_instruction_name)
 
         return target
 
@@ -130,7 +134,8 @@ class PlanqkBackend(BackendV2, ABC):
 
     def _get_gate_config_from_target(self, name) -> GateConfig:
         operations = [operation for operation in self._target.operations
-                      if operation.name.casefold() == name.casefold()]
+                      if isinstance(operation.name, str)  # Filters out the IBM conditional instructions having no name
+                      and operation.name.casefold() == name.casefold()]
         if len(operations) == 1:
             operation = operations[0]
             return GateConfig(
@@ -168,6 +173,8 @@ class PlanqkBackend(BackendV2, ABC):
         Returns:
             PlanqkJob: The job instance for the circuit that was run.
         """
+        from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
+
         self._validate_provider_for_backend()
 
         if isinstance(circuit, (list, tuple)):
@@ -187,7 +194,7 @@ class PlanqkBackend(BackendV2, ABC):
                     options[field] = kwargs[field]
 
         supported_input_formats = self._backend_info.configuration.supported_input_formats
-        backend_input = convert_to_backend_input(supported_input_formats, circuit, options)
+        backend_input = convert_to_backend_input(supported_input_formats, circuit, self, options)
         input_params = convert_to_backend_params(self._backend_info.provider, circuit, options)
 
         job_request = JobDto(backend_id=self._backend_info.id,

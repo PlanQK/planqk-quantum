@@ -1,12 +1,11 @@
 from typing import Optional
 
+from planqk.qiskit.client.client import _PlanqkClient
+from planqk.qiskit.client.job_dtos import JobDto
 from qiskit.providers import JobV1, JobStatus, Backend
 from qiskit.qobj import QobjExperimentHeader
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
-
-from planqk.qiskit.client.client import _PlanqkClient
-from planqk.qiskit.client.job_dtos import JobDto
 
 JobStatusMap = {
     "CREATED": JobStatus.INITIALIZING,

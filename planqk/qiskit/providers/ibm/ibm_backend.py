@@ -1,7 +1,6 @@
-from qiskit.qobj.utils import MeasLevel, MeasReturnType
-
 from planqk.qiskit import PlanqkBackend
 from planqk.qiskit.options import OptionsV2
+from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 
 class PlanqkIbmBackend(PlanqkBackend):
