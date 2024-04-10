@@ -47,6 +47,10 @@ class _PlanqkClient(object):
         return cls._credentials
 
     @classmethod
+    def set_organization_id(cls, organization_id: str):
+        cls._organization_id = organization_id
+
+    @classmethod
     def perform_request(cls, request_func: Callable[..., Response], url: str, params=None, data=None, headers=None):
         headers = {**cls._get_default_headers(), **(headers or {})}
         debug = os.environ.get("PLANQK_QUANTUM_DEBUG", "false").lower() == "true"
@@ -140,7 +144,10 @@ class _PlanqkClient(object):
             cls._context_resolver = ContextResolver()
 
         context = cls._context_resolver.get_context()
-        if context is not None and context.is_organization:
+
+        if cls._organization_id is not None:
+            headers["x-organizationid"] = cls._organization_id
+        elif context is not None and context.is_organization:
             headers["x-organizationid"] = context.get_organization_id()
 
         headers[HEADER_CLOUD_TRACE_CTX] = cls._generate_trace_id()

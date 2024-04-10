@@ -12,7 +12,7 @@ from planqk.qiskit.client.client import _PlanqkClient
 
 class PlanqkQuantumProvider(Provider):
 
-    def __init__(self, access_token: str = None):
+    def __init__(self, access_token: str = None, organization_id: str = None):
         """Initialize the PlanQK provider.
               Args:
                     access_token (str): access token used for authentication with PlanQK. If not token is provided,
@@ -20,6 +20,7 @@ class PlanqkQuantumProvider(Provider):
                     manually or by using the PlanQK CLI.
         """
         _PlanqkClient.set_credentials(DefaultCredentialsProvider(access_token))
+        _PlanqkClient.set_organization_id(organization_id)
 
     def backends(self, provider: PROVIDER = None, **kwargs):
         """

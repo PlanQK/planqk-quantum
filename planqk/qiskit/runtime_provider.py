@@ -19,8 +19,11 @@ logger = logging.getLogger(__name__)
 
 class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
 
-    def __init__(self, access_token=None, channel: Optional[ChannelType] = None, channel_strategy=None):
-        super().__init__(access_token)
+    def __init__(self, access_token: Optional[str] = None,
+                 organization_id: Optional[str] = None,
+                 channel: Optional[ChannelType] = None,
+                 channel_strategy=None):
+        super().__init__(access_token, organization_id)
 
         self._channel = channel
         self._channel_strategy = channel_strategy
@@ -73,7 +76,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
         qrt_options.validate(channel=self.channel)
 
         hgp_name = 'ibm-q/open/main'
-        
+
         runtime_job_params = RuntimeJobParamsDto(
             program_id=program_id,
             image=qrt_options.image,
