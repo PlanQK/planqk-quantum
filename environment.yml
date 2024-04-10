@@ -23,8 +23,7 @@ dependencies:
       # aws braket
       - amazon-braket-default-simulator==1.21.0
       - amazon-braket-schemas==1.21.0
-      # we need the latest dev version as this fixes the issue with the Rigetti's qubit ids
-      - git+https://github.com/qiskit-community/qiskit-braket-provider.git@main
+      - qiskit-braket-provider==0.2.0
       # azure quantum
       - azure-quantum[qiskit]==2.0.0
       - qiskit-ionq==0.5.0
