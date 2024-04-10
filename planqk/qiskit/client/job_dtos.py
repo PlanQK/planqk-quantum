@@ -6,9 +6,10 @@ from pydantic import BaseModel
 
 
 class INPUT_FORMAT(str, Enum):
+    BRAKET_OPEN_QASM_V3 = "BRAKET_OPEN_QASM_V3"
     OPEN_QASM_V3 = "OPEN_QASM_V3"
     IONQ_CIRCUIT_V1 = "IONQ_CIRCUIT_V1"
-    QISKIT_PRIMITIVE = "QISKIT_PRIMITIVE"
+    QISKIT = "QISKIT"
     QOQO = "QOQO"
 
 
@@ -49,10 +50,10 @@ class JobDto(BaseModel):
 
 class RuntimeJobParamsDto(BaseModel):
     program_id: str
-    image: Optional[str]
+    image: Optional[str] = None
     hgp: Optional[str]
-    log_level: Optional[str]
-    session_id: Optional[str]
+    log_level: Optional[str] = None
+    session_id: Optional[str] = None
     max_execution_time: Optional[int] = None
     start_session: Optional[bool] = False
     session_time: Optional[int] = None

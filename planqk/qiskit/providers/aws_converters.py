@@ -8,9 +8,9 @@ from braket.circuits.serialization import QubitReferenceType, OpenQASMSerializat
 from braket.ir.openqasm import Program as OpenQASMProgram
 
 
-def transform_to_qasm_3_program(braket_circuit: Circuit,
-                                disable_qubit_rewiring: bool,
-                                inputs: Dict[str, float]) -> str:
+def transform_braket_to_qasm_3_program(braket_circuit: Circuit,
+                                       disable_qubit_rewiring: bool,
+                                       inputs: Dict[str, float]) -> str:
     """Transforms a Braket input to a QASM 3 program."""
 
     qubit_reference_type = QubitReferenceType.VIRTUAL

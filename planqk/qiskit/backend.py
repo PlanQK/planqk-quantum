@@ -7,7 +7,7 @@ from qiskit.providers import BackendV2, Provider
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
-from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER, HARDWARE_PROVIDER
+from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
 from .options import OptionsV2
@@ -45,14 +45,14 @@ class PlanqkBackend(BackendV2, ABC):
             **fields: other arguments
         """
 
-        super().__init__(
-            provider=provider,
-            name=name,
-            description=description,
-            online_date=online_date,
-            backend_version=backend_version,
-            **fields,
-        )
+        BackendV2.__init__(self,
+                           provider=provider,
+                           name=name,
+                           description=description,
+                           online_date=online_date,
+                           backend_version=backend_version,
+                           **fields,
+                           )
         self._backend_info = backend_info
         self._target = self._planqk_backend_to_target()
         self._configuration = self._planqk_backend_dto_to_configuration()
@@ -130,6 +130,7 @@ class PlanqkBackend(BackendV2, ABC):
             max_experiments=self._backend_info.configuration.shots_range.max,  # Only one circuit is supported per job
             description=self._backend_info.documentation.description,
             min_shots=self._backend_info.configuration.shots_range.min,
+            online_date=self._backend_info.updated_at  # TODO replace with online date
         )
 
     def _get_gate_config_from_target(self, name) -> GateConfig:
@@ -175,8 +176,6 @@ class PlanqkBackend(BackendV2, ABC):
         """
         from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
 
-        self._validate_provider_for_backend()
-
         if isinstance(circuit, (list, tuple)):
             if len(circuit) > 1:
                 raise ValueError("Multi-experiment jobs are not supported")
@@ -194,6 +193,7 @@ class PlanqkBackend(BackendV2, ABC):
                     options[field] = kwargs[field]
 
         supported_input_formats = self._backend_info.configuration.supported_input_formats
+
         backend_input = convert_to_backend_input(supported_input_formats, circuit, self, options)
         input_params = convert_to_backend_params(self._backend_info.provider, circuit, options)
 
@@ -205,13 +205,6 @@ class PlanqkBackend(BackendV2, ABC):
                              input_params=input_params)
 
         return PlanqkJob(backend=self, job_details=job_request)
-
-    def _validate_provider_for_backend(self):
-        from planqk.qiskit.runtime_provider import PlanqkQiskitRuntimeService
-        if (self._backend_info.hardware_provider == HARDWARE_PROVIDER.IBM
-                and not isinstance(self.provider, PlanqkQiskitRuntimeService)):
-            raise ValueError(f"Jobs for IBM backends must not be created with {self.provider.__class__.__name__}. "
-                             f"Use {PlanqkQiskitRuntimeService.__name__} instead.")
 
     def retrieve_job(self, job_id: str) -> PlanqkJob:
         """Return a single job.

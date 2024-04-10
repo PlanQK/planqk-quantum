@@ -24,7 +24,7 @@ rigetti_mock = {
             "fully_connected": True,
             "graph": {},
         },
-        "supported_input_formats": ["OPEN_QASM_V3"],
+        "supported_input_formats": ["BRAKET_OPEN_QASM_V3"],
         "shots_range": {
             "min": 1,
             "max": 10
@@ -72,7 +72,7 @@ oqc_lucy_mock = {
             "fully_connected": False,
             "graph": {},
         },
-        "supported_input_formats": ["OPEN_QASM_V3"],
+        "supported_input_formats": ["BRAKET_OPEN_QASM_V3"],
         "shots_range": {
             "min": 2,
             "max": 20
@@ -99,7 +99,7 @@ job_mock = {
     "shots": 10,
     "id": "123",
     "input": {"param1": "value1", "param2": "value2"},
-    "input_format": "OPEN_QASM_V3",
+    "input_format": "BRAKET_OPEN_QASM_V3",
     "input_params": {"param1": "value1", "param2": "value2"},
     "begin_execution_time": "2023-07-11T10:00:00",
     "cancellation_time": "2023-07-11T11:00:00",

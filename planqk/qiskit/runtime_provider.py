@@ -72,17 +72,8 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
 
         qrt_options.validate(channel=self.channel)
 
-        hgp_name = 'ibm-q/open/main'  # TODO determine dynamically
-        # if self._channel == "ibm_quantum":
-        #     # Find the right hgp
-        #     hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
-        #     hgp_name = hgp.name
-        # backend = self.backend(name=qrt_options.backend, instance=hgp_name)
-        # status = backend.status()
-        # if status.operational is True and status.status_msg != "active":
-        #     logger.warning(
-        #         f"The backend {backend.name} currently has a status of {status.status_msg}."
-        #     )
+        hgp_name = 'ibm-q/open/main'
+        
         runtime_job_params = RuntimeJobParamsDto(
             program_id=program_id,
             image=qrt_options.image,
@@ -94,7 +85,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             session_time=qrt_options.session_time,
         )
 
-        input_data = convert_to_backend_input([INPUT_FORMAT.QISKIT_PRIMITIVE], inputs)
+        input_data = convert_to_backend_input([INPUT_FORMAT.QISKIT], inputs)
 
         backend_id = options.get('backend')
         backend = self.backend(backend_id)
