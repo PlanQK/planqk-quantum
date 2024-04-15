@@ -34,7 +34,7 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             self,
             name: str = None,
             instance: Optional[str] = None,
-    ) -> str:
+    ):
         """Return a single backend matching the specified filtering.
 
         Args:
@@ -57,6 +57,14 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
                 f"Backend '{name}' is not from IBM. Qiskit Runtime only supports IBM backends.")
 
         return backend
+
+    def _get_backend_object(self, backend_dto, backend_init_params):
+        if backend_dto.provider in {PROVIDER.IBM, PROVIDER.IBM_CLOUD, PROVIDER.TSYSTEMS}:
+            from planqk.qiskit.providers.ibm.ibm_runtime_backend import PlanqkIbmRuntimeBackend
+            return PlanqkIbmRuntimeBackend(**backend_init_params)
+        else:
+            return QiskitBackendNotFoundError(
+                f"Backends of provider '{backend_dto.provider}' are not supported.")
 
     def run(self,
             program_id: str,

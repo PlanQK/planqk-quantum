@@ -1,17 +1,18 @@
 import datetime
-from abc import ABC
+from abc import ABC, abstractmethod
 from copy import copy
+from typing import Optional
 
+from qiskit.circuit import Instruction as QiskitInstruction, Delay, Parameter
 from qiskit.circuit import Measure
 from qiskit.providers import BackendV2, Provider
 from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
-from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, ConnectivityDto, PROVIDER
+from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, PROVIDER
 from .client.job_dtos import JobDto
 from .job import PlanqkJob
 from .options import OptionsV2
-from .providers.adapter import ProviderAdapterFactory
 
 
 class PlanqkBackend(BackendV2, ABC):
@@ -54,9 +55,42 @@ class PlanqkBackend(BackendV2, ABC):
                            **fields,
                            )
         self._backend_info = backend_info
+        self._is_simulator = self.backend_info.type == TYPE.SIMULATOR
         self._target = self._planqk_backend_to_target()
         self._configuration = self._planqk_backend_dto_to_configuration()
         self._instance = None
+
+    @property
+    def backend_info(self):
+        return self._backend_info
+
+    @property
+    def is_simulator(self):
+        return self._is_simulator
+
+    @abstractmethod
+    def to_gate(self, name: str):
+        pass
+
+    @abstractmethod
+    def get_single_qubit_gate_properties(self):
+        pass
+
+    @abstractmethod
+    def get_multi_qubit_gate_properties(self):
+        pass
+
+    non_gate_instr_mapping = {
+        "delay": Delay(Parameter("t")),
+        "measure": Measure(),
+    }
+
+    def to_non_gate_instruction(self, name: str) -> Optional[QiskitInstruction]:
+        instr = self.non_gate_instr_mapping.get(name, None)
+        if instr is not None:
+            instr.has_single_gate_props = True
+            return instr
+        return None
 
     def _planqk_backend_to_target(self) -> Target:
         """Converts properties of a PlanQK actual into Qiskit Target object.
@@ -65,21 +99,17 @@ class PlanqkBackend(BackendV2, ABC):
             target for Qiskit actual
         """
         # building target
-        configuration: ConfigurationDto = self._backend_info.configuration
+
+        configuration: ConfigurationDto = self.backend_info.configuration
         qubit_count: int = configuration.qubit_count
         target = Target(description=f"Target for PlanQK actual {self.name}", num_qubits=qubit_count)
 
-        is_simulator = self._backend_info.type == TYPE.SIMULATOR
-        qubits = configuration.qubits
-        connectivity: ConnectivityDto = self._backend_info.configuration.connectivity
-
-        adapter = ProviderAdapterFactory.get_adapter(self._backend_info.provider)
-
-        single_qubit_props = adapter.single_qubit_gate_props(qubits, is_simulator)
-        multi_qubit_props = adapter.multi_qubit_gate_props(qubits, connectivity, is_simulator)
+        single_qubit_props = self.get_single_qubit_gate_properties()
+        multi_qubit_props = self.get_multi_qubit_gate_properties()
         gates_names = {gate.name.lower() for gate in configuration.gates}
+
         for gate in gates_names:
-            gate = adapter.to_gate(gate, is_simulator)
+            gate = self.to_gate(gate)
 
             if gate is None:
                 continue
@@ -96,7 +126,7 @@ class PlanqkBackend(BackendV2, ABC):
 
         non_gate_instructions = set(configuration.instructions).difference(gates_names).difference({'measure'})
         for non_gate_instruction_name in non_gate_instructions:
-            instruction = adapter.to_non_gate_instruction(non_gate_instruction_name, is_simulator)
+            instruction = self.to_non_gate_instruction(non_gate_instruction_name)
             if instruction is not None:
                 if instruction.has_single_gate_props:
                     target.add_instruction(instruction, single_qubit_props)
@@ -107,30 +137,30 @@ class PlanqkBackend(BackendV2, ABC):
 
     def _planqk_backend_dto_to_configuration(self) -> QasmBackendConfiguration:
         basis_gates = [self._get_gate_config_from_target(basis_gate.name)
-                       for basis_gate in self._backend_info.configuration.gates if basis_gate.native_gate
+                       for basis_gate in self.backend_info.configuration.gates if basis_gate.native_gate
                        and self._get_gate_config_from_target(basis_gate.name) is not None]
         gates = [self._get_gate_config_from_target(gate.name)
-                 for gate in self._backend_info.configuration.gates if not gate.native_gate
+                 for gate in self.backend_info.configuration.gates if not gate.native_gate
                  and self._get_gate_config_from_target(gate.name) is not None]
 
         return QasmBackendConfiguration(
             backend_name=self.name,
             backend_version=self.backend_version,
-            n_qubits=self._backend_info.configuration.qubit_count,
+            n_qubits=self.backend_info.configuration.qubit_count,
             basis_gates=basis_gates,
             gates=gates,
             local=False,
-            simulator=self._backend_info.type == TYPE.SIMULATOR,
+            simulator=self.backend_info.type == TYPE.SIMULATOR,
             conditional=False,
             open_pulse=False,
-            memory=self._backend_info.configuration.memory_result_supported,
-            max_shots=self._backend_info.configuration.shots_range.max,
+            memory=self.backend_info.configuration.memory_result_supported,
+            max_shots=self.backend_info.configuration.shots_range.max,
             coupling_map=self.coupling_map,
             supported_instructions=self._target.instructions,
-            max_experiments=self._backend_info.configuration.shots_range.max,  # Only one circuit is supported per job
-            description=self._backend_info.documentation.description,
-            min_shots=self._backend_info.configuration.shots_range.min,
-            online_date=self._backend_info.updated_at  # TODO replace with online date
+            max_experiments=self.backend_info.configuration.shots_range.max,  # Only one circuit is supported per job
+            description=self.backend_info.documentation.description,
+            min_shots=self.backend_info.configuration.shots_range.min,
+            online_date=self.backend_info.updated_at  # TODO replace with online date
         )
 
     def _get_gate_config_from_target(self, name) -> GateConfig:
@@ -155,11 +185,11 @@ class PlanqkBackend(BackendV2, ABC):
 
     @property
     def min_shots(self):
-        return self._backend_info.configuration.shots_range.min
+        return self.backend_info.configuration.shots_range.min
 
     @property
     def max_shots(self):
-        return self._backend_info.configuration.shots_range.max
+        return self.backend_info.configuration.shots_range.max
 
     @classmethod
     def _default_options(cls):
@@ -183,7 +213,7 @@ class PlanqkBackend(BackendV2, ABC):
 
         # PennyLane-Qiskit Plugin identifies the result based on the circuit name which must be "circ0"
         circuit.name = "circ0"
-        shots = kwargs.get('shots', self._backend_info.configuration.shots_range.min)
+        shots = kwargs.get('shots', self.backend_info.configuration.shots_range.min)
 
         # add kwargs, if defined as options, to a copy of the options
         options = copy(self.options)
@@ -192,13 +222,13 @@ class PlanqkBackend(BackendV2, ABC):
                 if field in options.data:
                     options[field] = kwargs[field]
 
-        supported_input_formats = self._backend_info.configuration.supported_input_formats
+        supported_input_formats = self.backend_info.configuration.supported_input_formats
 
         backend_input = convert_to_backend_input(supported_input_formats, circuit, self, options)
-        input_params = convert_to_backend_params(self._backend_info.provider, circuit, options)
+        input_params = convert_to_backend_params(self.backend_info.provider, circuit, options)
 
-        job_request = JobDto(backend_id=self._backend_info.id,
-                             provider=self._backend_info.provider.name,
+        job_request = JobDto(backend_id=self.backend_info.id,
+                             provider=self.backend_info.provider.name,
                              input_format=backend_input[0],
                              input=backend_input[1],
                              shots=shots,
@@ -228,4 +258,4 @@ class PlanqkBackend(BackendV2, ABC):
     @property
     def backend_provider(self) -> PROVIDER:
         """Return the provider offering the quantum backend resource."""
-        return self._backend_info.provider
+        return self.backend_info.provider

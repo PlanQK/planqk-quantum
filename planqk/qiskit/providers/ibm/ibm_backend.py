@@ -1,36 +1,37 @@
-import json
-from typing import Dict, Optional, List
+from typing import Optional
 
-from qiskit import QuantumCircuit
-from qiskit.providers import Options
-from qiskit.providers.models import BackendStatus
+from qiskit.circuit import Gate
+from qiskit.circuit import IfElseOp, WhileLoopOp, ForLoopOp, SwitchCaseOp, Instruction
+from qiskit.circuit import Parameter, Reset
+from qiskit.circuit.library import IGate, SXGate, XGate, CXGate, RZGate, ECRGate, CZGate
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
-from qiskit_ibm_provider import IBMBackend
-from qiskit_ibm_provider.job import IBMCircuitJob
-from qiskit_ibm_provider.utils import RuntimeEncoder
 
-from planqk.qiskit import PlanqkBackend, PlanqkJob
-from planqk.qiskit.client.backend_dtos import STATUS
-from planqk.qiskit.client.client import _PlanqkClient
-from planqk.qiskit.client.job_dtos import JobDto, INPUT_FORMAT, RuntimeJobParamsDto
+from planqk.qiskit import PlanqkBackend
 from planqk.qiskit.options import OptionsV2
-from planqk.qiskit.planqk_runtime_job import PlanqkRuntimeJob
 
+ibm_name_mapping = {
+    "id": IGate(),
+    "sx": SXGate(),
+    "x": XGate(),
+    "cx": CXGate(),
+    "rz": RZGate(Parameter("λ")),
+    "reset": Reset(),
+    "ecr": ECRGate(),
+    "cz": CZGate(),
+}
 
-def _encode_circuit_base64(circuit: QuantumCircuit, backend: PlanqkBackend, options: Options):
-    # Transforms circuit to base64 encoded byte stream
-    input_json_str = json.dumps(circuit, cls=RuntimeEncoder)
-    # Transform back to json but with the base64 encoded byte stream
-    return json.loads(input_json_str)
+qiskit_control_flow_mapping = {
+    "if_else": IfElseOp,
+    "while_loop": WhileLoopOp,
+    "for_loop": ForLoopOp,
+    "switch_case": SwitchCaseOp,
+}
 
 
 class PlanqkIbmBackend(PlanqkBackend):
 
     def __init__(self, **kwargs):
         PlanqkBackend.__init__(self, **kwargs)
-        self.ibm_backend = IBMBackend(configuration=self.configuration(), provider=None, api_client=None)
-        self.ibm_backend._runtime_run = self._submit_job
-        self.ibm_backend.status = self.status
 
     def _default_options(self):
         return OptionsV2(
@@ -49,45 +50,24 @@ class PlanqkIbmBackend(PlanqkBackend):
             seed_simulator=None,
         )
 
-    def run(self, circuit, **kwargs) -> PlanqkRuntimeJob:
-        return IBMBackend.run(self.ibm_backend, circuit, **kwargs)
+    def to_gate(self, name: str) -> Optional[Gate]:
+        name = name.lower()
+        return ibm_name_mapping.get(name, None) or Gate(name, 0, [])
 
-    def status(self):
-        operational = self._backend_info.status == STATUS.ONLINE
-        status_msg = "active" if operational else self._backend_info.status.name.lower()
-        pending_jobs = 0  # TODO set pending jobs
+    def get_single_qubit_gate_properties(self) -> dict:
+        qubits = self.backend_info.configuration.qubits
+        return {None: None} if self.is_simulator else {(int(qubit.id),): None for qubit in qubits}
 
-        return BackendStatus.from_dict({'backend_name': self.name,
-                                        'backend_version': self.backend_version,
-                                        'operational': operational,
-                                        'status_msg': status_msg,
-                                        'pending_jobs': pending_jobs})
+    def get_multi_qubit_gate_properties(self) -> dict:
+        connectivity = self.backend_info.configuration.connectivity
+        return {None: None} if self.is_simulator else {(int(qubit), int(connected_qubit)): None
+                                                       for qubit, connections in connectivity.graph.items()
+                                                       for connected_qubit in connections}
 
-    def _submit_job(
-            self,
-            program_id: str,
-            inputs: Dict,
-            backend_name: str,
-            job_tags: Optional[List[str]] = None,
-            image: Optional[str] = None,
-    ) -> IBMCircuitJob:
-        encoded_input = _encode_circuit_base64(circuit=inputs, backend=self, options=None)
-        hgp_name = 'ibm-q/open/main'
+    def to_non_gate_instruction(self, name: str) -> Optional[Instruction]:
+        if name in qiskit_control_flow_mapping:
+            instr = qiskit_control_flow_mapping[name]
+            instr.has_single_gate_props = False
+            return instr
 
-        runtime_job_params = RuntimeJobParamsDto(
-            program_id=program_id,
-            hgp=hgp_name
-        )
-
-        job_request = JobDto(backend_id=self._backend_info.id,
-                             provider=self._backend_info.provider.name,
-                             input_format=INPUT_FORMAT.QISKIT,
-                             input=encoded_input,
-                             shots=inputs.get('shots'),
-                             input_params=runtime_job_params.dict())
-
-        return PlanqkRuntimeJob(backend=self, job_details=job_request)
-
-    def retrieve_job(self, job_id: str) -> PlanqkJob:
-        job_details = _PlanqkClient.get_job(job_id)
-        return PlanqkRuntimeJob(backend=self, job_id=job_id, job_details=job_details)
+        return super().to_non_gate_instruction(name)

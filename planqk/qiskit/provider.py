@@ -93,6 +93,9 @@ class PlanqkQuantumProvider(Provider):
         # add additional parameters to the backend init params
         backend_init_params.update(**kwargs)
 
+        return self._get_backend_object(backend_dto, backend_init_params)
+
+    def _get_backend_object(self, backend_dto, backend_init_params):
         if backend_dto.provider == PROVIDER.AWS:
             from planqk.qiskit.providers.aws.aws_backend import PlanqkAwsBackend
             return PlanqkAwsBackend(**backend_init_params)
@@ -103,10 +106,11 @@ class PlanqkQuantumProvider(Provider):
             from planqk.qiskit.providers.qryd.qryd_backend import PlanqkQrydBackend
             return PlanqkQrydBackend(**backend_init_params)
         elif backend_dto.provider in {PROVIDER.IBM, PROVIDER.IBM_CLOUD}:
-            from planqk.qiskit.providers.ibm.ibm_backend import PlanqkIbmBackend
-            return PlanqkIbmBackend(**backend_init_params)
+            from planqk.qiskit.providers.ibm.ibm_provider_backend import PlanqkIbmProviderBackend
+            return PlanqkIbmProviderBackend(**backend_init_params)
         else:
-            return PlanqkBackend(**backend_init_params)
+            return QiskitBackendNotFoundError(
+                f"Backends of provider '{backend_dto.provider}' are not supported.")
 
     def retrieve_job(self, backend: PlanqkBackend, job_id: str):
         """
