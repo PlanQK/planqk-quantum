@@ -10,9 +10,8 @@ from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
 from planqk.qiskit import PlanqkQuantumProvider
 from planqk.qiskit.client.backend_dtos import PROVIDER
 from planqk.qiskit.client.client import _PlanqkClient
-from planqk.qiskit.client.job_dtos import RuntimeJobParamsDto, JobDto, INPUT_FORMAT
+from planqk.qiskit.client.job_dtos import RuntimeJobParamsDto, JobDto
 from planqk.qiskit.planqk_runtime_job import PlanqkRuntimeJob
-from planqk.qiskit.providers.job_input_converter import convert_to_backend_input
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +95,6 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
             session_time=qrt_options.session_time,
         )
 
-        input_data = convert_to_backend_input([INPUT_FORMAT.QISKIT], inputs)
-
         backend_id = options.get('backend')
         backend = self.backend(backend_id)
 
@@ -107,12 +104,14 @@ class PlanqkQiskitRuntimeService(PlanqkQuantumProvider):
         else:
             shots = run_options.get('shots', backend.min_shots)
 
+        job_input_format = backend.get_job_input_format()
+        input_data = backend.convert_to_job_input(inputs)
         input_params = runtime_job_params.dict()
 
         job_request = JobDto(backend_id=backend_id,
                              provider=PROVIDER.IBM.name,
-                             input_format=input_data[0],
-                             input=input_data[1],
+                             input_format=job_input_format,
+                             input=input_data,
                              shots=shots,
                              input_params=input_params)
 

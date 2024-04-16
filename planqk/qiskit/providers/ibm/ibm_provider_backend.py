@@ -53,7 +53,7 @@ class PlanqkIbmProviderBackend(PlanqkIbmBackend):
             job_tags: Optional[List[str]] = None,
             image: Optional[str] = None,
     ) -> IBMCircuitJob:
-        encoded_input = _encode_circuit_base64(circuit=inputs, backend=self, options=None)
+        encoded_input = _encode_circuit_base64(circuit=inputs)
         hgp_name = 'ibm-q/open/main'
 
         runtime_job_params = RuntimeJobParamsDto(

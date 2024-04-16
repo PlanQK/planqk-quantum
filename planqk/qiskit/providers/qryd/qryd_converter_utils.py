@@ -1,7 +1,7 @@
+from math import pi
 from typing import Any
 from typing import Dict
 
-from math import pi
 from qiskit import QuantumCircuit
 from qiskit.providers import Options
 
@@ -372,20 +372,3 @@ def convert_to_wire_format(circuit: QuantumCircuit, options: Options) -> dict:
     ]
 
     return circuit_dict
-
-
-def create_qoqu_input_params(circuit, options: Options):
-    return {
-        "format": "qoqo",
-        "backend": "",  # Backend is set in the middleware
-        "fusion_max_qubits": options.fusion_max_qubits,
-        "seed_simulator": options.seed_simulator,
-        "seed_compiler": options.seed_compiler,
-        "allow_compilation": options.allow_compilation,
-        "pcz_theta": float(PCZGate().get_theta()),
-        "use_extended_set": options.use_extended_set,
-        "use_reverse_traversal": options.use_reverse_traversal,
-        "extended_set_size": options.extended_set_size,
-        "extended_set_weight": options.extended_set_weight,
-        "reverse_traversal_iterations": options.reverse_traversal_iterations,
-    }

@@ -1,8 +1,9 @@
 import datetime
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Optional
+from typing import Optional, Tuple
 
+from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction as QiskitInstruction, Delay, Parameter
 from qiskit.circuit import Measure
 from qiskit.providers import BackendV2, Provider
@@ -10,7 +11,7 @@ from qiskit.providers.models import QasmBackendConfiguration, GateConfig
 from qiskit.transpiler import Target
 
 from .client.backend_dtos import ConfigurationDto, TYPE, BackendDto, PROVIDER
-from .client.job_dtos import JobDto
+from .client.job_dtos import JobDto, INPUT_FORMAT
 from .job import PlanqkJob
 from .options import OptionsV2
 
@@ -195,6 +196,17 @@ class PlanqkBackend(BackendV2, ABC):
     def _default_options(cls):
         return OptionsV2()
 
+    @abstractmethod
+    def convert_to_job_input(self, circuit: QuantumCircuit, options=None) -> Tuple[INPUT_FORMAT, dict]:
+        pass
+
+    def convert_to_job_params(self, circuit: QuantumCircuit = None, options=None) -> dict:
+        return {}
+
+    @abstractmethod
+    def get_job_input_format(self) -> INPUT_FORMAT:
+        pass
+
     def run(self, circuit, **kwargs) -> PlanqkJob:
         """Run a circuit on the backend as job.
 
@@ -204,7 +216,6 @@ class PlanqkBackend(BackendV2, ABC):
         Returns:
             PlanqkJob: The job instance for the circuit that was run.
         """
-        from planqk.qiskit.providers.job_input_converter import convert_to_backend_input, convert_to_backend_params
 
         if isinstance(circuit, (list, tuple)):
             if len(circuit) > 1:
@@ -222,15 +233,14 @@ class PlanqkBackend(BackendV2, ABC):
                 if field in options.data:
                     options[field] = kwargs[field]
 
-        supported_input_formats = self.backend_info.configuration.supported_input_formats
-
-        backend_input = convert_to_backend_input(supported_input_formats, circuit, self, options)
-        input_params = convert_to_backend_params(self.backend_info.provider, circuit, options)
+        job_input_format = self.get_job_input_format()
+        job_input = self.convert_to_job_input(circuit, options)
+        input_params = self.convert_to_job_params(circuit, options)
 
         job_request = JobDto(backend_id=self.backend_info.id,
                              provider=self.backend_info.provider.name,
-                             input_format=backend_input[0],
-                             input=backend_input[1],
+                             input_format=job_input_format,
+                             input=job_input,
                              shots=shots,
                              input_params=input_params)
 
