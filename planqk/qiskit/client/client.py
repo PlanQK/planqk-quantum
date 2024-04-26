@@ -116,6 +116,11 @@ class _PlanqkClient(object):
         return JobDto(**response)
 
     @classmethod
+    def get_jobs(cls) -> List[JobDto]:
+        response = cls.perform_request(requests.get, f"{base_url()}/jobs")
+        return [JobDto(**job_info) for job_info in response]
+
+    @classmethod
     def get_job_result(cls, job_id: str, provider: Optional[PROVIDER] = None) -> Dict[str, Any]:
         params = {}
         if provider is not None:

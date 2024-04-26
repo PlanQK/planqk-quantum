@@ -134,6 +134,13 @@ class PlanqkJob(JobV1):
         """
         return {key: value for key, value in vars(self).items() if not key.startswith('_')}
 
+    def backend(self) -> Backend:
+        """Return the backend where this job was executed."""
+        if self._backend is None:
+            from planqk.qiskit import PlanqkBackend
+            self._backend = PlanqkBackend(self._job_details.backend_id)
+        return self._backend
+
     def queue_position(self):
         """
         Return the position of the job in the server queue.

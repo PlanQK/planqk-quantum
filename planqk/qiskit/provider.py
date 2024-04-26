@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from qiskit.providers import ProviderV1 as Provider, QiskitBackendNotFoundError
 
@@ -124,3 +125,14 @@ class PlanqkQuantumProvider(Provider):
             Job: the job from the backend with the given id.
         """
         return PlanqkJob(backend=backend, job_id=job_id)
+
+    def jobs(self) -> List[PlanqkJob]:
+        """
+        Returns all jobs of the user or organization.
+
+        Returns:
+            List[PlanqkJob]: a list of active jobs.
+        """
+        print("Getting your jobs from PlanQK, this may take a few seconds...")
+        job_dtos = _PlanqkClient.get_jobs()
+        return [PlanqkJob(backend=None, job_id=job_dto.id, job_details=job_dto) for job_dto in job_dtos]
