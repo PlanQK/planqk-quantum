@@ -1,3 +1,9 @@
+# PROJECT MOVED TO GITLAB
+
+**NOTICE:** This project is no longer maintained on GitHub. It has been moved to GitLab for continued updates and development. You can find the latest version of this project at [https://gitlab.com/planqk-foss/planqk-quantum](https://gitlab.com/planqk-foss/planqk-quantum).
+
+---
+
 # PlanQK Quantum SDK
 
 [![PyPI version](https://badge.fury.io/py/planqk-quantum.svg)](https://badge.fury.io/py/planqk-quantum)
